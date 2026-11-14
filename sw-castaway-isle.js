@@ -1,6 +1,6 @@
 // 표류섬 서비스워커 — 이 앱 주소(/castaway-isle/) 것만 다룸
 const APP = 'castaway-isle';
-const CACHE = APP + '-9';
+const CACHE = APP + '-10';
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png", "./boy.png", "./girl.png", "./floor_beach.png", "./beach_objs.png", "./icons.png"];
 const APP_TAG = '<meta name="app-id" content="castaway-isle">';
 const myScope = () => new URL('./', self.registration.scope).pathname;
@@ -28,6 +28,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url); if (url.origin !== location.origin) return;
   if (!url.pathname.startsWith(myScope())) return;
   if (url.pathname.endsWith('/version.json')) return;
+  if (req.cache === 'no-store' || req.cache === 'reload') return;   // 업데이트 확인용 요청은 항상 인터넷
   if (req.mode === 'navigate') {   // 화면: 저장본 먼저 (오프라인·잘못 올린 파일에도 열림)
     e.respondWith(caches.match('./index.html').then(hit => hit || fetch(req)));
     return;
