@@ -1,6 +1,6 @@
 // 표류섬 서비스워커 — 이 앱 주소(/castaway-isle/) 것만 다룸
 const APP = 'castaway-isle';
-const CACHE = APP + '-16';
+const CACHE = APP + '-17';
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png", "./boy.png", "./girl.png", "./boy_x.png", "./girl_x.png", "./floor_beach.png", "./beach_objs.png", "./ui_icons.png"];
 const APP_TAG = '<meta name="app-id" content="castaway-isle">';
 const myScope = () => new URL('./', self.registration.scope).pathname;
