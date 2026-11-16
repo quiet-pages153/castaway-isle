@@ -1,7 +1,7 @@
 // 표류섬 서비스워커 — 이 앱 주소(/castaway-isle/) 것만 다룸
 const APP = 'castaway-isle';
-const CACHE = APP + '-23';
-const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png", "./boy.png", "./girl.png", "./boy_x.png", "./girl_x.png", "./beach_objs.png", "./ui_icons.png", "./ui_frame.png", "./floor_beachA.png", "./floor_beachB.png"];
+const CACHE = APP + '-27';
+const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png", "./boy.png", "./girl.png", "./boy_x.png", "./girl_x.png", "./beach_objs.png", "./ui_icons.png", "./ui_frame.png", "./beach_camp.png", "./beach_tools.png", "./cliff_front.png", "./felled_tree.png", "./wake.png", "./thin_tree.png", "./beach_story_items.png", "./beach_cooking.png", "./floor_beachA.png", "./floor_beachB.png"];
 const APP_TAG = '<meta name="app-id" content="castaway-isle">';
 const myScope = () => new URL('./', self.registration.scope).pathname;
 const scopeOk = () => /\/castaway-isle\/$/.test(myScope()) || ['localhost', '127.0.0.1'].includes(location.hostname);
