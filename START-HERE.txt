@@ -1,12 +1,8 @@
-표류섬 v35 · v34용 GitHub 업데이트
+표류섬 v39 · v37→v39 GitHub 변경 파일
 
-1. ZIP을 먼저 풀어주세요.
-2. index.html이 있는 GitHub 저장소의 기존 위치에 다음 파일을 올립니다.
-   beach-audio.js, carried_ember.png, cliff_mask.png, index.html,
-   shore_items.png, shore_seated.png, version.json
-3. GitHub에서 기존 audio 폴더로 들어가 files.json을 덮어씁니다.
-   이미 올려둔 day.mp3, night.mp3, hut.mp3와 나머지 음원은 그 폴더에 그대로 둡니다.
-4. index.html과 같은 위치에 sw-castaway-isle.js를 마지막으로 올립니다.
-5. 배포가 끝난 뒤 게임을 다시 열어 시작 화면에 v35가 표시되는지 확인합니다.
-
-START-HERE.txt는 안내문이므로 GitHub에 올릴 필요가 없습니다.
+v37이 올라 있는 저장소에 사용합니다. v38 수정도 포함되어 있습니다.
+1. ZIP을 풉니다. START-HERE.txt는 안내문입니다.
+2. 기존 index.html 위치에 변경 파일을 덮어씁니다. audio 안의 3개는 GitHub의 기존 audio 폴더에 올립니다.
+3. sw-castaway-isle.js를 index.html과 같은 위치에 마지막으로 올립니다.
+4. 배포 후 게임 첫 화면에서 v39를 확인합니다.
+v36 이전 판이거나 어떤 파일을 올렸는지 모르겠다면 v39 전체 배포 ZIP을 사용합니다.

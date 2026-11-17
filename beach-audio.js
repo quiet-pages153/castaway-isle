@@ -6,7 +6,7 @@ function createBeachAudio(store, settings) {
   const groups = {
     music: ['day', 'night', 'hut'],
     ambient: ['waves', 'fire', 'cricket'],
-    effects: ['sand', 'grass', 'wet', 'wake', 'chop', 'vine', 'pickup', 'cast', 'bite'],
+    effects: ['sand', 'grass', 'wet', 'wake', 'chop', 'vine', 'pickup', 'pickup-hard', 'cast', 'bite'],
   };
   const sounds = {};
   for (const [group, names] of Object.entries(groups)) {
@@ -133,7 +133,7 @@ function createBeachAudio(store, settings) {
         warmed = true;
         load('cricket');
         nextCricket = ctx.currentTime + 18;
-        for (const key of ['wake', 'chop', 'vine', 'pickup', 'cast', 'bite']) load(key);
+        for (const key of ['wake', 'chop', 'vine', 'pickup', 'pickup-hard', 'cast', 'bite']) load(key);
         for (const [key, {clips}] of Object.entries(steps)) {
           for (let i = 1; i <= clips; i++) load(key + '-' + i);
         }
@@ -155,6 +155,6 @@ function createBeachAudio(store, settings) {
     for (const [name, level] of Object.entries(tracks)) mix(name, level);
   }
 
-  const effectLevels = {wake: .38, chop: .64, vine: .47, pickup: .36, cast: .43, bite: .58};
+  const effectLevels = {wake: .38, chop: .64, vine: .47, pickup: .28, 'pickup-hard': .27, cast: .43, bite: .58};
   return {unlock, scene, step, effect: name => oneShot(name, effectLevels[name])};
 }
