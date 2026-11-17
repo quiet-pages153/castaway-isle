@@ -4,7 +4,7 @@
 function createBeachAudio(store, settings) {
   const volumes = {music: .6, ambient: .55, effects: .65};
   const groups = {
-    music: ['day', 'night'],
+    music: ['day', 'night', 'hut'],
     ambient: ['waves', 'fire', 'cricket'],
     effects: ['sand', 'grass', 'wet', 'wake', 'chop', 'vine', 'pickup', 'cast', 'bite'],
   };
@@ -12,7 +12,7 @@ function createBeachAudio(store, settings) {
   for (const [group, names] of Object.entries(groups)) {
     for (const name of names) sounds[name] = {group};
   }
-  const tracks = {day: 0, night: 0, waves: 0, fire: 0};
+  const tracks = {day: 0, night: 0, hut: 0, waves: 0, fire: 0};
   const steps = {
     sand: {level: .23, clips: 3},
     grass: {level: .20, clips: 3},
@@ -64,7 +64,7 @@ function createBeachAudio(store, settings) {
     if (!buffers.has(name)) {
       buffers.set(name, assets
         .then(files => {
-          const file = files?.[name];
+          const file = name==='hut'?'hut.mp3':files?.[name];
           if (typeof file !== 'string' || !/^[a-z0-9-]+\.(ogg|mp3|m4a|wav)$/.test(file)) return null;
           return fetch('./audio/' + file).then(response => response.ok ? response.arrayBuffer() : null);
         })
@@ -139,8 +139,9 @@ function createBeachAudio(store, settings) {
         }
       }
       const scale = menuOpen ? .65 : indoors ? .48 : 1;
-      tracks.day = night ? 0 : .56 * scale;
-      tracks.night = night ? .46 * scale : 0;
+      tracks.day = night || indoors ? 0 : .56 * scale;
+      tracks.night = night && !indoors ? .46 * scale : 0;
+      tracks.hut = indoors ? (menuOpen ? .29 : .44) : 0;
       tracks.waves = (night ? .27 : .48) * (zone === 0 ? .55 : 1) * scale;
       tracks.fire = Math.max(0, fire) * .42 * scale;
       if (night && zone === 0 && !indoors && !menuOpen && ctx.currentTime >= nextCricket) {

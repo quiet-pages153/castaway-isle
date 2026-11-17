@@ -284,24 +284,26 @@
   .hud .mapBtn:not([hidden]) + .menuBtn{margin-left:0}
   .clockTime{position:absolute;top:calc(100% + 7px);left:0;width:max-content;max-width:165px;pointer-events:none;
     padding:6px 8px;border:1px solid #ab8157;border-radius:4px;background:#30251bee;color:#fff0d5;font-size:12px}
-  .objective{top:calc(env(safe-area-inset-top) + 82px);z-index:3;box-sizing:border-box;
-    width:clamp(150px,47%,205px);padding:8px 9px;gap:6px;border:1px solid #b98b55;border-radius:5px;
-    background:#30251ceb;box-shadow:inset 0 0 0 2px #1c1813b8,0 2px 4px #170e0844}
-  .objective .questHeading{font-size:15px;font-weight:700;color:#ffd88e;padding-bottom:4px;border-bottom:1px solid #b28a4b78}
-  .objective ol{list-style:none;display:grid;gap:5px;margin:0;padding:0}
-  .objective li{position:relative;padding-left:11px;color:#fbefdb;font-size:13px;line-height:1.32;overflow-wrap:anywhere}
-  .objective li::before{content:'•';position:absolute;left:0;color:#b58d59}
-  .objective li:first-child::before{content:'◆';font-size:8px;top:3px;color:#ffcf72}
-  .objective li small{display:block;color:#ead3a8;font-size:11px;margin-top:2px}
+  .objective{top:calc(env(safe-area-inset-top) + 76px);z-index:3;box-sizing:border-box;
+    width:clamp(123px,37%,155px);padding:0;gap:4px;border:0;background:none;box-shadow:none}
+  .objective .questHeading{font-size:14px;font-weight:700;color:#ffebbe;padding:0 3px;text-shadow:0 1px 3px #24170e,0 0 6px #24170e}
+  .questBox{box-sizing:border-box;padding:5px 7px;max-height:min(24dvh,160px);overflow-y:auto;overscroll-behavior:contain;pointer-events:auto;
+    border:1px solid #b98b55;border-radius:5px;background:#30251ceb;box-shadow:inset 0 0 0 2px #1c1813b8,0 2px 4px #170e0844}
+  .objective ol{list-style:none;display:grid;gap:4px;margin:0;padding:0}
+  .objective li{color:#fbefdb;font-size:12px;line-height:1.25;overflow-wrap:anywhere}
+  .objective li:first-child .questTask{font-weight:700}
+  .objective li small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;color:#ead3a8;font-size:11px;margin-top:2px}
   .questTask{pointer-events:auto;display:block;width:100%;min-height:28px;text-align:left;border:0;background:none;padding:0;color:inherit;font:inherit;cursor:pointer}
   .questTask[aria-pressed="true"]{color:#ffda91}
-  .questCraft{pointer-events:auto;margin-top:5px;min-height:35px;background:#74502d;border:1px solid #c79a60;border-radius:5px;padding:3px 9px;color:#fff1d7;font:inherit;cursor:pointer}
+  .questCraft{pointer-events:auto;margin-top:4px;min-height:30px;background:#74502d;border:1px solid #c79a60;border-radius:5px;padding:3px 9px;color:#fff1d7;font:inherit;cursor:pointer}
   .questTask:focus-visible,.questCraft:focus-visible{outline:2px solid #ffda91}
   .ic.coconutChips{background:url(coconut-chips.png) center/contain no-repeat}
   .sceneCurtain{position:absolute;inset:0;z-index:24;background:#171712;pointer-events:none;opacity:0}
   .sceneCurtain:not([hidden]){pointer-events:auto}
   .hud .gauges{gap:2px}
-  .questMore{pointer-events:auto;justify-self:end;background:none;border:0;padding:4px 0;color:#fbd486;font:inherit;cursor:pointer}
+  .questMore{pointer-events:auto;display:block;margin:3px 0 0 auto;background:none;border:0;padding:4px 0;color:#fbd486;font:inherit;cursor:pointer}
+  #gameScreen.indoors .say{z-index:9;width:min(84%,290px)}
+  #gameScreen.indoors .say::after{display:none}
   .hint{top:auto;bottom:calc(env(safe-area-inset-bottom) + 88px);z-index:3}
   .soundSettings{margin:8px 0;padding:8px 10px;border:1px solid #b98b556f;border-radius:6px;text-align:left}
   .soundSettings legend{padding:0 4px;color:#ffdc9a}
@@ -343,8 +345,9 @@
     <button type="button" class="menuBtn" id="menuBtn" aria-label="메뉴"><i></i></button>
   </div>
   <section class="objective" id="objective" aria-label="퀘스트">
-    <strong class="questHeading">퀘스트</strong><ol id="questList" aria-live="polite"></ol>
-    <button type="button" class="questMore" id="questMore" aria-controls="questList" aria-expanded="false" hidden>더보기</button>
+    <strong class="questHeading">퀘스트</strong>
+    <div class="questBox"><ol id="questList" aria-live="polite"></ol>
+    <button type="button" class="questMore" id="questMore" aria-controls="questList" aria-expanded="false" hidden>더보기</button></div>
   </section>
   <button type="button" class="say" id="dialogue" hidden></button>
   <p class="hint" id="hint" aria-live="polite"></p>
@@ -410,7 +413,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='33', NOTE="해변 발소리와 생존 수치, 제작 퀘스트, 모닥불 휴식, 움막과 지형 표시를 수정했어요.";
+const APP='castaway-isle', APP_V='34', NOTE="코코넛 칩 제작 오류, 봉화·SOS, 물속 낚시, 퀘스트와 움막을 수정했어요.";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -448,6 +451,7 @@ IMG.camp.src='beach_camp.png';
 IMG.tools=new Image(); IMG.tools.src='beach_tools.png';
 IMG.cliff=new Image(); IMG.cliff.src='cliff_front.png';
 IMG.felled=new Image(); IMG.felled.src='felled_tree.png';
+IMG.beaconAsh=new Image(); IMG.beaconAsh.src='beacon_ash.png';
 IMG.signal=new Image();IMG.signal.src='beacon_lit.png';
 IMG.fishingFront=new Image(); IMG.fishingFront.src='fishing_front.png';
 IMG.beachMap=new Image(); IMG.beachMap.src='paper_beach_map.png';
@@ -613,7 +617,7 @@ const seenHints=new Set();
 function resetStory(){
   Object.assign(story,{stormOver:false,stormNight:false,gateOpen:false,stoneFound:false,gateSeen:false,
     fireIdea:false,fireLit:false,dryIdea:false,axeIdea:false,fruitFishIdea:false,fruitClamIdea:false,
-    signalPrepared:false,ember:false,beaconLit:false,sosDrawn:false,hutReady:false,crateOpened:false,bottleFound:false});
+    signalPrepared:false,ember:false,beaconLit:false,beaconLitDay:0,sosDrawn:false,hutReady:false,crateOpened:false,bottleFound:false});
   closeDiscovery();paperMapBtn.hidden=true;sleepScene=null;
   Object.assign(story,{wreckSeen:false,visitedB:false,duskLine:false,sleptWithLeaves:false});
   seenHints.clear();questsExpanded=false;lastQuestDisplay='';selectedQuest=null;cancelHutTransition();clockTime.hidden=true;clock.setAttribute('aria-expanded','false');introPose=-1;dialogueNext=null;story.hutTalk=false;buildMotion=null;leaveHut();
@@ -633,8 +637,8 @@ function renderQuests(title,detail,recipeId){
     if(inv.rod&&!seenHints.has('quest:fish'))optional.push(['낚시로 물고기 잡기','낚싯대를 들고 물가로 가세요']);
     if(inv.pot&&!seenHints.has('quest:cooked'))optional.push(['냄비로 요리하기','불이 켜진 모닥불에서 요리를 고르세요']);
   }
-  if(optional.length<3)questsExpanded=false;
-  const list=[[title,detail,recipeId],...(questsExpanded?optional:optional.slice(0,2))];
+  if(!optional.length)questsExpanded=false;
+  const list=[[title,detail,recipeId],...(questsExpanded?optional:[])];
   const entries=list.map(([name,help,id])=>{
     const recipe=RECIPES.find(r=>r.id===id);
     return {name,help,recipe,ready:!!recipe&&canCraft(recipe)};
@@ -663,8 +667,8 @@ function renderQuests(title,detail,recipeId){
     }
     return row;
   }));
-  questMore.hidden=optional.length<3;
-  questMore.textContent=questsExpanded?'접기 ▲':`더보기 +${optional.length-2} ▾`;
+  questMore.hidden=!optional.length;
+  questMore.textContent=questsExpanded?'접기 ▲':`더보기 +${optional.length} ▾`;
   questMore.setAttribute('aria-expanded',String(questsExpanded));
 }
 function built(type){ return Object.values(world).flatMap(m=>m.objs).find(o=>o.type===type); }
@@ -747,7 +751,7 @@ function survivalIdeas(){
 function say(message,thought=false,pinned=false,next=null){
   dialogueNext=next;
   dialogue.replaceChildren(document.createTextNode(message));
-  if(pinned){const more=document.createElement('small');more.textContent='오른쪽 버튼으로 계속';dialogue.appendChild(more);}
+  if(pinned){const more=document.createElement('small');more.textContent=insideHut?'말풍선을 눌러 계속':'오른쪽 버튼으로 계속';dialogue.appendChild(more);}
   dialogue.classList.toggle('thought',thought);
   dialogue.classList.toggle('interactive',pinned);
   dialogue.hidden=false;dialoguePinned=pinned;dialogueLeft=5.2;
@@ -761,8 +765,9 @@ dialogue.addEventListener('click',nextDialogue);
 function positionDialogue(){
   if(dialogue.hidden)return;
   if(insideHut){
-    dialogue.style.left='50%';dialogue.style.top='';dialogue.style.bottom='118px';
-    dialogue.style.transform='translateX(-50%)';return;
+    dialogue.classList.remove('side','right','left');
+    dialogue.style.left='50%';dialogue.style.top=Math.max(84,Math.round(VH*.21))+'px';
+    dialogue.style.bottom='';dialogue.style.transform='translateX(-50%)';return;
   }
   dialogue.style.transform='';dialogue.style.bottom='';
   const half=(dialogue.offsetWidth||180)/2, px=st.x-cam.x;
@@ -888,12 +893,12 @@ const SVG={
 };
 const GNAME={hp:'체력', food:'배고픔', water:'목마름'};
 const gaugesEl=document.getElementById('gauges'), gBar={};
-gaugesEl.innerHTML=['hp','food','water'].map(k=>`<div class="g ${k}" id="g_${k}" role="meter" aria-label="${GNAME[k]}" aria-valuemin="0" aria-valuemax="100">${SVG[k]}<span class="bar"><i></i></span></div>`).join('');
-['hp','food','water'].forEach(k=>{ gBar[k]={el:document.getElementById('g_'+k), i:document.querySelector('#g_'+k+' i'), v:-1}; });
+gaugesEl.innerHTML=['hp','water'].map(k=>`<div class="g ${k}" id="g_${k}" role="meter" aria-label="${GNAME[k]}" aria-valuemin="0" aria-valuemax="100">${SVG[k]}<span class="bar"><i></i></span></div>`).join('');
+['hp','water'].forEach(k=>{ gBar[k]={el:document.getElementById('g_'+k), i:document.querySelector('#g_'+k+' i'), v:-1}; });
 function renderGauges(){
   gaugesEl.classList.toggle('hungry',st.food<=LOW_FOOD);
   for(const k in gBar){ const v=Math.ceil(st[k]), g=gBar[k]; if(v===g.v) continue; g.v=v;
-    g.i.style.width=v+'%'; g.el.setAttribute('aria-valuenow',v); g.el.classList.toggle('low',v<=(k==='food'?LOW_FOOD:20)); }
+    g.i.style.width=v+'%'; g.el.setAttribute('aria-valuenow',v); g.el.classList.toggle('low',v<=20); }
 }
 const bagBtn=document.getElementById('bagBtn'), bagEl=document.getElementById('bag'), bagVeil=document.getElementById('bagVeil');
 const bagBody=document.getElementById('bagBody'), bagDetail=document.getElementById('bagDetail');
@@ -1025,18 +1030,21 @@ function renderBag(){
     bagDetail.innerHTML=`<span class="ic ${ITEMS[item][0]}"></span><strong>${ITEMS[item][1]}</strong>${USABLE.includes(item)?'<button type="button">빠른 칸에 놓기</button>':''}`;
     if(USABLE.includes(item)) bagDetail.querySelector('button').addEventListener('click',()=>beginQuick(item));
   }));
-  if(selFood){ const e=EAT[selFood];
+  if(selFood){ const e={...EAT[selFood],hp:foodHealing(EAT[selFood])};
     bagDetail.innerHTML=`<span class="ic ${ITEMS[selFood][0]}"></span><div><strong>${ITEMS[selFood][1]}</strong>${['food','water','hp'].filter(k=>e[k]).map(k=>`${GNAME[k]} <span class="up">+${e[k]}</span>`).join(' · ')}</div><button type="button" class="eat" id="eatBtn">${e.water&&!e.food?'마시기':'먹기'}</button><button type="button" class="eat" id="pinFood" aria-label="빠른 칸에 놓기">빠른 칸</button>`;
     bagDetail.hidden=false; document.getElementById('eatBtn').addEventListener('click',()=>eat(selFood)); document.getElementById('pinFood').addEventListener('click',()=>beginQuick(selFood));
   } else { bagDetail.hidden=false; bagDetail.innerHTML=`<div>먹을 것이 없어요. 덤불 열매나 코코넛을 찾아보세요.</div>`; }
 }
+function foodHealing(e){return e.hp||Math.round((e.food||0)*.2);}
 function eat(k){
   if(!(inv[k]>0)) return; inv[k]--; const e=EAT[k];
   if(k==='coconut') inv.fiber++;
   if(k==='waterBottle') inv.emptyBottle=1;
-  for(const meter of ['food','water','hp'])if(e[meter])st[meter]=Math.min(100,st[meter]+e[meter]);
+  const restored=Math.min(100-st.hp,foodHealing(e));
+  for(const meter of ['food','water'])if(e[meter])st[meter]=Math.min(100,st[meter]+e[meter]);
+  st.hp+=restored;
   const stack=pops.filter(p=>p.t<.6&&Math.abs(p.x-st.x)<5).length;   // 빨리 여러 번 먹으면 글자가 겹치지 않게 위로 쌓음
-  pops.push({text:['food','water','hp'].filter(q=>e[q]).map(q=>`${GNAME[q]} +${e[q]}`).join(' '),x:st.x,y:st.y-130-stack*20,t:0});
+  pops.push({text:['food','water','hp'].map(q=>[q,q==='hp'?restored:e[q]]).filter(([,n])=>n>0).map(([q,n])=>`${GNAME[q]} +${Math.round(n)}`).join(' '),x:st.x,y:st.y-130-stack*20,t:0});
   renderGauges(); renderInv(); goal(); checkRecipes();
   if(k==='cookedFish'&&!story.fruitFishIdea){
     story.fruitFishIdea=true;closeBag();
@@ -1073,7 +1081,16 @@ clock.addEventListener('click',()=>{
   clockTime.hidden=!clockTime.hidden;
   clock.setAttribute('aria-expanded',String(!clockTime.hidden));
 });
+function coversSos(type,x,y){
+  if(story.stormOver)return false;
+  const visual={fire:[48,66,10],hut:[96,117,13],dryberries:[28,39,8],drycoconut:[28,39,8]}[type];
+  if(!visual)return false;
+  const [halfWidth,top,bottom]=visual;
+  return objs.some(o=>o.type==='sosSpot'&&Math.abs(o.x-x)<119+halfWidth
+    &&y-top<o.y+31&&y+bottom>o.y-42);
+}
 function canPlace(type,x,y){
+  if(coversSos(type,x,y))return false;
   const [w,h]=SOLID[type];
   if(Math.hypot(x-st.x,y-st.y)>165||Math.abs(x-st.x)<w+6&&Math.abs(y-st.y)<h+5) return false;
   if((MAP.exits||[]).some(e=>e.side==='left'?x-w<44:x+w>WORLD.w-44)) return false;
@@ -1095,6 +1112,9 @@ function updatePlacement(){
     placement.y=Math.round(st.y+dy*(h+27));
   }
   actBtn.disabled=!canPlace(placement.recipe.id,placement.x,placement.y);
+  if(placement.manual&&coversSos(placement.recipe.id,placement.x,placement.y)){
+    hint('구조 신호가 잘 보이도록 SOS 옆에 놓으세요',1.2);
+  }
   if(placement.recipe.id==='hut'){
     if(!placement.dirManual)placement.dir=bestHutDirection(placement.x,placement.y);
     const visible=hutFire(placement);
@@ -1202,6 +1222,21 @@ hutSleep.addEventListener('click',()=>{
   advanceCamp(cycleLength()-camp.time);resting=false;renderHutChoices();
 });
 document.getElementById('hutExit').addEventListener('click',()=>{if(!dialoguePinned)moveThroughHut(null);});
+function drawStormRain(g,x0,y0){
+  const count=Math.round(Math.min(210,Math.max(96,VW*VH/1650)));
+  for(let layer=0;layer<2;layer++){
+    g.beginPath();g.lineWidth=layer?.85:1.6;
+    g.strokeStyle=layer?'rgba(191,219,238,.29)':'rgba(207,232,247,.50)';
+    const speed=layer?510:680;
+    for(let i=layer;i<count;i+=2){
+      const len=(layer?10:25)+(i*17%13);
+      const x=x0+(i*89+st.t*speed*.41)%(VW+40)-20;
+      const y=y0+(i*157+st.t*speed)%(VH+48)-24;
+      g.moveTo(x,y);g.lineTo(x+len*.42,y+len);
+    }
+    g.stroke();
+  }
+}
 function drawHutView(){
   if(hutCanvas.width!==Math.round(VW*dpr)||hutCanvas.height!==Math.round(VH*dpr)){
     hutCanvas.width=Math.round(VW*dpr);hutCanvas.height=Math.round(VH*dpr);
@@ -1213,8 +1248,8 @@ function drawHutView(){
   const f=hutFire(insideHut);
   if(f&&IMG.camp.naturalWidth){
     const x=VW/2+Math.max(-VW*.23,Math.min(VW*.23,f.side/135*VW*.23));
-    const y=Math.min(VH*.86,Math.max(VH*.74,(VH-h)/2+h*(.80-Math.min(.025,f.forward/9000))));
-    const s=Math.max(.34,.75-f.forward/475);
+    const y=Math.min(VH*.90,Math.max(VH*.81,(VH-h)/2+h*(.85-Math.min(.027,f.forward/8500))));
+    const s=Math.min(1.05,Math.max(.52,1.10-f.forward/525));
     const lit=f.fire.fuel>0, frame=lit?1+Math.floor(st.t*7)%3:0;
     if(night&&lit&&typeof hutCtx.createRadialGradient==='function'){
       const grd=hutCtx.createRadialGradient(x,y-6,4,x,y-4,79);
@@ -1226,10 +1261,8 @@ function drawHutView(){
   if(story.stormNight&&night){
     hutCtx.save();hutCtx.beginPath();hutCtx.moveTo(VW*.49,VH*.21);
     hutCtx.lineTo(VW*.96,VH*.81);hutCtx.lineTo(VW*.07,VH*.81);hutCtx.closePath();hutCtx.clip();
-    hutCtx.strokeStyle='#add3e063';hutCtx.beginPath();
-    for(let i=0;i<44;i++){const x=(i*67+st.t*180)%VW,y=(i*113+st.t*375)%VH;
-      hutCtx.moveTo(x,y);hutCtx.lineTo(x-7,y+13);}
-    hutCtx.stroke();hutCtx.restore();
+    drawStormRain(hutCtx,0,0);
+    hutCtx.restore();
   }
   positionDialogue();
 }
@@ -1455,7 +1488,7 @@ function drawShadow(cx,cy,w,box){
 const sprOf=o=>o.type==='palm'&&o.spr?o.spr:o.type==='looseRocks'?'rock_pile':o.type==='smallRocks'?'stone':o.type==='vineCut'?'rock_pile':o.type;
 const storyArt={palmLeaf:[0,52],waterBottle:[3,37]};
 const customArt={sharp:[0,67,47],vineRock:[1,128,128],vineBundle:[2,83,61]};
-function shadowWidth(o){ if(o.type==='gate'||o.type==='felled')return 102; if(o.type==='beacon')return story.beaconLit&&!story.stormOver?130:66; if(o.type==='dryberries')return 37; if(['sosSpot','palmLeaf','waterBottle'].includes(o.type))return 13; if(o.type==='tree')return 46; if(customArt[o.type])return o.type==='vineRock'?58:25; if(o.type==='fire'||o.type==='hut') return SOLID[o.type][0]*2; const m=OB[sprOf(o)]; if(o.type==='tree') return m[2]/K*0.5; if(o.type==='palm') return m[2]/K*0.42; if(o.type==='crate') return m[2]/K*1.02; return m[6]/K*1.05; }   // 상자: 몸 너비 전체
+function shadowWidth(o){ if(o.type==='gate'||o.type==='felled')return 102; if(o.type==='beacon')return story.beaconLit?130:66; if(dryingFood[o.type])return 37; if(['sosSpot','palmLeaf','waterBottle'].includes(o.type))return 13; if(o.type==='tree')return 46; if(customArt[o.type])return o.type==='vineRock'?58:25; if(o.type==='fire'||o.type==='hut') return SOLID[o.type][0]*2; const m=OB[sprOf(o)]; if(o.type==='tree') return m[2]/K*0.5; if(o.type==='palm') return m[2]/K*0.42; if(o.type==='crate') return m[2]/K*1.02; return m?m[6]/K*1.05:30; }   // 상자: 몸 너비 전체
 function drawSos(x,y){
   ctx.save();ctx.translate(x,y-5);ctx.scale(1,.57);
   ctx.lineJoin='round';ctx.lineCap='round';
@@ -1486,8 +1519,9 @@ function drawObj(o){
   }
   if(dryingFood[o.type]){
     if(IMG.story.naturalWidth)ctx.drawImage(IMG.story,0,0,48,48,o.x-28,o.y-39,56,47);
-    if(o.type==='drycoconut'&&IMG.chips.naturalWidth)ctx.drawImage(IMG.chips,o.x-14,o.y-25,28,27);
-    else if(camp.day>=o.readyDay&&IMG.cooking.naturalWidth)
+    if(o.type==='drycoconut'){
+      if(IMG.chips.naturalWidth)ctx.drawImage(IMG.chips,o.x-14,o.y-25,28,27);
+    }else if(camp.day>=o.readyDay&&IMG.cooking.naturalWidth)
       ctx.drawImage(IMG.cooking,48,0,48,48,o.x-13,o.y-20,26,26);
     else {
       ctx.fillStyle='#8e3444';
@@ -1506,8 +1540,11 @@ function drawObj(o){
     return;
   }
   if(o.type==='beacon'){
-    const lit=story.beaconLit&&isNight()===false&&!story.stormOver;
-    if(!lit){
+    const lit=story.beaconLit&&((story.beaconLitDay||1)===camp.day)&&!story.stormNight&&!story.stormOver;
+    if(story.beaconLit&&!lit&&IMG.beaconAsh.naturalWidth){
+      const w=142,h=w*IMG.beaconAsh.naturalHeight/IMG.beaconAsh.naturalWidth;
+      ctx.drawImage(IMG.beaconAsh,o.x-w/2,o.y-h+7,w,h);
+    }else if(!lit){
       const [sx,sy,sw,sh,fx,fy]=OB.driftwood;
       for(const [x,y] of [[-18,0],[10,-5],[-2,-19]])
         ctx.drawImage(IMG.objs,sx,sy,sw,sh,o.x+x-fx/K,o.y+y-fy/K,sw/K,sh/K);
@@ -1805,7 +1842,7 @@ function hitNow(t){
     }else if(!story.signalPrepared){
       hint('빠른 칸에서 돌도끼를 들어야 유목을 정리할 수 있어요',3.4);
     }else if(story.ember){
-      story.ember=false;story.beaconLit=true;
+      story.ember=false;story.beaconLit=true;story.beaconLitDay=camp.day;
       say('연기가 올라간다. 모래에도 멀리서 보이는 표시를 남기자.',true);
     }else hint('모닥불에서 불씨를 가져오세요',2.5);
     goal();
@@ -2010,6 +2047,12 @@ function drawRipples(x,y){
   ctx.globalAlpha=.55; ctx.fillStyle='#d8fbf2'; ctx.beginPath(); ctx.ellipse(x,y,15,3.5,0,0,Math.PI*2); ctx.fill();
   ctx.restore();
 }
+function drawThroughWaterline(depth,draw){
+  if(depth>1){
+    ctx.save();ctx.beginPath();ctx.rect(st.x-200,st.y-400,400,400-depth);ctx.clip();
+    draw();ctx.restore();
+  }else draw();
+}
 function drawPlayer(){
   if(sleepScene?.night&&IMG.wake.naturalWidth){
     ctx.drawImage(IMG.wake,0,chosen==='boy'?0:184,192,184,st.x-96,st.y-159,192,184);
@@ -2034,8 +2077,12 @@ function drawPlayer(){
   }
   if(fishing){
     const pose=fishing.phase==='cast'?0:fishing.phase==='reel'?2:1;
-    if(fishing.front)drawFrontFishing(pose);
-    else drawFrame(ctx,chosen,'fish_side',pose,st.x,st.y,playerHeight,fishing.flip);
+    const depth=Math.round(Math.max(st.depth,waterDepth(st.x,st.y)));
+    drawThroughWaterline(depth,()=>{
+      if(fishing.front)drawFrontFishing(pose);
+      else drawFrame(ctx,chosen,'fish_side',pose,st.x,st.y,playerHeight,fishing.flip);
+    });
+    if(depth>1)drawRipples(st.x,st.y-depth);
     return;
   }
   let anim,i,ox=0;
@@ -2047,11 +2094,8 @@ function drawPlayer(){
   else { anim='stand'; i=0; }
   const [name,flip]=sprite(st.dir,anim);
   const d=Math.round(st.depth);
-  if(d>1){
-    ctx.save(); ctx.beginPath(); ctx.rect(st.x-200,st.y-400,400,400-d); ctx.clip();
-    drawFrame(ctx,chosen,name,i,st.x+ox,st.y,112,flip); ctx.restore();
-    if(d>KNEE*0.6) drawRipples(st.x,st.y-d);
-  } else drawFrame(ctx,chosen,name,i,st.x+ox,st.y,112,flip);
+  drawThroughWaterline(d,()=>drawFrame(ctx,chosen,name,i,st.x+ox,st.y,112,flip));
+  if(d>KNEE*0.6)drawRipples(st.x,st.y-d);
 }
 function inView(o){ const m=OB[sprOf(o)]; const w=m?m[2]/K:192, h=m?m[3]/K:130; return o.x+w>cam.x && o.x-w<cam.x+VW && o.y>cam.y-20 && o.y-h-160<cam.y+VH; }
 const nightLayer=document.createElement('canvas'), shade=nightLayer.getContext('2d');
@@ -2175,15 +2219,7 @@ function drawWorld(){
     }
     ctx.globalAlpha=1;
   }
-  if(story.stormNight&&isNight()){
-    ctx.strokeStyle='rgba(183,212,236,.28)';ctx.lineWidth=1;
-    ctx.beginPath();
-    for(let i=0;i<52;i++){
-      const x=cx+(i*79+st.t*190)%VW,y=cy+(i*107+st.t*405)%VH;
-      ctx.moveTo(x,y);ctx.lineTo(x-8,y-15);
-    }
-    ctx.stroke();
-  }
+  if(story.stormNight&&isNight())drawStormRain(ctx,cx,cy);
   ctx.font='16px Jua, sans-serif'; ctx.textAlign='center'; ctx.lineWidth=4; ctx.lineJoin='round';
   pops.forEach(p=>{ const y=p.y-p.t*24; ctx.globalAlpha=Math.max(0,1-p.t); ctx.strokeStyle='#1d1a12'; ctx.strokeText(p.text,p.x,y); ctx.fillStyle='#fff8ea'; ctx.fillText(p.text,p.x,y); });
   ctx.globalAlpha=1;
