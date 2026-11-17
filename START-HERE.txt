@@ -1,10 +1,12 @@
-표류섬 v34 · 기존 v33용 업데이트
+표류섬 v35 · v34용 GitHub 업데이트
 
-1. 기존 index.html이 있는 위치에 index.html, beach-audio.js, beacon_ash.png, version.json을 올립니다.
-2. 기존 audio 폴더 안에 hut.mp3를 올립니다.
-3. index.html 옆에 sw-castaway-isle.js를 마지막으로 올립니다.
-4. 공개 게임을 다시 열어 첫 화면의 v34를 확인합니다.
+1. ZIP을 먼저 풀어주세요.
+2. index.html이 있는 GitHub 저장소의 기존 위치에 다음 파일을 올립니다.
+   beach-audio.js, carried_ember.png, cliff_mask.png, index.html,
+   shore_items.png, shore_seated.png, version.json
+3. GitHub에서 기존 audio 폴더로 들어가 files.json을 덮어씁니다.
+   이미 올려둔 day.mp3, night.mp3, hut.mp3와 나머지 음원은 그 폴더에 그대로 둡니다.
+4. index.html과 같은 위치에 sw-castaway-isle.js를 마지막으로 올립니다.
+5. 배포가 끝난 뒤 게임을 다시 열어 시작 화면에 v35가 표시되는지 확인합니다.
 
-코코넛칩 건조대 설치 후 화면 멈춤, 봉화 잔해와 SOS 가림, 얕은 물 낚시,
-퀘스트 표시, 움막 대사와 모닥불, 비 표현, 생명 막대와 음식 회복을 수정했습니다.
-움막에서만 들리는 약 29초의 짧은 연주곡을 이 빌드용으로 새로 만들었습니다.
+START-HERE.txt는 안내문이므로 GitHub에 올릴 필요가 없습니다.

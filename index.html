@@ -198,14 +198,23 @@
   .gauges.hungry .g.hp svg{animation:lowPulse 1.7s ease-in-out infinite}@keyframes lowPulse{50%{opacity:.45}}
   .objective strong{color:#ffdf9c;font-size:14px}.objective small{color:#fbefdb;font-size:12px}
   .hint{top:calc(env(safe-area-inset-top) + 117px)}
-  .say{position:absolute;z-index:6;max-width:min(77%,290px);width:max-content;text-align:left;padding:8px 11px;
+  .say{position:absolute;z-index:8;max-width:min(52%,190px);width:max-content;text-align:left;padding:7px 9px;word-break:keep-all;overflow-wrap:anywhere;
     background:#fff1d6;color:#2b201d;border:2px solid #4c372b;border-radius:9px;font-size:14px;line-height:1.35;box-shadow:0 2px #281e19a0;pointer-events:none}
   .say:after{content:"";position:absolute;bottom:-7px;left:var(--tail,50%);width:10px;height:10px;transform:rotate(45deg);background:#fff1d6;border-right:2px solid #4c372b;border-bottom:2px solid #4c372b}
   .say.thought:after{bottom:-9px;width:6px;height:6px;border:0;border-radius:50%;box-shadow:4px 5px 0 -1px #fff1d6}
   .say.side:after{bottom:auto;top:var(--tail-y,50%)}
   .say.side.right:after{left:-6px;transform:rotate(135deg)}
   .say.side.left:after{left:auto;right:-6px;transform:rotate(-45deg)}
-  .say.interactive{pointer-events:auto;cursor:pointer}.say small{font-size:10px;margin-left:6px;color:#745136;white-space:nowrap}
+  .say.interactive{pointer-events:auto;cursor:pointer}.say small{display:block;margin-top:3px;text-align:right;font-size:11px;color:#745136}
+  .say.below:after{top:-7px;bottom:auto;transform:rotate(225deg)}
+  .say.noTail:after{display:none}
+  .talkTap{position:absolute;inset:0;z-index:7;border:0;background:none;touch-action:manipulation}
+  .exitCue{position:absolute;z-index:2;right:8px;top:45%;display:flex;align-items:center;gap:5px;pointer-events:none;padding:4px 7px;color:#fff2d2;background:#30251ddc;border:1px solid #b98b55;border-radius:5px;font-size:12px}
+  .exitCue.back{left:8px;right:auto}.exitCue.jungle{left:50%;right:auto;top:calc(env(safe-area-inset-top) + 68px);transform:translateX(-50%)}
+  .ic.ember{background:url(carried_ember.png) center/contain no-repeat}
+  .ic.conchIcon,.ic.clamIcon,.ic.scallopIcon,.ic.tideFish{background:url(shore_items.png) 0 0/400% 100%}
+  .ic.clamIcon{background-position:33.333% 0}.ic.scallopIcon{background-position:66.667% 0}.ic.tideFish{background-position:100% 0}
+  .ic.mapPiece{background:url(paper_beach_map.png) 2% 48%/390% auto;clip-path:polygon(8% 12%,88% 5%,83% 27%,98% 40%,86% 55%,96% 77%,76% 91%,53% 83%,41% 98%,6% 84%);border:2px solid #c5a473}
   .storyIcon{background-image:url(beach_story_items.png);background-size:900% 100%}
   .ic.leaf,.ic.fiber,.ic.pot,.ic.waterBottle,.ic.emptyBottle,.ic.rod,.ic.rawFish,.ic.cookedFish,.ic.flame{background-image:url(beach_story_items.png);background-size:900% 100%}
   .ic.leaf{background-position:0 0}.ic.fiber{background-position:12.5% 0}.ic.pot{background-position:25% 0}
@@ -285,7 +294,7 @@
   .clockTime{position:absolute;top:calc(100% + 7px);left:0;width:max-content;max-width:165px;pointer-events:none;
     padding:6px 8px;border:1px solid #ab8157;border-radius:4px;background:#30251bee;color:#fff0d5;font-size:12px}
   .objective{top:calc(env(safe-area-inset-top) + 76px);z-index:3;box-sizing:border-box;
-    width:clamp(123px,37%,155px);padding:0;gap:4px;border:0;background:none;box-shadow:none}
+    width:clamp(120px,37%,148px);padding:0;gap:4px;border:0;background:none;box-shadow:none}
   .objective .questHeading{font-size:14px;font-weight:700;color:#ffebbe;padding:0 3px;text-shadow:0 1px 3px #24170e,0 0 6px #24170e}
   .questBox{box-sizing:border-box;padding:5px 7px;max-height:min(24dvh,160px);overflow-y:auto;overscroll-behavior:contain;pointer-events:auto;
     border:1px solid #b98b55;border-radius:5px;background:#30251ceb;box-shadow:inset 0 0 0 2px #1c1813b8,0 2px 4px #170e0844}
@@ -302,7 +311,7 @@
   .sceneCurtain:not([hidden]){pointer-events:auto}
   .hud .gauges{gap:2px}
   .questMore{pointer-events:auto;display:block;margin:3px 0 0 auto;background:none;border:0;padding:4px 0;color:#fbd486;font:inherit;cursor:pointer}
-  #gameScreen.indoors .say{z-index:9;width:min(84%,290px)}
+  #gameScreen.indoors .say{z-index:9;max-width:min(58%,190px)}
   #gameScreen.indoors .say::after{display:none}
   .hint{top:auto;bottom:calc(env(safe-area-inset-bottom) + 88px);z-index:3}
   .soundSettings{margin:8px 0;padding:8px 10px;border:1px solid #b98b556f;border-radius:6px;text-align:left}
@@ -349,7 +358,9 @@
     <div class="questBox"><ol id="questList" aria-live="polite"></ol>
     <button type="button" class="questMore" id="questMore" aria-controls="questList" aria-expanded="false" hidden>더보기</button></div>
   </section>
+  <button type="button" class="talkTap" id="talkTap" tabindex="-1" aria-label="대사 계속" hidden></button>
   <button type="button" class="say" id="dialogue" hidden></button>
+  <div class="exitCue" id="exitCue" hidden></div>
   <p class="hint" id="hint" aria-live="polite"></p>
   <div class="craft" id="craftCard" hidden><span class="ic" id="craftIcon"></span><span class="craftInfo"><strong id="craftText"></strong><small id="craftMats"></small></span><button type="button" id="craftBtn">만들기</button><button type="button" class="x" id="craftX" aria-label="닫기">✕</button></div>
   <div class="joyzone" id="joyzone" aria-label="이동: 왼쪽 아래 아무 곳이나 누르고 밀기"><div class="joy" id="joy"><svg viewBox="-10 -10 124 124" aria-hidden="true" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><circle class="rim" cx="52" cy="52" r="49"/><circle class="inset" cx="52" cy="52" r="44"/><path d="M43 15l9-9 9 9M43 89l9 9 9-9M15 43l-9 9 9 9M89 43l9 9-9 9"/></svg><div class="knob" id="knob"></div></div></div>
@@ -357,7 +368,7 @@
   <button type="button" class="placeX" id="cancelPlace" aria-label="배치 취소" hidden>×</button>
   <div class="hutAim" id="hutAim" hidden><button type="button" id="rotateHut">입구 돌리기</button><span id="hutAimText"></span></div>
   <div class="hutView" id="hutView" hidden><canvas id="hutCanvas" aria-label="움막 안에서 바라본 해변"></canvas></div>
-  <div class="hutChoices" id="hutChoices" hidden><button type="button" id="hutRest" aria-pressed="false">쉬기</button><button type="button" id="hutSleep">잠자기</button><button type="button" id="hutExit">나가기</button></div>
+  <div class="hutChoices" id="hutChoices" hidden><button type="button" id="hutRest">저녁까지 쉬기</button><button type="button" id="hutSleep">잠자기</button><button type="button" id="hutExit">나가기</button></div>
   <div class="campChoices" id="campChoices" hidden></div>
   <div class="quickHint" id="quickHint" hidden></div>
   <div class="quickBar" id="quickBar" aria-label="빠른 선택">
@@ -413,7 +424,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='34', NOTE="코코넛 칩 제작 오류, 봉화·SOS, 물속 낚시, 퀘스트와 움막을 수정했어요.";
+const APP='castaway-isle', APP_V='35', NOTE="움막과 태풍 진행, 낚시·요리, 썰물 탐색과 손에 든 불씨를 업데이트했어요.";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -449,7 +460,9 @@ IMG.chips=new Image(); IMG.chips.src='coconut-chips.png';
 IMG.camp=new Image();
 IMG.camp.src='beach_camp.png';
 IMG.tools=new Image(); IMG.tools.src='beach_tools.png';
-IMG.cliff=new Image(); IMG.cliff.src='cliff_front.png';
+IMG.cliffMask=new Image();IMG.cliffMask.src='cliff_mask.png';
+IMG.seated=new Image();IMG.seated.src='shore_seated.png';
+IMG.ember=new Image();IMG.ember.src='carried_ember.png';
 IMG.felled=new Image(); IMG.felled.src='felled_tree.png';
 IMG.beaconAsh=new Image(); IMG.beaconAsh.src='beacon_ash.png';
 IMG.signal=new Image();IMG.signal.src='beacon_lit.png';
@@ -468,8 +481,8 @@ const SRC_H = 230;
 // The waiting poses include a short painted line below the tip. Draw the
 // runtime line there instead, keeping the original rod and guide rings.
 const fishingRodArt = {
-  boy:{tip:[161,15],oldLine:[161,19]},
-  girl:{tip:[168,24],oldLine:[162,28]},
+  boy:{tips:[[163,1],[161,15],[128,5]],oldLine:[161,19]},
+  girl:{tips:[[4,11],[168,24],[156,12]],oldLine:[162,28]},
 };
 const playerHeight=112;
 function drawFrame(c, ch, anim, i, x, y, h, flip){
@@ -477,6 +490,14 @@ function drawFrame(c, ch, anim, i, x, y, h, flip){
   const f = list[i % list.length], im = IMG[f[6]?ch+'_'+f[6]:ch]; if(!im.complete) return;   // 'x' = 나중에 받은 동작 묶음
   const [sx,sy,sw,sh,ax,ay] = f, s = h/SRC_H*((FRAMES[ch]._fix||{})[anim]||1);   // 줍기 그림은 크게 그려져 있어 줄임
   c.save(); c.translate(x,y); if(flip) c.scale(-1,1);
+  if(anim==='fish_side'&&i!==1){
+    const cut=ch==='boy'?(i===0?[[166,0],[185,0],[185,67],[102,67],[104,53],[170,19],[170,5]]:
+      [[129,7],[153,7],[153,46],[139,46],[125,9]]):
+      (i===0?[[0,13],[9,14],[38,63],[0,79]]:[[155,13],[169,11],[169,50],[155,50]]);
+    c.beginPath();c.rect(-ax*s,-ay*s,sw*s,sh*s);
+    cut.forEach(([px,py],index)=>c[index?'lineTo':'moveTo']((px-ax)*s,(py-ay)*s));
+    c.closePath();c.clip('evenodd');
+  }
   if(anim==='fish_side'&&i===1){
     const [maskX,maskY]=fishingRodArt[ch].oldLine;
     c.drawImage(im,sx,sy,sw,maskY,-ax*s,-ay*s,sw*s,maskY*s);
@@ -511,10 +532,10 @@ function startGame(){
   history.pushState({game:1},'');                  // 뒤로가기 → 첫 화면 (앱 밖으로 안 나감)
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden)beachAudio.scene(false);});
-function toTitle(){ cancelHutTransition();beachAudio.scene(false); fishing=null; closeDiscovery(); sleepScene=null; leaveHut(); clearDialogue(); cancelQuick(); closeCampOptions(); cancelPlacement(); menu.hidden=true; closeBag(); gameScreen.hidden=true; selectScreen.hidden=false; actHeld=false; }
+function toTitle(){ cancelHutTransition();hutSleepScene=0;faintScene=0;seated=false;cookingScene=null;fishingBait=null;beachAudio.scene(false); fishing=null; closeDiscovery(); sleepScene=null; leaveHut(); clearDialogue(); cancelQuick(); closeCampOptions(); cancelPlacement(); menu.hidden=true; closeBag(); gameScreen.hidden=true; selectScreen.hidden=false; actHeld=false; }
 document.getElementById('startBtn').addEventListener('click',startGame);
 addEventListener('popstate',()=>{ if(!menu.hidden||!bagEl.hidden){ menu.hidden=true; closeBag(); history.pushState({game:1},''); return; } if(!gameScreen.hidden) toTitle(); });
-document.getElementById('menuBtn').addEventListener('click',()=>{ if(sleepScene||discovery||hutTransition)return; cancelQuick(); closeCampOptions(); cancelPlacement(); closeBag(); menu.hidden=false; actHeld=false; });
+document.getElementById('menuBtn').addEventListener('click',()=>{ if(sleepScene||discovery||hutTransition||hutSleepScene||faintScene||cookingScene)return; cancelQuick(); closeCampOptions(); cancelPlacement(); closeBag(); menu.hidden=false; actHeld=false; });
 document.getElementById('resumeBtn').addEventListener('click',()=>{ menu.hidden=true; });
 document.getElementById('toTitleBtn').addEventListener('click',()=>{ toTitle(); if(history.state&&history.state.game) history.back(); });
 menu.addEventListener('click',e=>{ if(e.target===menu) menu.hidden=true; });
@@ -527,9 +548,43 @@ for(const k in BEACH.zones){ const Z=BEACH.zones[k], g=new Uint8Array(Z.w*Z.h);
   Z.rle.forEach((row,r)=>{ let c=0; for(const p of row.split(',')){ const v=+p[0], n=+p.slice(1); g.fill(v,r*Z.w+c,r*Z.w+c+n); c+=n; } });
   ZONES[k]={Z,g}; }
 let cur='beachA', Z=ZONES[cur].Z, ZG=ZONES[cur].g, MAP=MAPS[cur];
-function zoneAt(x,y){
-  const c=Math.min(Z.w-1,Math.max(0,Math.floor(x/Z.cell))), r=Math.min(Z.h-1,Math.max(0,Math.floor(y/Z.cell)));
+const tidalPath=[[1112,725],[1142,734],[1177,745],[1203,758],[1218,772],[1217,782],[1206,790],[1176,785],[1144,775],[1111,765],[1092,751]];
+const tideDigSites=[{x:1148,y:752,item:'clam'},{x:1178,y:764,item:'shell'},{x:1198,y:774,item:'stone'},{x:1152,y:768,item:'scallop'}];
+const shoreSeat={type:'shoreSeat',x:818,y:755};
+let tideHeld=false;
+function inTidalPath(x,y){
+  if(x<1092||x>1218||y<725||y>790)return false;
+  let inside=false;
+  for(let i=0,j=tidalPath.length-1;i<tidalPath.length;j=i++){
+    const [ax,ay]=tidalPath[i],[bx,by]=tidalPath[j];
+    if((ay>y)!==(by>y)&&x<(bx-ax)*(y-ay)/(by-ay)+ax)inside=!inside;
+  }
+  return inside;
+}
+function lowTide(){
+  return camp.day>=2&&!story.stormNight&&camp.time>=dayLength()*.18&&camp.time<dayLength()*.64;
+}
+function exposedTide(){return lowTide()||tideHeld;}
+function groundZone(x,y){
+  const c=Math.min(Z.w-1,Math.max(0,Math.floor(x/Z.cell))),r=Math.min(Z.h-1,Math.max(0,Math.floor(y/Z.cell)));
   return ZG[r*Z.w+c];
+}
+function zoneAt(x,y){
+  const original=groundZone(x,y);
+  if(cur==='beachB'&&original>=2&&original<=4&&inTidalPath(x,y)){
+    if(exposedTide())return 2;
+    if(original>=3)return 4;
+  }
+  return original;
+}
+function updateTide(){
+  if(cur!=='beachB'){tideHeld=false;return;}
+  const onPath=inTidalPath(st.x,st.y)&&groundZone(st.x,st.y)>=3;
+  if(lowTide()){tideHeld=onPath;return;}
+  if(!onPath){tideHeld=false;return;}
+  if(tideHeld&&!seenHints.has('tideRising')){
+    seenHints.add('tideRising');hint('물이 차오르고 있어요. 왔던 모래길로 돌아갈 수 있어요.',3);
+  }
 }
 // 물에 잠기는 깊이: 발에서 위로 물가까지의 거리 (물가에 막 들어서면 조금, 안쪽으로 갈수록 무릎까지)
 const isWater=z=>z===3||z===4, BLOCK=z=>z>=4&&z<=6;
@@ -551,17 +606,19 @@ const BUSH = {bush_berry:1, bush_empty:1};
 // 이름 (가까이 가면 위에 뜸)
 const NAME = {drycoconut:'코코넛 말리는 자리',dryberries:'열매 말리는 자리',palmLeaf:'야자잎',waterBottle:'이름표 달린 물병',beacon:'유목 더미',sosSpot:'마른 모래',fishWater:'낚싯대를 던져보세요',crate:'떠밀려 온 상자',looseRocks:'길가의 돌무더기',smallRocks:'남은 돌무더기',gate:'쓰러진 나무', wreck:'난파선', sharp:'뾰족한 돌', vineRock:'바위에 감긴 덩굴', vineBundle:'잘라낸 덩굴', fire:'모닥불', hut:'움막', branch:'나뭇가지', crab:'게', tree:'나무', palm:'야자수', coconut:'코코넛', shell_conch:'소라 껍데기', shell_clam:'대합', shell_scallop:'가리비', stone:'돌', vine:'덩굴', driftwood:'유목', bush_berry:'열매 덤불'};
 // 가방에 들어가는 것: [아이콘, 이름]
-const ITEMS = {coconutChips:['coconutChips','코코넛 칩'],clam:['shell','조개'],cookedClam:['cookedClam','삶은 조개'],driedBerry:['driedBerry','말린 열매'],leaf:['leaf','야자잎'],fiber:['fiber','마른 야자 섬유'],pot:['pot','작은 냄비'],rod:['rod','낡은 낚싯대'],
-  waterBottle:['waterBottle','이름표 달린 물병'],emptyBottle:['emptyBottle','빈 물병'],rawFish:['rawFish','은빛 물고기'],stripedFish:['stripedFish','줄무늬 물고기'],blueFish:['blueFish','푸른 물고기'],cookedFish:['fishSoup','생선 수프'],fruitFish:['fruitFish','열매 생선 수프'],fruitClam:['fruitClam','과일 조개찜'],sharp:['sharp','돌칼'], mapPiece:['wood','찢어진 지도 조각'], axe:['axe','돌도끼'], branch:['branch','나뭇가지'], wood:['wood','목재'], coconut:['coconut','코코넛'], berries:['berries','열매'], shell:['shell','조개'], stone:['stone','돌'], vine:['vineBundle','덩굴']};
+const ITEMS = {coconutChips:['coconutChips','코코넛 칩'],clam:['clamIcon','대합'],scallop:['scallopIcon','가리비'],cookedClam:['cookedClam','삶은 조개'],driedBerry:['driedBerry','말린 열매'],leaf:['leaf','야자잎'],fiber:['fiber','마른 야자 섬유'],pot:['pot','작은 냄비'],rod:['rod','낡은 낚싯대'],
+  waterBottle:['waterBottle','이름표 달린 물병'],emptyBottle:['emptyBottle','빈 물병'],rawFish:['rawFish','은빛 물고기'],stripedFish:['stripedFish','줄무늬 물고기'],blueFish:['blueFish','푸른 물고기'],tideFish:['tideFish','금지느러미 물고기'],tideSoup:['fishSoup','금지느러미 수프'],cookedFish:['fishSoup','생선 수프'],fruitFish:['fruitFish','열매 생선 수프'],fruitClam:['fruitClam','과일 조개찜'],sharp:['sharp','돌칼'], mapPiece:['mapPiece','찢어진 지도 조각'], axe:['axe','돌도끼'], branch:['branch','나뭇가지'], wood:['wood','목재'], coconut:['coconut','코코넛'], berries:['berries','열매'], shell:['conchIcon','빈 소라 껍데기'], stone:['stone','돌'], vine:['vineBundle','덩굴']};
 // 가방 칸: 음식·도구만 칸 수 제한 (음식은 한 칸에 같은 것 5개까지), 재료는 개수 제한 없음
-const CATCH_TYPES=['rawFish','stripedFish','blueFish'];
-const FOODS=['coconut','coconutChips','berries','cookedFish','cookedClam','driedBerry','fruitFish','fruitClam','waterBottle'];
+const CATCH_TYPES=['rawFish','stripedFish','blueFish','tideFish'];
+const BAIT_TYPES=['rawFish','stripedFish','clam','scallop'];
+let fishingBait=null,cookingScene=null;
+const FOODS=['coconut','coconutChips','berries','cookedFish','cookedClam','driedBerry','fruitFish','fruitClam','tideSoup','waterBottle'];
 const TOOLS=['sharp','axe','rod','pot','emptyBottle'];
 const USABLE=[...FOODS,'sharp','axe','rod'];
-const MATS=['wood','branch','stone','vine','leaf','fiber','shell','clam','mapPiece',...CATCH_TYPES];
+const MATS=['wood','branch','stone','vine','leaf','fiber','shell','clam','scallop','mapPiece',...CATCH_TYPES];
 const FOOD_SLOTS=12, TOOL_SLOTS=6, STACK=5;
-const EAT = {coconut:{food:12,water:8},coconutChips:{food:42},berries:{food:3},cookedFish:{food:17},cookedClam:{food:12},driedBerry:{food:12},fruitFish:{food:30,hp:8},fruitClam:{food:24,hp:6},waterBottle:{water:27}};   // 먹으면 오르는 양 (배고픔·목마름 100 기준)
-const PICK = {sharp:['sharp',1], vineBundle:['vine',2],palmLeaf:['leaf',1],waterBottle:['waterBottle',1], branch:['branch',1], coconut:['coconut',1], shell_conch:['shell',1], shell_clam:['clam',1], shell_scallop:['clam',1], stone:['stone',1], driftwood:['wood',1]};
+const EAT = {coconut:{food:12,water:8},coconutChips:{food:42},berries:{food:3},cookedFish:{food:17},cookedClam:{food:12},driedBerry:{food:12},fruitFish:{food:30,hp:8},fruitClam:{food:24,hp:6},tideSoup:{food:24,hp:18},waterBottle:{water:27}};   // 먹으면 오르는 양 (배고픔·목마름 100 기준)
+const PICK = {sharp:['sharp',1], vineBundle:['vine',2],palmLeaf:['leaf',1],waterBottle:['waterBottle',1], branch:['branch',1], coconut:['coconut',1], shell_conch:['shell',1], shell_clam:['clam',1], shell_scallop:['scallop',1], stone:['stone',1], driftwood:['wood',1]};
 // 가까이 가면 버튼이 바뀌는 것
 const A_CHOP={label:'베기', icon:'axe', anim:'chop'}, A_SHAKE_TREE={label:'흔들기', icon:'branch', anim:'shake'};
 const A_ROCKS={label:'돌 줍기',icon:'stone',anim:'pick'};
@@ -573,23 +630,26 @@ const ACTIONS = {
 for(const k in PICK) ACTIONS[k]={label:'줍기', icon:PICK[k][0], anim:'pick', when:o=>!o.fall};
 // 나무: 도끼가 없으면 흔들기(나뭇가지), 있으면 베기
 function actionOf(o){
+  if(o.type==='shoreSeat')return {label:seated?'일어나기':'잠깐 앉기',icon:'leaf',camp:true};
+  if(o.type==='sandHole'&&exposedTide()&&o.dugDay!==camp.day)
+    return {label:equipped==='sharp'?'모래 파기':'살펴보기',icon:'sharp',anim:'pick'};
   const drying=dryingFood[o.type];
   if(drying) return {label:camp.day>=o.readyDay?ITEMS[drying.result][1]+' 수거':'말리는 중',
     icon:camp.day>=o.readyDay?drying.result:drying.input,anim:'pick'};
   if(o.type==='fire'){
     const ember=story.signalPrepared&&!story.beaconLit&&!story.ember;
     return {label:o.fuel>0?(ember?'불씨 들기':'모닥불 메뉴'):'불 피우기',
-      icon:o.fuel>0&&!ember&&inv.pot?'pot':'flame',camp:true};
+      icon:ember&&o.fuel>0?'ember':o.fuel>0&&inv.pot?'pot':'flame',camp:true};
   }
-  if(o.type==='beacon'&&story.crateOpened&&!story.beaconLit) return {label:story.signalPrepared?'봉화 피우기':equipped==='axe'?'유목 정리':'도끼 필요',icon:story.signalPrepared?'flame':'axe',anim:story.signalPrepared?'pick':equipped==='axe'?'chop':'pick'};
+  if(o.type==='beacon'&&story.crateOpened&&!story.beaconLit) return {label:story.signalPrepared?'봉화 피우기':equipped==='axe'?'유목 정리':'도끼 필요',icon:story.signalPrepared?'ember':'axe',anim:story.signalPrepared?'pick':equipped==='axe'?'chop':'pick'};
   if(o.type==='sosSpot'&&story.beaconLit&&!story.sosDrawn&&!story.stormOver) return {label:'SOS 그리기',icon:'branch',anim:'pick'};
   if(o.type==='crate'&&!story.crateOpened) return {label:equipped==='axe'?'상자 부수기':'살펴보기',icon:equipped==='axe'?'axe':'wood',anim:equipped==='axe'?'chop':'pick'};
-  if(o.type==='fishWater'&&equipped==='rod') return {label:'낚시',icon:'rod'};
+  if(o.type==='fishWater'&&equipped==='rod') return {label:fishingBait&&inv[fishingBait]?'미끼로 낚기':'낚시',icon:'rod'};
   if(o.type==='hut'){
     const n=o.stage||0;
     return {label:n===0?'뼈대 세우기':n===1?'야자잎 덮기':'움막 들어가기',icon:n===1?'leaf':'wood',camp:true};
   }
-  if(o.type==='wreck'&&!inv.mapPiece) return {label:'난파선 살펴보기',icon:'wood',anim:'pick'};
+  if(o.type==='wreck'&&!inv.mapPiece) return {label:'난파선 살펴보기',icon:'mapPiece',anim:'pick'};
   if(o.type==='gate') return story.stormOver&&story.bottleFound&&equipped==='axe'
     ? {label:'가지 쳐내기',icon:'axe',anim:'chop'} : {label:'살펴보기',icon:'wood',anim:'pick'};
   if(o.type==='vineRock') return equipped==='sharp'
@@ -625,7 +685,13 @@ function resetStory(){
 const objective=document.getElementById('objective');
 const questList=document.getElementById('questList'),questMore=document.getElementById('questMore');
 let questsExpanded=false,lastQuestDisplay='',selectedQuest=null;
-questMore.addEventListener('click',()=>{questsExpanded=!questsExpanded;goal();});
+let questPage=0;
+questMore.addEventListener('click',()=>{
+  if(!questsExpanded){questsExpanded=true;questPage=0;}
+  else if(questMore.dataset.next==='true')questPage++;
+  else{questsExpanded=false;questPage=0;}
+  goal();
+});
 function renderQuests(title,detail,recipeId){
   const optional=[];
   if(!waking&&!story.gateOpen){
@@ -638,7 +704,8 @@ function renderQuests(title,detail,recipeId){
     if(inv.pot&&!seenHints.has('quest:cooked'))optional.push(['냄비로 요리하기','불이 켜진 모닥불에서 요리를 고르세요']);
   }
   if(!optional.length)questsExpanded=false;
-  const list=[[title,detail,recipeId],...(questsExpanded?optional:[])];
+  questPage=Math.min(questPage,Math.max(0,Math.ceil(optional.length/2)-1));
+  const list=[[title,detail,recipeId],...(questsExpanded?optional.slice(questPage*2,questPage*2+2):[])];
   const entries=list.map(([name,help,id])=>{
     const recipe=RECIPES.find(r=>r.id===id);
     return {name,help,recipe,ready:!!recipe&&canCraft(recipe)};
@@ -668,7 +735,9 @@ function renderQuests(title,detail,recipeId){
     return row;
   }));
   questMore.hidden=!optional.length;
-  questMore.textContent=questsExpanded?'접기 ▲':`더보기 +${optional.length} ▾`;
+  const remaining=optional.length-(questPage+1)*2;
+  questMore.dataset.next=String(remaining>0);
+  questMore.textContent=questsExpanded?(remaining>0?`더보기 +${remaining} ▾`:'접기 ▲'):`더보기 +${optional.length} ▾`;
   questMore.setAttribute('aria-expanded',String(questsExpanded));
 }
 function built(type){ return Object.values(world).flatMap(m=>m.objs).find(o=>o.type===type); }
@@ -701,10 +770,10 @@ function goal(){
   else {title=story.stormNight?'첫 태풍을 견디자':'움막에서 밤을 보내자';detail=story.stormNight?'파도가 잦아들 때까지 기다리세요':'구조 신호를 남겼어요';}
   renderQuests(title,detail,recipeId);
 }
-const dialogue=document.getElementById('dialogue');
+const dialogue=document.getElementById('dialogue'),talkTap=document.getElementById('talkTap');
 let dialogueLeft=0,dialoguePinned=false,dialogueNext=null,introPose=-1;
 function clearDialogue(){
-  dialogue.hidden=true;dialogueLeft=0;dialoguePinned=false;dialogueNext=null;
+  dialogue.hidden=true;talkTap.hidden=true;dialogueLeft=0;dialoguePinned=false;dialogueNext=null;
   gameScreen.classList.remove('speaking');
   if(insideHut)renderHutChoices();
   lastAct=null;
@@ -749,9 +818,17 @@ function survivalIdeas(){
     noticeOnce('east','모래사장이 동쪽으로 이어지네. 저쪽도 한번 살펴봐야겠어.');
 }
 function say(message,thought=false,pinned=false,next=null){
-  dialogueNext=next;
+  const limit=VW<360?36:45;
+  if(pinned&&message.length>limit){
+    const split=message.lastIndexOf(' ',limit);
+    const at=split>limit/2?split:limit;
+    const rest=message.slice(at).trim(), after=next;
+    next=()=>say(rest,thought,true,after);
+    message=message.slice(0,at).trim();
+  }
+  dialogueNext=next;talkTap.hidden=!pinned;
   dialogue.replaceChildren(document.createTextNode(message));
-  if(pinned){const more=document.createElement('small');more.textContent=insideHut?'말풍선을 눌러 계속':'오른쪽 버튼으로 계속';dialogue.appendChild(more);}
+  if(pinned){const more=document.createElement('small');more.textContent='계속 ▾';dialogue.appendChild(more);}
   dialogue.classList.toggle('thought',thought);
   dialogue.classList.toggle('interactive',pinned);
   dialogue.hidden=false;dialoguePinned=pinned;dialogueLeft=5.2;
@@ -762,30 +839,52 @@ function say(message,thought=false,pinned=false,next=null){
   }
 }
 dialogue.addEventListener('click',nextDialogue);
+talkTap.addEventListener('click',e=>{e.stopPropagation();if(dialoguePinned)nextDialogue();});
 function positionDialogue(){
   if(dialogue.hidden)return;
-  if(insideHut){
-    dialogue.classList.remove('side','right','left');
-    dialogue.style.left='50%';dialogue.style.top=Math.max(84,Math.round(VH*.21))+'px';
-    dialogue.style.bottom='';dialogue.style.transform='translateX(-50%)';return;
-  }
+  dialogue.classList.remove('side','right','left','below','noTail');
   dialogue.style.transform='';dialogue.style.bottom='';
-  const half=(dialogue.offsetWidth||180)/2, px=st.x-cam.x;
-  const x=Math.min(VW-half-8,Math.max(half+8,px));
-  const head=st.y-cam.y-111, h=dialogue.offsetHeight||50;
-  const roomLeft=px-28-half*2>=8,roomRight=px+28+half*2<=VW-8;
-  const card=objective.getBoundingClientRect();
-  const overlaps=x-half<card.right&&x+half>card.left;
-  const topMargin=overlaps?Math.max(76,card.bottom+8):76;
-  const side=head-h-12<topMargin&&(roomLeft||roomRight);
-  const right=side&&roomRight;
-  dialogue.classList.toggle('side',side);
-  dialogue.classList.toggle('right',right);
-  dialogue.classList.toggle('left',side&&!right);
-  dialogue.style.left=(side?(right?px+28:px-28-half*2):x-half)+'px';
-  dialogue.style.top=Math.min(VH-174,Math.max(topMargin,side?head-13:head-h-12))+'px';
-  dialogue.style.setProperty('--tail',Math.max(9,Math.min(half*2-13,px-x+half-5))+'px');
-  dialogue.style.setProperty('--tail-y','9px');
+  const w=dialogue.offsetWidth||160,h=dialogue.offsetHeight||50;
+  const root=gameScreen.getBoundingClientRect();
+  const hud=document.querySelector('.hud').getBoundingClientRect();
+  const top=Math.max(66,hud.bottom-root.top+8);
+  if(insideHut){
+    dialogue.style.left=(VW-w)/2+'px';
+    dialogue.style.top=Math.max(top,Math.round(VH*.18))+'px';
+    return;
+  }
+  const x=st.x-cam.x,y=st.y-cam.y;
+  const fitX=n=>Math.max(8,Math.min(VW-w-8,n));
+  const quest=objective.getBoundingClientRect();
+  const questBox={left:quest.left-root.left,right:quest.right-root.left,top:quest.top-root.top,bottom:quest.bottom-root.top};
+  const controls=document.getElementById('quickBar').getBoundingClientRect();
+  const bottom=Math.min(VH-142,controls.top>root.top?controls.top-root.top-8:VH-142);
+  const options=[
+    [fitX(x-w/2),y-116-h-12,'above'],
+    [x+38,Math.max(top,y-112),'right'],
+    [x-w-38,Math.max(top,y-112),'left'],
+    [fitX(x-w/2),y+16,'below'],
+  ];
+  const overlaps=(l,t)=>l<questBox.right&&l+w>questBox.left&&t<questBox.bottom&&t+h>questBox.top;
+  const spot=options.find(([l,t])=>l>=8&&l+w<=VW-8&&t>=top&&t+h<=bottom&&!overlaps(l,t));
+  const fallbackX=x>VW/2?8:VW-w-8;
+  const [l,t,where]=spot||[fallbackX,Math.max(top,overlaps(fallbackX,top)?questBox.bottom+6:top),'none'];
+  if(where==='left'||where==='right')dialogue.classList.add('side',where);
+  else if(where==='below')dialogue.classList.add('below');
+  else if(where==='none')dialogue.classList.add('noTail');
+  dialogue.style.left=l+'px';dialogue.style.top=t+'px';
+  dialogue.style.setProperty('--tail',Math.max(9,Math.min(w-17,x-l-5))+'px');
+  dialogue.style.setProperty('--tail-y',Math.max(9,Math.min(h-17,y-102-t))+'px');
+}
+const exitCue=document.getElementById('exitCue');
+function renderExitCue(){
+  const back=cur==='beachB', jungle=back&&story.gateOpen&&st.y<240&&st.x>710&&st.x<990;
+  const nearby=st.y>=395&&(back?st.x<145:st.x>WORLD.w-145);
+  const hidden=!!insideHut||(!nearby&&!jungle),state=hidden?'':jungle?'jungle':back?'back':'forward';
+  if(state===exitCue.dataset.state)return;
+  exitCue.dataset.state=state;exitCue.hidden=hidden;
+  exitCue.className='exitCue'+(jungle?' jungle':back?' back':'');
+  exitCue.textContent=jungle?'↑ 정글':back?'‹ A해변':'B해변 ›';
 }
 function resetWorld(){
   let pi=0; world={};
@@ -793,10 +892,13 @@ function resetWorld(){
     world[k]={
       objs: MAPS[k].objects.map(([type,x,y])=>{ const spr=type==='palm'?(pi++%2?'palm_s':'palm_b'):type;   // 야자수 모습은 번갈아, 수확은 한 그루당 하루 한 개
         const nuts=type==='palm'?1:0;
-        return {type,spr,x,y,hp:type==='tree'?4:type==='crate'?2:0,branches:type==='tree'?2:0,nuts,maxNuts:nuts,leafDropped:false,shake:0,fall:0}; }),
+        return {type,spr,x,y,hp:type==='tree'?10:type==='crate'?2:0,branches:type==='tree'?2:0,nuts,maxNuts:nuts,leafDropped:false,shake:0,fall:0}; }),
       crabs: MAPS[k].crabs.map(([x,y])=>({x,y,hx:x,hy:y,dir:Math.random()<.5?-1:1,mode:'idle',timer:Math.random()*2,dist:0,f:0}))};
   }
-  equipped=null; ignition=null; resetStory(); quick.fill(null); cancelQuick(); closeCampOptions(); clearDialogue(); waking=.72;
+  world.beachA.objs.push({...shoreSeat,shake:0,fall:0});
+  world.beachB.objs.push(...tideDigSites.map(site=>({...site,type:'sandHole',shake:0,fall:0})));
+  tideHeld=false;seated=false;
+  equipped=null; ignition=null; cookingScene=null; fishingBait=null; resetStory(); quick.fill(null); cancelQuick(); closeCampOptions(); clearDialogue(); waking=.72;
   told={}; camp.elapsed=0; camp.day=1; camp.time=0; camp.cold=false; renderClock();
   document.getElementById('craftCard').hidden=true;
   inv=Object.fromEntries(Object.keys(ITEMS).map(k=>[k,0])); st.inv=inv; renderInv();
@@ -811,8 +913,8 @@ function enterMap(k,x,y,first){
   if(k==='beachB')story.visitedB=true;
   cur=k; Z=ZONES[k].Z; ZG=ZONES[k].g; MAP=MAPS[k]; objs=world[k].objs; crabs=world[k].crabs; leaves=[];
   for(let d=0; d<400 && !walkable(x,y); d+=4){ if(walkable(x,y-d)){ y-=d; break; } if(walkable(x,y+d)){ y+=d; break; } }   // 넘어간 자리가 물·물건이면 가까운 땅으로
-  fishing=null;
-  st.x=x; st.y=y; st.depth=waterDepth(x,y); st.act=null; st.target=null; camInit=true; lastAct=null;
+  fishing=null;tideHeld=false;seated=false;
+  st.x=x; st.y=y;renderExitCue(); st.depth=waterDepth(x,y); st.act=null; st.target=null; camInit=true; lastAct=null;
   cv.setAttribute('aria-label',MAP.name);
   leaveHut();cancelPlacement(); closeCampOptions(); cancelQuick(); clearDialogue();
   document.getElementById('craftCard').hidden=true; cardRec=null;
@@ -957,7 +1059,7 @@ function renderQuick(){
   }
 }
 let bagTab='bag',selFood=null,pickSlot=null;
-function openBag(tab,slot=null){ if(gameScreen.hidden||!menu.hidden||waking||dialoguePinned||insideHut||buildMotion||sleepScene||discovery||hutTransition)return;
+function openBag(tab,slot=null){ if(gameScreen.hidden||!menu.hidden||waking||dialoguePinned||insideHut||buildMotion||sleepScene||discovery||hutTransition||hutSleepScene||faintScene||cookingScene)return;
   cancelQuick();closeCampOptions();cancelPlacement();pickSlot=slot;bagTab=tab||bagTab;bagEl.hidden=false;
   bagVeil.hidden=false;actHeld=false;jv=[0,0];renderBag();
 }
@@ -980,11 +1082,13 @@ const MATERIAL_HELP={
  vine:'돌도끼의 손잡이와 움막 뼈대를 묶는 데 써요.',
  leaf:'움막 지붕에 5장이 필요해요. 열매를 말릴 때는 받침으로 썼다가 돌려받아요.',
  fiber:'코코넛을 먹을 때 얻어요. 나뭇가지와 함께 모닥불을 피우는 데 써요.',
- clam:'물가에서 주운 대합이나 가리비. 냄비에서 삶아 먹을 수 있어요.',
+ clam:'냄비에서 삶아 먹거나 낚시 미끼로 쓸 수 있어요.',
+ scallop:'말린 열매와 찌면 허기와 하트를 회복해요. 미끼로도 쓸 수 있어요.',
  shell:'물가에서 주운 빈 소라 껍데기예요.',
  rawFish:'A해변 연안에서 잡히는 물고기예요. 냄비와 불을 쓰면 수프로 만들 수 있어요.',
  stripedFish:'B해변 연안에서 잡히는 물고기예요. 냄비와 불을 쓰면 수프로 만들 수 있어요.',
  blueFish:'깊은 물에서 잡히는 물고기예요. 냄비와 불을 쓰면 수프로 만들 수 있어요.',
+ tideFish:'물이 빠진 B해변 바위틈에서만 잡혀요. 수프로 만들면 하트를 크게 회복해요.',
  mapPiece:'옛 난파선에서 찾은 찢어진 지도 조각이에요.'
 };
 function renderBag(){
@@ -1021,7 +1125,13 @@ function renderBag(){
   bagBody.querySelectorAll('[data-material]').forEach(b=>b.addEventListener('click',()=>{
     const k=b.dataset.material;
     bagDetail.hidden=false;
-    bagDetail.innerHTML=`<span class="ic ${ITEMS[k][0]}"></span><div><strong>${ITEMS[k][1]} ×${inv[k]}</strong><p>${MATERIAL_HELP[k]}</p></div>`;
+    const bait=BAIT_TYPES.includes(k);
+    const selected=fishingBait===k;
+    bagDetail.innerHTML=`<span class="ic ${ITEMS[k][0]}"></span><div><strong>${ITEMS[k][1]} ×${inv[k]}</strong><p>${MATERIAL_HELP[k]}</p></div>${bait?'<button type="button">'+(selected?'미끼 해제':'다음 낚시 미끼로')+'</button>':''}`;
+    if(bait)bagDetail.querySelector('button').addEventListener('click',()=>{
+      fishingBait=selected?null:k;
+      closeBag();hint(selected?'미끼를 뺐어요':ITEMS[k][1]+' · 다음 낚시에 사용',2);
+    });
   }));
   bagBody.querySelectorAll('[data-food]').forEach(b=>b.addEventListener('click',()=>{ selFood=b.dataset.food; renderBag(); }));
   bagBody.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>{
@@ -1046,7 +1156,7 @@ function eat(k){
   const stack=pops.filter(p=>p.t<.6&&Math.abs(p.x-st.x)<5).length;   // 빨리 여러 번 먹으면 글자가 겹치지 않게 위로 쌓음
   pops.push({text:['food','water','hp'].map(q=>[q,q==='hp'?restored:e[q]]).filter(([,n])=>n>0).map(([q,n])=>`${GNAME[q]} +${Math.round(n)}`).join(' '),x:st.x,y:st.y-130-stack*20,t:0});
   renderGauges(); renderInv(); goal(); checkRecipes();
-  if(k==='cookedFish'&&!story.fruitFishIdea){
+  if((k==='cookedFish'||k==='tideSoup')&&!story.fruitFishIdea){
     story.fruitFishIdea=true;closeBag();
     say('앗, 비려! …말린 열매를 같이 끓이면 향이 좀 나아질까?',true,true);
   }
@@ -1090,7 +1200,7 @@ function coversSos(type,x,y){
     &&y-top<o.y+31&&y+bottom>o.y-42);
 }
 function canPlace(type,x,y){
-  if(coversSos(type,x,y))return false;
+  if(coversSos(type,x,y)||(cur==='beachB'&&inTidalPath(x,y)))return false;
   const [w,h]=SOLID[type];
   if(Math.hypot(x-st.x,y-st.y)>165||Math.abs(x-st.x)<w+6&&Math.abs(y-st.y)<h+5) return false;
   if((MAP.exits||[]).some(e=>e.side==='left'?x-w<44:x+w>WORLD.w-44)) return false;
@@ -1173,9 +1283,9 @@ const hutView=document.getElementById('hutView');
 const hutCanvas=document.getElementById('hutCanvas'),hutCtx=hutCanvas.getContext('2d');
 const hutChoices=document.getElementById('hutChoices'),hutRest=document.getElementById('hutRest');
 const hutSleep=document.getElementById('hutSleep');
-let insideHut=null,resting=false,buildMotion=null,hutTransition=null;
+let insideHut=null,buildMotion=null,hutTransition=null,hutSleepScene=0,faintScene=0,seated=false;
 const sceneCurtain=document.getElementById('sceneCurtain');
-const HUT_FADE=.22;
+const HUT_FADE=.31;
 function cancelHutTransition(){hutTransition=null;sceneCurtain.hidden=true;sceneCurtain.style.opacity='0';}
 function moveThroughHut(hut){
   if(hutTransition)return;
@@ -1194,48 +1304,66 @@ function tickHutTransition(dt){
 }
 
 function renderHutChoices(){
-  hutChoices.hidden=!insideHut||dialoguePinned;
+  hutChoices.hidden=!insideHut||dialoguePinned||hutSleepScene>0;
   hutSleep.hidden=!isNight();
-  hutRest.textContent=resting?'쉬기 끝내기':'쉬기';
-  hutRest.setAttribute('aria-pressed',String(resting));
+  hutRest.hidden=isNight();
 }
 function hutMonologue(){
   if(!insideHut||!isNight()||story.hutTalk||dialoguePinned)return;
   story.hutTalk=true;
   say('야자잎으로 지은 움막인데… 생각보다 아늑하네.',true,true,
-    ()=>say(`가족도, 친구들도 보고 싶다. ${partner()}도 어디선가 이 비를 피하고 있겠지?`,true,true,
+    ()=>say(`가족도, 친구들도 보고 싶다. ${partner()}도 어디선가 밤을 보내고 있겠지?`,true,true,
       ()=>say('누군가 곧 구하러 오겠지… 오늘은 일단 좀 쉬자.',true,true)));
 }
 function enterHut(o){
   if((o.stage||0)!==2)return;
-  insideHut=o;resting=false;actHeld=false;jv=[0,0];st.moving=false;
-  gameScreen.classList.add('indoors');hutView.hidden=false;
+  insideHut=o;actHeld=false;jv=[0,0];st.moving=false;
+  gameScreen.classList.add('indoors');hutView.hidden=false;renderExitCue();
   renderHutChoices();hutMonologue();
 }
 function leaveHut(){
-  insideHut=null;resting=false;hutView.hidden=true;hutChoices.hidden=true;
+  insideHut=null;hutView.hidden=true;hutChoices.hidden=true;
   gameScreen.classList.remove('indoors');lastAct=null;jv=[0,0];actHeld=false;
 }
-hutRest.addEventListener('click',()=>{if(!insideHut||dialoguePinned)return;resting=!resting;renderHutChoices();});
-hutSleep.addEventListener('click',()=>{
-  if(!insideHut||!isNight()||dialoguePinned)return;
-  advanceCamp(cycleLength()-camp.time);resting=false;renderHutChoices();
+hutRest.addEventListener('click',()=>{
+  if(!insideHut||isNight()||dialoguePinned||hutSleepScene)return;
+  clearDialogue();
+  advanceCamp(dayLength()-camp.time);renderHutChoices();
 });
-document.getElementById('hutExit').addEventListener('click',()=>{if(!dialoguePinned)moveThroughHut(null);});
+function beginStorm(){
+  if(!story.hutReady||story.stormOver||story.stormNight)return false;
+  story.stormNight=true;goal();return true;
+}
+hutSleep.addEventListener('click',()=>{
+  if(!insideHut||!isNight()||dialoguePinned||hutSleepScene)return;
+  clearDialogue();
+  const storm=beginStorm();
+  hutSleepScene=storm?2.8:1.05;
+  say(storm?'바람이 세졌어… 오늘 밤은 여기 안에 있자.':'이제 눈을 좀 붙이자.',true);
+  renderHutChoices();
+});
+function tickHutSleep(dt){
+  hutSleepScene=Math.max(0,hutSleepScene-dt);
+  if(hutSleepScene)return;
+  clearDialogue();advanceCamp(cycleLength()-camp.time);renderHutChoices();
+}
+document.getElementById('hutExit').addEventListener('click',()=>{if(!dialoguePinned&&!hutSleepScene)moveThroughHut(null);});
 function drawStormRain(g,x0,y0){
-  const count=Math.round(Math.min(210,Math.max(96,VW*VH/1650)));
-  for(let layer=0;layer<2;layer++){
-    g.beginPath();g.lineWidth=layer?.85:1.6;
-    g.strokeStyle=layer?'rgba(191,219,238,.29)':'rgba(207,232,247,.50)';
-    const speed=layer?510:680;
-    for(let i=layer;i<count;i+=2){
-      const len=(layer?10:25)+(i*17%13);
-      const x=x0+(i*89+st.t*speed*.41)%(VW+40)-20;
-      const y=y0+(i*157+st.t*speed)%(VH+48)-24;
-      g.moveTo(x,y);g.lineTo(x+len*.42,y+len);
+  const count=Math.round(Math.min(155,Math.max(62,VW*VH/2450)));
+  const wind=.28+Math.sin(st.t*1.6)*.10;
+  g.save();g.lineCap='round';
+  for(let layer=0;layer<3;layer++){
+    g.beginPath();g.lineWidth=[.85,1.35,1.95][layer];
+    g.strokeStyle=['#bfdbee48','#cfe8f363','#e5f5fd82'][layer];
+    for(let i=layer;i<count;i+=3){
+      const speed=440+layer*125+(i*41%177),len=5+layer*4+(i*17%14);
+      const x=x0+((i*91.73+st.t*speed*wind)%(VW+56))-28;
+      const y=y0+((i*157.31+st.t*speed)%(VH+52))-26;
+      g.moveTo(x,y);g.lineTo(x+len*wind,y+len);
     }
     g.stroke();
   }
+  g.restore();
 }
 function drawHutView(){
   if(hutCanvas.width!==Math.round(VW*dpr)||hutCanvas.height!==Math.round(VH*dpr)){
@@ -1248,8 +1376,8 @@ function drawHutView(){
   const f=hutFire(insideHut);
   if(f&&IMG.camp.naturalWidth){
     const x=VW/2+Math.max(-VW*.23,Math.min(VW*.23,f.side/135*VW*.23));
-    const y=Math.min(VH*.90,Math.max(VH*.81,(VH-h)/2+h*(.85-Math.min(.027,f.forward/8500))));
-    const s=Math.min(1.05,Math.max(.52,1.10-f.forward/525));
+    const y=Math.min(VH*.93,Math.max(VH*.86,(VH-h)/2+h*(.895-Math.min(.027,f.forward/8500))));
+    const s=Math.min(1.22,Math.max(.65,1.25-f.forward/560));
     const lit=f.fire.fuel>0, frame=lit?1+Math.floor(st.t*7)%3:0;
     if(night&&lit&&typeof hutCtx.createRadialGradient==='function'){
       const grd=hutCtx.createRadialGradient(x,y-6,4,x,y-4,79);
@@ -1302,34 +1430,38 @@ function campOptions(o){
   campChoices.hidden=false;
 }
 const COOKING=[
-  {result:'cookedFish',need:{rawFish:1}},
-  {result:'cookedClam',need:{clam:1}},
+  ...CATCH_TYPES.map(fish=>({result:fish==='tideFish'?'tideSoup':'cookedFish',need:{[fish]:1},count:fish==='stripedFish'?2:1})),
   {result:'fruitFish',need:{rawFish:1,driedBerry:1},idea:'fruitFishIdea'},
-  {result:'fruitClam',need:{clam:1,driedBerry:1},idea:'fruitClamIdea'}
+  {result:'fruitFish',need:{stripedFish:1,driedBerry:1},idea:'fruitFishIdea'},
+  {result:'fruitFish',need:{blueFish:1,driedBerry:1},idea:'fruitFishIdea'},
+  {result:'cookedClam',need:{clam:1}},
+  {result:'cookedClam',need:{scallop:1}},
+  {result:'fruitClam',need:{scallop:1,driedBerry:1},idea:'fruitClamIdea'}
 ];
 const cookingOpen=r=>!r.idea||story[r.idea];
-function cookingStock(key){
-  return key==='rawFish'?CATCH_TYPES.reduce((n,kind)=>n+inv[kind],0):inv[key];
-}
-function cookingIngredients(recipe){
-  return Object.fromEntries(Object.entries(recipe.need).map(([key,n])=>
-    [key==='rawFish'?(CATCH_TYPES.find(kind=>inv[kind]>=n)||key):key,n]));
-}
 function canCook(o,r){
-  const delta=Object.fromEntries(Object.entries(cookingIngredients(r)).map(([k,n])=>[k,-n]));
-  delta[r.result]=1;
-  return cookingOpen(r)&&objs.includes(o)&&reachDist(o)<1&&o.fuel>0&&inv.pot>0
-    &&Object.entries(r.need).every(([k,n])=>cookingStock(k)>=n)
-    &&foodSlotsUsed(delta)<=FOOD_SLOTS;
+  const delta=Object.fromEntries(Object.entries(r.need).map(([k,n])=>[k,-n]));
+  delta[r.result]=r.count||1;
+  return !cookingScene&&cookingOpen(r)&&objs.includes(o)&&reachDist(o)<1&&o.fuel>0&&inv.pot>0
+    &&Object.entries(r.need).every(([k,n])=>inv[k]>=n)&&foodSlotsUsed(delta)<=FOOD_SLOTS;
 }
 function cook(o,r){
   if(!canCook(o,r))return;
-  for(const [k,n] of Object.entries(cookingIngredients(r)))inv[k]-=n;
-  o.cookFlashUntil=camp.elapsed+2.3;
-  give(r.result,1,o.x,o.y-35);showCooking(o);
+  for(const [k,n] of Object.entries(r.need))inv[k]-=n;
+  if(fishingBait&&!inv[fishingBait])fishingBait=null;
+  cookingScene={fire:o,recipe:r,left:1.45};
+  actHeld=false;jv=[0,0];st.moving=false;faceTo(o);
+  closeCampOptions();renderInv();setAction(null);
+  hint('냄비에서 음식이 끓고 있어요',1.42);
+}
+function tickCooking(dt){
+  cookingScene.left-=dt;
+  if(cookingScene.left>0)return;
+  const {recipe}=cookingScene;cookingScene=null;
+  give(recipe.result,recipe.count||1,st.x,st.y-115);
 }
 function showCooking(o){
-  if(!objs.includes(o)||reachDist(o)>=1||!o.fuel||!inv.pot){closeCampOptions();return;}
+  if(!objs.includes(o)||reachDist(o)>=1||!o.fuel||!inv.pot||cookingScene){closeCampOptions();return;}
   campChoices.textContent='';
   const list=document.createElement('div');
   list.className='cookList';
@@ -1337,13 +1469,19 @@ function showCooking(o){
   const heading=document.createElement('strong');heading.textContent='냄비 요리';
   const close=document.createElement('button');close.type='button';close.textContent='닫기';
   close.addEventListener('click',closeCampOptions);top.append(heading,close);list.appendChild(top);
-  if(!story.fruitClamIdea&&inv.clam&&inv.driedBerry){
+  if(!story.fruitClamIdea&&inv.scallop&&inv.driedBerry){
     story.fruitClamIdea=true;
-    say('조개에 말린 열매를 조금 넣으면 달큰한 향이 나겠어.',true);
+    say('가리비에 말린 열매를 넣으면 달큰한 향이 나겠어.',true);
   }
-  for(const r of COOKING.filter(cookingOpen)){
+  const available=COOKING.filter(r=>cookingOpen(r)&&inv[Object.keys(r.need)[0]]>0);
+  if(!available.length){
+    const empty=document.createElement('p');empty.textContent='물고기나 조개를 가져와 보세요.';list.appendChild(empty);
+  }
+  for(const r of available){
     const row=document.createElement('button');row.type='button';row.className='cookRow';
-    row.innerHTML=`<span class="ic ${ITEMS[r.result][0]}"></span><span><strong>${ITEMS[r.result][1]}</strong><small>${Object.entries(r.need).map(([k,n])=>`${k==='rawFish'?'물고기':ITEMS[k][1]} ${cookingStock(k)}/${n}`).join(' · ')}</small></span><b>만들기</b>`;
+    const result=EAT[r.result];
+    const ingredients=Object.entries(r.need).map(([k,n])=>ITEMS[k][1]+' '+Math.min(inv[k],n)+'/'+n).join(' · ');
+    row.innerHTML=`<span class="ic ${ITEMS[r.result][0]}"></span><span><strong>${ITEMS[r.result][1]}${r.count>1?' 2그릇':''}</strong><small>${ingredients}<br>한 그릇 · 허기 +${result.food} · 하트 +${foodHealing(result)}</small></span><b>요리</b>`;
     row.disabled=!canCook(o,r);row.addEventListener('click',()=>cook(o,r));list.appendChild(row);
   }
   campChoices.appendChild(list);campChoices.hidden=false;
@@ -1373,6 +1511,14 @@ function storyDawn(){
 let ignition=null;
 function useCamp(o){
   actHeld=false;
+  if(o.type==='shoreSeat'){
+    seated=!seated;st.moving=false;actHeld=false;jv=[0,0];
+    if(seated){
+      st.x=o.x;st.y=o.y;st.dir='right';
+      noticeOnce('shoreSeat','파도 소리가 가까이 들리네. 여기서 조금 쉬었다 가자.');
+    }
+    setAction(actionOf(o));return;
+  }
   if(o.type==='hut'){if((o.stage||0)<2)buildStep(o);else moveThroughHut(o);return;}
   if(o.fuel>0){
     if(story.signalPrepared&&!story.beaconLit&&!story.ember){story.ember=true;goal();hint('불붙인 가지를 들었어요',2);}
@@ -1409,10 +1555,7 @@ function advanceCamp(dt){
     say(litHere?sunset:sunset+' 불 피울 준비를 해야겠다.',true);
   }
   if(!wasNight&&isNight()){
-    if(story.hutReady&&!story.stormOver){
-      story.stormNight=true;
-      say(insideHut?'바람이 세졌네. 오늘 밤은 여기 안에 있는 게 좋겠어.':'바람이 세졌어. 움막으로 돌아가야겠어.',true);
-    }else hint(camp.day===1?'밤이 됐어요. 모닥불에서 아침까지 쉴 수 있어요':'밤이 됐어요. 불 가까이에서 몸을 데우세요',3);
+    hint(camp.day===1?'밤이 됐어요. 모닥불에서 아침까지 쉴 수 있어요':'밤이 됐어요. 불 가까이에서 몸을 데우세요',3);
     goal();
   }
   renderClock();
@@ -1433,24 +1576,37 @@ function survive(dt){
     (o.type==='hut'&&o.stage===2&&Math.abs(o.x-st.x)<58&&Math.abs(o.y-st.y)<44));
   const chilled=cold && !camp.cold;
   camp.cold=cold;
-  if(starving||cold) st.hp=Math.max(0,st.hp-HP_LOSS*(starving+Number(cold))*dt);
-  else if(st.food>LOW_FOOD&&st.water>LOW_WATER) st.hp=Math.min(100,st.hp+HP_GAIN*(resting?2:1)*dt);
+  if(starving||cold&&!seated) st.hp=Math.max(0,st.hp-HP_LOSS*(starving+Number(cold&&!seated))*dt);
+  else if(st.food>LOW_FOOD&&st.water>LOW_WATER) st.hp=Math.min(100,st.hp+HP_GAIN*(seated?4:1)*dt);
   for(const k of ['food','water']){ const threshold=k==='food'?LOW_FOOD:LOW_WATER; const low=st[k]<=threshold; if(low&&!warned[k]){ warned[k]=1; hint(k==='food'?'배가 고파요. 가방에서 먹을 것을 찾아보세요':'목이 말라요. 코코넛을 마셔 보세요',2.6); } if(st[k]>threshold+5) warned[k]=0; }
-  if(chilled) hint('밤공기가 차가워요. 모닥불 근처로 가세요',3);
+  if(chilled&&!seated) hint('밤공기가 차가워요. 모닥불 근처로 가세요',3);
   if(st.hp<=0) faint();
 }
-function faint(){                                // 쓰러지면 처음 해변에서 깨어남 (가방은 그대로)
+function faint(){
   if(insideHut)leaveHut();
-  buildMotion=null;
-  st.hp=30; st.food=Math.max(st.food,LOW_FOOD+8); st.water=Math.max(st.water,LOW_WATER+8); warned={};
-  enterMap('beachA', MAPS.beachA.start[0], MAPS.beachA.start[1]); hint('쓰러졌어요… 처음 해변에서 정신을 차렸어요',3);
+  buildMotion=null;fishing=null;ignition=null;seated=false;
+  st.act=null;st.moving=false;st.target=null;jv=[0,0];actHeld=false;
+  closeCampOptions();cancelPlacement();clearDialogue();
+  faintScene=2.15;
+}
+function tickFaint(dt){
+  faintScene=Math.max(0,faintScene-dt);
+  sceneCurtain.hidden=false;
+  sceneCurtain.style.opacity=String(faintScene>1.2?0:Math.sin(Math.PI*faintScene/1.2)*.92);
+  if(faintScene)return;
+  sceneCurtain.hidden=true;
+  st.hp=30;st.food=Math.max(st.food,LOW_FOOD+8);st.water=Math.max(st.water,LOW_WATER+8);warned={};
+  advanceCamp((isNight()?cycleLength():dayLength())-camp.time);
+  if(!dialoguePinned)say('정신을 잃었나 봐… 먹을 걸 찾아야겠어.',true,true);
+  renderGauges();
 }
 
 document.getElementById('craftBtn').addEventListener('click',()=>{ if(cardRec) craft(cardRec); });
 document.getElementById('craftX').addEventListener('click',()=>{ document.getElementById('craftCard').hidden=true; });
 
 // ---------- 화면 크기 ----------
-const cv=document.getElementById('world'), ctx=cv.getContext('2d');
+const cv=document.getElementById('world');
+let ctx=cv.getContext('2d');
 cv.addEventListener('pointerdown',e=>{
   if(!placement||!menu.hidden||bagOpen()) return;
   const r=cv.getBoundingClientRect();
@@ -1488,7 +1644,7 @@ function drawShadow(cx,cy,w,box){
 const sprOf=o=>o.type==='palm'&&o.spr?o.spr:o.type==='looseRocks'?'rock_pile':o.type==='smallRocks'?'stone':o.type==='vineCut'?'rock_pile':o.type;
 const storyArt={palmLeaf:[0,52],waterBottle:[3,37]};
 const customArt={sharp:[0,67,47],vineRock:[1,128,128],vineBundle:[2,83,61]};
-function shadowWidth(o){ if(o.type==='gate'||o.type==='felled')return 102; if(o.type==='beacon')return story.beaconLit?130:66; if(dryingFood[o.type])return 37; if(['sosSpot','palmLeaf','waterBottle'].includes(o.type))return 13; if(o.type==='tree')return 46; if(customArt[o.type])return o.type==='vineRock'?58:25; if(o.type==='fire'||o.type==='hut') return SOLID[o.type][0]*2; const m=OB[sprOf(o)]; if(o.type==='tree') return m[2]/K*0.5; if(o.type==='palm') return m[2]/K*0.42; if(o.type==='crate') return m[2]/K*1.02; return m?m[6]/K*1.05:30; }   // 상자: 몸 너비 전체
+function shadowWidth(o){ if(o.type==='gate'||o.type==='felled')return 102; if(o.type==='beacon')return story.beaconLit?130:66; if(dryingFood[o.type])return 37; if(['sosSpot','palmLeaf','waterBottle','sandHole','shoreSeat'].includes(o.type))return 13; if(o.type==='tree')return 46; if(customArt[o.type])return o.type==='vineRock'?58:25; if(o.type==='fire'||o.type==='hut') return SOLID[o.type][0]*2; const m=OB[sprOf(o)]; if(o.type==='tree') return m[2]/K*0.5; if(o.type==='palm') return m[2]/K*0.42; if(o.type==='crate') return m[2]/K*1.02; return m?m[6]/K*1.05:30; }   // 상자: 몸 너비 전체
 function drawSos(x,y){
   ctx.save();ctx.translate(x,y-5);ctx.scale(1,.57);
   ctx.lineJoin='round';ctx.lineCap='round';
@@ -1508,12 +1664,27 @@ function drawSos(x,y){
   ctx.restore();
 }
 function drawObj(o){
+  if(o.type==='sandHole'){
+    if(!exposedTide())return;
+    ctx.fillStyle=o.dugDay===camp.day?'#a87448':'#6a482e';
+    ctx.beginPath();ctx.ellipse(o.x,o.y,4,2.3,0,0,Math.PI*2);ctx.fill();
+    if(o.dugDay!==camp.day){
+      ctx.fillStyle=o.item==='shell'||o.item==='scallop'?'#ffe5bf':'#c89966';
+      ctx.fillRect(o.x+4,o.y-3,3,2);ctx.fillRect(o.x+6,o.y+1,2,2);
+    }
+    return;
+  }
+  if(o.type==='shoreSeat'){
+    const [sx,sy,sw,sh]=OB.stone;
+    ctx.drawImage(IMG.objs,sx,sy,sw,sh,o.x-22,o.y-9,38,22);
+    return;
+  }
   if(o.type==='tree'){
     if(IMG.thin.naturalWidth){
       const h=196,w=h*IMG.thin.naturalWidth/IMG.thin.naturalHeight;
       const shake=o.shake>0?Math.round(Math.sin(o.shake*58)*3):0;
       ctx.drawImage(IMG.thin,o.x-w/2+shake,o.y-h,w,h);
-      if(o.hp<4&&o.hp>0){ctx.fillStyle='#be8750';ctx.fillRect(o.x-3,o.y-13,4-o.hp,3);}
+      if(o.hp<10&&o.hp>0){ctx.fillStyle='#492d19';ctx.fillRect(o.x-6+shake,o.y-15,12,4);ctx.fillStyle='#d29a5e';ctx.fillRect(o.x-6+shake,o.y-15,11-o.hp,2);}
     }
     return;
   }
@@ -1586,8 +1757,14 @@ function drawObj(o){
     if(o.type==='fire'){
       const frame=o.fuel>0 ? 1+Math.floor(st.t*7)%3 : 0;
       ctx.drawImage(IMG.camp,frame*96,0,96,76,o.x-48,o.y-66,96,76);
-      if(o.cookFlashUntil>camp.elapsed&&IMG.story.naturalWidth)
-        ctx.drawImage(IMG.story,96,0,48,48,o.x-19,o.y-54,38,38);
+      if(cookingScene?.fire===o&&IMG.story.naturalWidth){
+        ctx.drawImage(IMG.story,96,0,48,48,o.x-20,o.y-56,40,40);
+        for(let i=0;i<4;i++){
+          const phase=(st.t*1.8+i*.25)%1;
+          ctx.fillStyle=`rgba(250,233,212,${.45*(1-phase)})`;
+          ctx.beginPath();ctx.ellipse(o.x+(i-1.5)*5+Math.sin(phase*5+i)*5,o.y-43-phase*26,3+phase*5,2+phase*4,0,0,Math.PI*2);ctx.fill();
+        }
+      }
     } else {
       const n=o.stage||0;
       if(n===0&&!o.ghost&&buildMotion?.object!==o){
@@ -1614,7 +1791,7 @@ const keys={};
 addEventListener('keydown',e=>{
   if(gameScreen.hidden||!menu.hidden) return;
   const k=e.key.toLowerCase();
-  if(sleepScene||hutTransition)return;
+  if(sleepScene||hutTransition||hutSleepScene||faintScene||cookingScene)return;
   if(discovery){
     if(k==='escape'){e.preventDefault();closeDiscovery();}
     return;
@@ -1683,12 +1860,13 @@ const st={walkDist:0,stepDistance:0,x:640,y:300,dir:'down',moving:false,t:0,act:
 const REACH=44;
 function reachDist(o){ const s=SOLID[o.type]||[10,6]; const dx=(st.x-o.x)/(s[0]+REACH), dy=(st.y-o.y)/(s[1]+REACH*0.8); return Math.hypot(dx,dy); }
 function canAct(o){ return !!actionOf(o); }
-function findTarget(){ const water=findFishingWater();if(water)return water;let best=null, bd=1; for(const o of objs){ if(!canAct(o)) continue; const d=reachDist(o); if(d<bd){ bd=d; best=o; } } return best; }
+function findTarget(){ let best=null, bd=1; for(const o of objs){ if(!canAct(o)) continue; const d=reachDist(o); if(d<bd){ bd=d; best=o; } } return best||findFishingWater(); }
 function faceTo(o){ const vx=o.x-st.x, vy=(o.y-st.y)*1.6; st.dir=Math.abs(vx)>Math.abs(vy)?(vx>0?'right':'left'):(vy>0?'down':'up'); }
 function doAction(){
-  if(gameScreen.hidden||!menu.hidden||bagOpen()||discovery||sleepScene||hutTransition)return;
+  if(gameScreen.hidden||!menu.hidden||bagOpen()||discovery||sleepScene||hutTransition||hutSleepScene||faintScene||cookingScene)return;
   if(dialoguePinned){nextDialogue();return;}
   if(st.act||waking||ignition||buildMotion||insideHut||!campChoices.hidden)return;
+  if(seated){useCamp(shoreSeat);return;}
   if(fishing){reelFishing();return;}
   if(placement){confirmPlace();return;}
   const t=st.target;
@@ -1717,16 +1895,18 @@ function findFishingWater(){
   let best=null;
   for(const [dx,dy] of castDirections){
     let water=null;
+    const [fx,fy]=dirVector[st.dir];
+    const penalty=25*(1-dx*fx-dy*fy);
     for(let distance=16;distance<=128;distance+=8){
       const x=Math.round(st.x+dx*distance),y=Math.round(st.y+dy*distance);
       if(x<0||x>=WORLD.w||y<0||y>=WORLD.h)break;
       const zone=zoneAt(x,y);
       if(zone===5||zone===6)break;
       if(isWater(zone)&&distance>=48){
-        water={type:'fishWater',x,y,zone,distance};break;
+        water={type:'fishWater',x,y,zone,distance,score:distance+penalty};break;
       }
     }
-    if(water&&(!best||water.distance<best.distance))best=water;
+    if(water&&(!best||water.score<best.score))best=water;
   }
   if(!best)return null;
   // Shift the float farther out along the same clear shoreline when possible.
@@ -1738,7 +1918,9 @@ function findFishingWater(){
   }
   return best;
 }
-function fishInWater(map,zone){
+function fishInWater(map,zone,target,bait=false,roll=Math.random()){
+  if(map==='beachB'&&exposedTide()&&inTidalPath(st.x,st.y)&&st.x>1155&&
+      target?.x>=1190&&target.y>=738&&roll<(bait?.74:.34))return 'tideFish';
   return zone===4?'blueFish':map==='beachB'?'stripedFish':'rawFish';
 }
 function startFishing(){
@@ -1747,7 +1929,10 @@ function startFishing(){
   const flip=target.x<st.x||(target.x===st.x&&st.dir==='left');
   const front=!!IMG.fishingFront.naturalWidth&&fishingFacesFront(target,st);
   st.dir=front?'down':flip?'left':'right';st.moving=false;
-  fishing={...target,phase:'cast',left:.34,fish:fishInWater(cur,target.zone),flip,front};
+  const bait=!!(fishingBait&&inv[fishingBait]);
+  if(bait){inv[fishingBait]--;fishingBait=null;renderInv();}
+  fishing={...target,phase:'cast',left:.34,fish:fishInWater(cur,target.zone,target,bait),
+    flip,front};
   st.target=null;actHeld=false;
   setAction({label:'찌를 던지는 중',icon:'rod'});
 }
@@ -1776,7 +1961,7 @@ function tickFishing(dt){
   }
 }
 function fishingFacesFront(target,player){
-  return target.y-player.y>=Math.max(16,Math.abs(target.x-player.x)*1.05);
+  return player.dir==='down'&&target.y-player.y>=Math.max(16,Math.abs(target.x-player.x)*.86);
 }
 // Front sprite alignment in its original 512px cells: foot center and grip.
 const frontFishingArt={
@@ -1801,30 +1986,42 @@ function drawFrontFishing(pose){
   ctx.strokeStyle='#b07b46';ctx.lineWidth=1.45;ctx.stroke();ctx.restore();
 }
 function drawFishingFloat(){
-  if(!fishing||fishing.phase==='cast'||fishing.phase==='reel')return;
-  const {x,y,flip,phase}=fishing,bite=phase==='bite';
+  if(!fishing)return;
+  const {x,y,flip,phase,front,left}=fishing,bite=phase==='bite';
+  const pose=phase==='cast'?0:phase==='reel'?2:1;
+  const f=front?frontFishingFrame(chosen,pose,st.x,st.y,x):null;
+  const [tipX,tipY]=f?[f.tx,f.ty]:fishingRodTip(chosen,st.x,st.y,flip!==(pose===0&&chosen==='girl'),pose);
+  const progress=phase==='cast'?1-left/.34:phase==='reel'?left/.48:1;
+  const surface=phase==='wait'||bite;
   const bob=Math.sin(st.t*(bite?22:4))*(bite?3:1);
-  const frontFrame=fishing.front?frontFishingFrame(chosen,1,st.x,st.y,x):null;
-  const [tipX,tipY]=frontFrame?[frontFrame.tx,frontFrame.ty]:fishingRodTip(chosen,st.x,st.y,flip);
-  const floatTop=y+bob-6;
-  ctx.save();ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(tipX,tipY);ctx.quadraticCurveTo((x+tipX)/2,(floatTop+tipY)/2+(bite?4:10),x,floatTop);
-  ctx.strokeStyle='#f9e6bca6';ctx.lineWidth=2.65;ctx.stroke();
-  ctx.strokeStyle='#4a3425';ctx.lineWidth=1.55;ctx.stroke();
-  ctx.strokeStyle=bite?'#ebfff5':'#d3f5ea8c';ctx.lineWidth=bite?2:1;
-  ctx.beginPath();ctx.ellipse(x,y,bite?12:6,bite?4:2,0,0,Math.PI*2);ctx.stroke();
-  ctx.fillStyle='#fbf3d3';ctx.fillRect(x-2,y+bob-6,4,8);
-  ctx.fillStyle='#e75b40';ctx.fillRect(x-2,y+bob-6,4,4);ctx.restore();
+  const floatX=tipX+(x-tipX)*progress;
+  const floatY=tipY+(y-6-tipY)*progress+(surface?bob:-48*Math.sin(Math.PI*progress));
+  ctx.save();ctx.lineCap='round';ctx.beginPath();ctx.moveTo(tipX,tipY);
+  ctx.quadraticCurveTo((floatX+tipX)/2,(floatY+tipY)/2+(bite?4:10)*progress,floatX,floatY);
+  ctx.strokeStyle='#fff1c9aa';ctx.lineWidth=2.8;ctx.stroke();
+  ctx.strokeStyle='#3d2b21';ctx.lineWidth=1.6;ctx.stroke();
+  if(surface){
+    ctx.strokeStyle=bite?'#ebfff5':'#d3f5ea8c';ctx.lineWidth=bite?2:1;
+    ctx.beginPath();ctx.ellipse(x,y,bite?12:6,bite?4:2,0,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.fillStyle='#fbf3d3';ctx.fillRect(floatX-2,floatY,4,8);
+  ctx.fillStyle='#e75b40';ctx.fillRect(floatX-2,floatY,4,4);ctx.restore();
 }
-function fishingRodTip(ch,x,y,flip){
-  const [,,,,ax,ay]=FRAMES[ch].fish_side[1];
-  const [tipX,tipY]=fishingRodArt[ch].tip;
+function fishingRodTip(ch,x,y,flip,pose=1){
+  const [,,,,ax,ay]=FRAMES[ch].fish_side[pose];
+  const [tipX,tipY]=fishingRodArt[ch].tips[pose];
   const scale=playerHeight/SRC_H*(FRAMES[ch]._fix?.fish_side||1);
   return [x+(tipX-ax)*scale*(flip?-1:1),y+(tipY-ay)*scale];
 }
 const TIMES={chop:[.14,.24,.46], pick:[.16,.30,.48], shake:[.16,.55,.95]};   // [장면 바뀜, 효과, 끝]
 function hitNow(t){
   if(!t || !objs.includes(t) || reachDist(t)>=1.15) return;
+  if(t.type==='sandHole'){
+    if(!exposedTide()||t.dugDay===camp.day)return;
+    actHeld=false;
+    if(equipped!=='sharp'){hint('돌칼로 젖은 모래를 파볼 수 있어요',2.6);return;}
+    t.dugDay=camp.day;give(t.item,1,t.x,t.y-26);return;
+  }
   if(st.act==='chop'&&equipped==='axe'&&actionOf(t)?.anim==='chop'){beachAudio.effect('chop');pulse(32);}
   if(dryingFood[t.type]){
     const drying=dryingFood[t.type];
@@ -1889,6 +2086,7 @@ function hitNow(t){
   } else if(st.act==='chop' && t.type==='tree'){
     t.shake=.25;t.hp--;
     if(t.hp<=0){t.type='stump';give('wood',1,t.x,t.y-30);}
+    else if(t.hp===5)noticeOnce('betterAxe','돌도끼로는 한참 걸리네. 더 튼튼한 도끼가 있으면 좋겠어.');
   } else if(st.act==='shake' && t.type==='tree' && t.branches>0){
     t.shake=.45; t.branches--;
     const side=-(st.side||1), nx=t.x+side*(30+Math.random()*14), ny=t.y+16+Math.random()*10;
@@ -1914,7 +2112,8 @@ function hitNow(t){
       if(item==='sharp')showTool('sharp');
       if(item==='waterBottle'){
         story.bottleFound=true;goal();
-        say(`잠깐, 이 이름표… ${partner()}? 난파된 날 바다에 빠뜨렸나?`,true,true);
+        say(`잠깐, 이 이름표… ${partner()} 거잖아.`,true,true,
+          ()=>say('이 근처에 떠밀려 왔던 걸까? 숲길 안쪽을 봐야겠어.',true,true));
       }
     }
   }
@@ -1952,6 +2151,11 @@ function update(dt){
   let vy=jv[1]+((keys.arrowdown||keys.s)?1:0)-((keys.arrowup||keys.w)?1:0);
   const m=Math.hypot(vx,vy); st.moving=false;
   if(m<=.2)st.stepDistance=0;
+  if(seated){
+    if(m>.2)seated=false;
+    else{setAction(actionOf(shoreSeat));return;}
+  }
+  updateTide();
   if(fishing){
     if(m>.2&&fishing.phase!=='reel')fishing=null;
     else {tickFishing(dt);if(fishing)return;}
@@ -2003,11 +2207,12 @@ function update(dt){
   if(!st.act&&actHeld&&t&&t.type!=='fire'&&t.type!=='hut'&&t.type!=='fishWater')doAction();
   if(!st.act){
     const hut=t?null:objs.find(o=>o.type==='hut' && reachDist(o)<1);
-    if(t) hint(t.type==='beacon'&&!story.signalPrepared&&equipped!=='axe'?'돌도끼를 들고 유목을 정리하세요':NAME[t.type]||'');
+    if(t) hint(t.type==='sandHole'?'모래 위 작은 구멍':t.type==='beacon'&&!story.signalPrepared&&equipped!=='axe'?'돌도끼를 들고 유목을 정리하세요':NAME[t.type]||'');
     else if(cur==='beachB'&&story.gateOpen&&st.y<114&&st.x>=840) hint('해변 이야기 완료');
     else if(hut){
       hint('움막 가까이에서 행동 버튼을 눌러요');
     }
+    else if(cur==='beachB'&&exposedTide()&&Math.hypot(st.x-1125,st.y-739)<100)hint('물이 빠져 바위틈으로 이어지는 길이 보여요');
     else if(st.depth>12) hint('얕은 물: 천천히 걸어요');
     else hint(st.moving||st.t>8?'':'가까이 가면 오른쪽 버튼이 켜져요');
   }
@@ -2015,6 +2220,7 @@ function update(dt){
   pops.forEach(p=>p.t+=dt); while(pops.length&&pops[0].t>1) pops.shift();
   // 카메라: 캐릭터를 가운데보다 조금 위에 (아래 조작을 피함)
   const tx=st.x-VW/2, ty=st.y-60-VH/2+VH*0.06;
+  renderExitCue();
   if(camInit){ cam.x=tx; cam.y=ty; camInit=false; } else { const k=Math.min(1,dt*7); cam.x+=(tx-cam.x)*k; cam.y+=(ty-cam.y)*k; }
   clampCam();
 }
@@ -2053,7 +2259,44 @@ function drawThroughWaterline(depth,draw){
     draw();ctx.restore();
   }else draw();
 }
+function emberGrip(){
+  const side=st.dir==='left'||st.dir==='right';
+  const sign=st.dir==='left'||st.dir==='down'?-1:1;
+  const sway=st.moving?Math.sin(st.walkDist*.22):0;
+  return {x:st.x+sign*((side?18:21)+sway*3),y:st.y-(side?53:47)+sway*3,sign};
+}
+function drawCarriedEmber(){
+  if(!story.ember||!IMG.ember.complete||!IMG.ember.naturalWidth)return;
+  const {x,y,sign}=emberGrip();
+  ctx.save();ctx.translate(x,y);ctx.scale(sign,1);
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(IMG.ember,-8,-37,44,44);
+  const fx=31,fy=-27,flame=1+Math.sin(st.t*16)*.18;
+  ctx.fillStyle='#f86a25';
+  ctx.beginPath();ctx.moveTo(fx-3,fy+3);
+  ctx.quadraticCurveTo(fx-5,fy-2,fx+2,fy-10*flame);
+  ctx.quadraticCurveTo(fx+1,fy-5,fx+5,fy-3);
+  ctx.quadraticCurveTo(fx+6,fy+4,fx-3,fy+3);ctx.fill();
+  ctx.fillStyle='#ffcc51';ctx.fillRect(fx-1,fy-3,3,5);
+  ctx.fillStyle='#fff2a9';ctx.fillRect(fx,fy-1,2,3);
+  for(let i=0;i<3;i++){
+    const lift=(st.t*23+i*7)%21;
+    ctx.globalAlpha=.85*(1-lift/21);
+    ctx.fillStyle=i===0?'#fff0a4':'#ff973a';
+    ctx.fillRect(fx+i-1+Math.sin(lift*.32+i)*3,fy-7-lift,2,2);
+  }
+  ctx.restore();
+}
 function drawPlayer(){
+  if(seated&&IMG.seated.complete&&IMG.seated.naturalWidth){
+    ctx.drawImage(IMG.seated,chosen==='boy'?0:96,0,96,96,st.x-48,st.y-86,96,96);
+    return;
+  }
+  if(faintScene&&IMG.wake.naturalWidth){
+    const pose=faintScene>1.82?1:faintScene<.29?1:0;
+    ctx.drawImage(IMG.wake,pose*192,chosen==='boy'?0:184,192,184,st.x-96,st.y-159,192,184);
+    return;
+  }
   if(sleepScene?.night&&IMG.wake.naturalWidth){
     ctx.drawImage(IMG.wake,0,chosen==='boy'?0:184,192,184,st.x-96,st.y-159,192,184);
     if(IMG.story.naturalWidth){
@@ -2080,7 +2323,7 @@ function drawPlayer(){
     const depth=Math.round(Math.max(st.depth,waterDepth(st.x,st.y)));
     drawThroughWaterline(depth,()=>{
       if(fishing.front)drawFrontFishing(pose);
-      else drawFrame(ctx,chosen,'fish_side',pose,st.x,st.y,playerHeight,fishing.flip);
+      else drawFrame(ctx,chosen,'fish_side',pose,st.x,st.y,playerHeight,fishing.flip!==(pose===0&&chosen==='girl'));
     });
     if(depth>1)drawRipples(st.x,st.y-depth);
     return;
@@ -2094,7 +2337,10 @@ function drawPlayer(){
   else { anim='stand'; i=0; }
   const [name,flip]=sprite(st.dir,anim);
   const d=Math.round(st.depth);
-  drawThroughWaterline(d,()=>drawFrame(ctx,chosen,name,i,st.x+ox,st.y,112,flip));
+  drawThroughWaterline(d,()=>{
+    drawFrame(ctx,chosen,name,i,st.x+ox,st.y,112,flip);
+    if(anim==='walk'||anim==='stand')drawCarriedEmber();
+  });
   if(d>KNEE*0.6)drawRipples(st.x,st.y-d);
 }
 function inView(o){ const m=OB[sprOf(o)]; const w=m?m[2]/K:192, h=m?m[3]/K:130; return o.x+w>cam.x && o.x-w<cam.x+VW && o.y>cam.y-20 && o.y-h-160<cam.y+VH; }
@@ -2146,12 +2392,43 @@ function cliffCanCoverPlayer(x,y){
   const edge=cliffRightEdge[Math.floor(y)-CLIFF.y]||0;
   return x>=CLIFF.x&&x<CLIFF.x+edge&&cliffAhead(x,y);
 }
+const cliffActor=document.createElement('canvas'), cliffActorCtx=cliffActor.getContext('2d');
+cliffActor.width=256;cliffActor.height=235;
 function drawPlayerWithCliff(){
-  drawPlayer();
-  if(cur!=='beachA'||!IMG.cliff.naturalWidth||!cliffCanCoverPlayer(st.x,st.y))return;
-  const x=Math.floor(st.x)-53;
-  ctx.save();ctx.beginPath();ctx.rect(x,st.y-115,106,116);ctx.clip();
-  ctx.drawImage(IMG.cliff,CLIFF.x,CLIFF.y);ctx.restore();
+  if(cur!=='beachA'||!IMG.cliffMask.complete||!IMG.cliffMask.naturalWidth||
+      !cliffCanCoverPlayer(st.x,st.y)){drawPlayer();return;}
+  const worldCtx=ctx, x=Math.floor(st.x)-128, y=Math.floor(st.y)-194;
+  cliffActorCtx.setTransform(1,0,0,1,0,0);
+  cliffActorCtx.clearRect(0,0,256,235);
+  cliffActorCtx.translate(-x,-y);
+  cliffActorCtx.imageSmoothingEnabled=true;
+  ctx=cliffActorCtx;
+  try{drawPlayer();}finally{ctx=worldCtx;}
+  cliffActorCtx.globalCompositeOperation='destination-out';
+  cliffActorCtx.drawImage(IMG.cliffMask,CLIFF.x,CLIFF.y);
+  cliffActorCtx.globalCompositeOperation='source-over';
+  ctx.drawImage(cliffActor,x,y);
+}
+function drawTidalShore(){
+  if(cur!=='beachB'||cam.x>1260||cam.y>810||cam.x+VW<1040||cam.y+VH<690)return;
+  if(exposedTide()){
+    ctx.save();ctx.beginPath();
+    tidalPath.forEach(([x,y],i)=>ctx[i?'lineTo':'moveTo'](x,y));
+    ctx.closePath();ctx.clip();
+    if(IMG.floor_beachB.complete&&IMG.floor_beachB.naturalWidth)
+      ctx.drawImage(IMG.floor_beachB,788,755,132,69,1090,724,130,68);
+    ctx.fillStyle='#b47d4540';ctx.fillRect(1090,724,130,68);
+    ctx.strokeStyle='#dbb184';ctx.lineWidth=8;ctx.stroke();ctx.restore();
+  }
+  const [sx,sy,sw,sh]=OB.rock_pile;
+  if(IMG.objs.complete&&IMG.objs.naturalWidth)
+    ctx.drawImage(IMG.objs,sx,sy,sw,sh,1198,735,44,29);
+  ctx.save();ctx.strokeStyle=exposedTide()?'#fff0d478':'#d7ffef93';ctx.lineWidth=1.6;
+  const swell=Math.sin(st.t*2.3)*2;
+  ctx.beginPath();
+  if(exposedTide()){ctx.moveTo(1162,782+swell);ctx.quadraticCurveTo(1202,803+swell,1221,777+swell);}
+  else{ctx.moveTo(1165,764+swell);ctx.quadraticCurveTo(1208,790+swell,1233,764+swell);}
+  ctx.stroke();ctx.restore();
 }
 function drawWorld(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -2167,11 +2444,11 @@ function drawWorld(){
     ctx.drawImage(fl,cx,Math.max(0,cy),VW,VH-extra,0,extra,VW,VH-extra);
   }
   ctx.translate(-cx,-cy);
+  drawTidalShore();
   ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
   const vis=objs.filter(inView);
   vis.forEach(o=>{if(o.type==='sosSpot')drawObj(o);});
-  drawFishingFloat();
-  vis.forEach(o=>{ if(o.type!=='sosSpot'&&zoneAt(o.x,o.y)<3 && !(o.fall>.15)) drawShadow(o.x,o.y,shadowWidth(o),o.type==='crate'); });
+  vis.forEach(o=>{ if(o.type!=='sosSpot'&&o.type!=='sandHole'&&o.type!=='shoreSeat'&&zoneAt(o.x,o.y)<3 && !(o.fall>.15)) drawShadow(o.x,o.y,shadowWidth(o),o.type==='crate'); });
   crabs.forEach(c=>drawShadow(c.x,c.y,22));   // 떨어지는 코코넛은 땅에 닿을 때쯤 그림자
   if(st.depth<5) drawShadow(st.x,st.y,36);
   if(st.target && !['fishWater','sosSpot'].includes(st.target.type) && !st.act){
@@ -2183,6 +2460,7 @@ function drawWorld(){
   items.push({y:st.y,draw:drawPlayerWithCliff});
   crabs.forEach(c=>{ if(c.x>cam.x-40&&c.x<cam.x+VW+40&&c.y>cam.y-20&&c.y<cam.y+VH+40) items.push({y:c.y,draw:()=>drawCrab(c)}); });
   items.sort((a,b)=>a.y-b.y).forEach(it=>it.draw());
+  drawFishingFloat();
   if(placement){
     const {recipe,x,y}=placement;
     const solid=SOLID[recipe.id];
@@ -2203,11 +2481,15 @@ function drawWorld(){
     ctx.drawImage(IMG.story,48,0,48,48,o.x+3,o.y-12,24,24);
     if(t<.48){ctx.fillStyle='#ffb24d';ctx.fillRect(o.x+15,o.y,4,4);}
   }
-  if(story.ember){
-    ctx.fillStyle='#b7834b';ctx.fillRect(st.x+10,st.y-53,15,3);
-    ctx.fillStyle='#ffb349';ctx.fillRect(st.x+24,st.y-56,3,4);
-  }
   drawCampLight(cx,cy);
+  if(story.ember&&isNight()&&!faintScene&&!fishing&&!seated){
+    const hand=emberGrip(),x=hand.x+hand.sign*31,y=hand.y-27;
+    const glow=ctx.createRadialGradient(x,y,1,x,y,27);
+    if(glow?.addColorStop){
+      glow.addColorStop(0,'#ffb65d48');glow.addColorStop(1,'#ffb65d00');
+      ctx.fillStyle=glow;ctx.fillRect(x-27,y-27,54,54);
+    }
+  }
   if(isNight()&&!story.stormNight){
     ctx.fillStyle='#d8f49b';
     for(const [i,[x,y]] of fireflies[cur].entries()){
@@ -2320,11 +2602,11 @@ function tickBeachSleep(dt){
   renderGauges();
 }
 function testJump(toDawn){
-  if(waking||dialoguePinned||discovery||sleepScene||buildMotion||hutTransition)return;
-  fishing=null;
+  if(waking||dialoguePinned||discovery||sleepScene||buildMotion||hutTransition||hutSleepScene||faintScene||cookingScene)return;
+  fishing=null;updateTide();
   menu.hidden=true;
   if(!isNight())advanceCamp(dayLength()-camp.time);
-  if(toDawn)advanceCamp(cycleLength()-camp.time);
+  if(toDawn){if(insideHut)beginStorm();advanceCamp(cycleLength()-camp.time);}
 }
 document.getElementById('previewNight').addEventListener('click',()=>testJump(false));
 document.getElementById('previewDawn').addEventListener('click',()=>testJump(true));
@@ -2343,6 +2625,9 @@ function loop(now){
     beachAudio.scene(!document.hidden,isNight(),zone,fire,!!insideHut,!menu.hidden);
   }
   if(!document.hidden&&menu.hidden&&!bagOpen()&&!discovery){
+    if(faintScene){tickFaint(dt);drawWorld();return;}
+    if(cookingScene){st.t+=dt;tickCooking(dt);drawWorld();return;}
+    if(hutSleepScene){tickHutSleep(dt);drawHutView();return;}
     if(sleepScene){tickBeachSleep(dt);drawWorld();return;}
     if(!dialoguePinned&&!dialogue.hidden&&(dialogueLeft-=dt)<=0)clearDialogue();
     if(waking){

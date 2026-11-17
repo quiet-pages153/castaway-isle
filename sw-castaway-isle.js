@@ -1,7 +1,8 @@
 // 표류섬 서비스워커 — 이 앱 주소(/castaway-isle/) 것만 다룸
 const APP = 'castaway-isle';
-const CACHE = APP + '-34';
-const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png", "./boy.png", "./girl.png", "./boy_x.png", "./girl_x.png", "./beach_objs.png", "./ui_icons.png", "./ui_frame.png", "./beach_camp.png", "./beach_tools.png", "./cliff_front.png", "./felled_tree.png", "./wake.png", "./thin_tree.png", "./beach_story_items.png", "./beach_cooking.png", "./beach_soups.png", "./build_actions.png", "./hut_views.png", "./paper_beach_map.png", "./floor_beachA.png", "./floor_beachB.png", "./beach-audio.js", "./beacon_lit.png", "./catch_icons.png", "./fishing_front.png", "./coconut-chips.png", "./beacon_ash.png", "./audio/hut.mp3", "./audio/files.json", "./audio/day.mp3", "./audio/night.mp3", "./audio/waves.mp3", "./audio/fire.mp3", "./audio/cast.wav", "./audio/bite.wav", "./audio/wake.wav", "./audio/chop.wav", "./audio/pickup.wav", "./audio/vine.wav", "./audio/cricket.wav", "./audio/sand-1.wav", "./audio/grass-1.wav", "./audio/wet-1.wav", "./audio/sand-2.wav", "./audio/grass-2.wav", "./audio/wet-2.wav", "./audio/sand-3.wav", "./audio/grass-3.wav", "./audio/wet-3.wav"];
+const CACHE = APP + '-35';
+const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png", "./boy.png", "./girl.png", "./boy_x.png", "./girl_x.png", "./beach_objs.png", "./ui_icons.png", "./ui_frame.png", "./beach_camp.png", "./beach_tools.png", "./cliff_front.png", "./felled_tree.png", "./wake.png", "./thin_tree.png", "./beach_story_items.png", "./beach_cooking.png", "./beach_soups.png", "./build_actions.png", "./hut_views.png", "./paper_beach_map.png", "./floor_beachA.png", "./floor_beachB.png", "./beach-audio.js", "./beacon_lit.png", "./catch_icons.png", "./fishing_front.png", "./coconut-chips.png", "./beacon_ash.png", "./cliff_mask.png", "./shore_items.png", "./shore_seated.png", "./carried_ember.png"];
+const AUDIO = ["./audio/hut.mp3", "./audio/files.json", "./audio/day.mp3", "./audio/night.mp3", "./audio/waves.mp3", "./audio/fire.mp3", "./audio/cast.wav", "./audio/bite.wav", "./audio/wake.wav", "./audio/chop.wav", "./audio/pickup.wav", "./audio/vine.wav", "./audio/cricket.wav", "./audio/sand-1.wav", "./audio/grass-1.wav", "./audio/wet-1.wav", "./audio/sand-2.wav", "./audio/grass-2.wav", "./audio/wet-2.wav", "./audio/sand-3.wav", "./audio/grass-3.wav", "./audio/wet-3.wav"];
 const APP_TAG = '<meta name="app-id" content="castaway-isle">';
 const myScope = () => new URL('./', self.registration.scope).pathname;
 const scopeOk = () => /\/castaway-isle\/$/.test(myScope()) || ['localhost', '127.0.0.1'].includes(location.hostname);
@@ -15,6 +16,7 @@ self.addEventListener('install', e => e.waitUntil((async () => {
   if (!idx.ok || !text.slice(0, 600).includes(APP_TAG)) throw new Error('app-id');
   await c.put('./index.html', idx.clone()); await c.put('./', idx);
   await c.addAll(FILES.filter(f => f !== './' && f !== './index.html').map(f => new Request(f, {cache: 'reload'})));
+  await Promise.allSettled(AUDIO.map(file=>c.add(new Request(file,{cache:'reload'}))));
   await self.skipWaiting();
 })()));
 

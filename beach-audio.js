@@ -14,9 +14,9 @@ function createBeachAudio(store, settings) {
   }
   const tracks = {day: 0, night: 0, hut: 0, waves: 0, fire: 0};
   const steps = {
-    sand: {level: .23, clips: 3},
-    grass: {level: .20, clips: 3},
-    wet: {level: .12, clips: 3},
+    sand: {level: .16, clips: 3},
+    grass: {level: .13, clips: 3},
+    wet: {level: .10, clips: 3},
   };
   const sliderGain = value => value ** 2;
   let ctx, buses, assets, nextCricket = 0;
