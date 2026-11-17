@@ -14,10 +14,11 @@ function createBeachAudio(store, settings) {
   }
   const tracks = {day: 0, night: 0, waves: 0, fire: 0};
   const steps = {
-    sand: {level: .82, clips: 3},
-    grass: {level: .55, clips: 3},
-    wet: {level: .32, clips: 3},
+    sand: {level: .23, clips: 3},
+    grass: {level: .20, clips: 3},
+    wet: {level: .12, clips: 3},
   };
+  const sliderGain = value => value ** 2;
   let ctx, buses, assets, nextCricket = 0;
 
   for (const input of settings.querySelectorAll('[data-sound]')) {
@@ -31,7 +32,7 @@ function createBeachAudio(store, settings) {
     input.addEventListener('input', () => {
       volumes[key] = Number(input.value) / 100;
       store.set('audio-' + key, input.value);
-      if (ctx) buses[key].gain.setTargetAtTime(volumes[key], ctx.currentTime, .08);
+      if (ctx) buses[key].gain.setTargetAtTime(sliderGain(volumes[key]), ctx.currentTime, .08);
       label();
     });
   }
@@ -47,7 +48,7 @@ function createBeachAudio(store, settings) {
           .catch(() => ({}));
         buses = Object.fromEntries(Object.keys(groups).map(key => {
           const bus = ctx.createGain();
-          bus.gain.value = volumes[key];
+          bus.gain.value = sliderGain(volumes[key]);
           bus.connect(ctx.destination);
           return [key, bus];
         }));

@@ -293,6 +293,14 @@
   .objective li::before{content:'•';position:absolute;left:0;color:#b58d59}
   .objective li:first-child::before{content:'◆';font-size:8px;top:3px;color:#ffcf72}
   .objective li small{display:block;color:#ead3a8;font-size:11px;margin-top:2px}
+  .questTask{pointer-events:auto;display:block;width:100%;min-height:28px;text-align:left;border:0;background:none;padding:0;color:inherit;font:inherit;cursor:pointer}
+  .questTask[aria-pressed="true"]{color:#ffda91}
+  .questCraft{pointer-events:auto;margin-top:5px;min-height:35px;background:#74502d;border:1px solid #c79a60;border-radius:5px;padding:3px 9px;color:#fff1d7;font:inherit;cursor:pointer}
+  .questTask:focus-visible,.questCraft:focus-visible{outline:2px solid #ffda91}
+  .ic.coconutChips{background:url(coconut-chips.png) center/contain no-repeat}
+  .sceneCurtain{position:absolute;inset:0;z-index:24;background:#171712;pointer-events:none;opacity:0}
+  .sceneCurtain:not([hidden]){pointer-events:auto}
+  .hud .gauges{gap:2px}
   .questMore{pointer-events:auto;justify-self:end;background:none;border:0;padding:4px 0;color:#fbd486;font:inherit;cursor:pointer}
   .hint{top:auto;bottom:calc(env(safe-area-inset-bottom) + 88px);z-index:3}
   .soundSettings{margin:8px 0;padding:8px 10px;border:1px solid #b98b556f;border-radius:6px;text-align:left}
@@ -324,6 +332,7 @@
 <section id="gameScreen" aria-label="게임" hidden>
   <canvas id="world" aria-label="해변 A"></canvas>
   <div class="fade" id="fade"></div>
+  <div class="sceneCurtain" id="sceneCurtain" aria-hidden="true" hidden></div>
   <div class="hud">
     <div class="gauges" id="gauges" aria-label="생존 수치"></div>
     <button type="button" class="campClock" id="campClock" aria-expanded="false" aria-controls="clockTime">
@@ -401,7 +410,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='32', NOTE="해변 상단, 낚시, 진동과 소리 설정을 업데이트했어요.";
+const APP='castaway-isle', APP_V='33', NOTE="해변 발소리와 생존 수치, 제작 퀘스트, 모닥불 휴식, 움막과 지형 표시를 수정했어요.";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -433,6 +442,7 @@ let loaded = 0;
 [['boy','boy.png'],['girl','girl.png'],['boy_x','boy_x.png'],['girl_x','girl_x.png'],['objs','beach_objs.png'],...Object.keys(MAPS).map(k=>['floor_'+k,MAPS[k].floor])].forEach(([k,src])=>{
   const im=new Image(); im.onload=()=>{loaded++;}; im.src=src; IMG[k]=im;
 });
+IMG.chips=new Image(); IMG.chips.src='coconut-chips.png';
 IMG.camp=new Image();
 IMG.camp.src='beach_camp.png';
 IMG.tools=new Image(); IMG.tools.src='beach_tools.png';
@@ -497,10 +507,10 @@ function startGame(){
   history.pushState({game:1},'');                  // 뒤로가기 → 첫 화면 (앱 밖으로 안 나감)
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden)beachAudio.scene(false);});
-function toTitle(){ beachAudio.scene(false); fishing=null; closeDiscovery(); sleepScene=null; leaveHut(); clearDialogue(); cancelQuick(); closeCampOptions(); cancelPlacement(); menu.hidden=true; closeBag(); gameScreen.hidden=true; selectScreen.hidden=false; actHeld=false; }
+function toTitle(){ cancelHutTransition();beachAudio.scene(false); fishing=null; closeDiscovery(); sleepScene=null; leaveHut(); clearDialogue(); cancelQuick(); closeCampOptions(); cancelPlacement(); menu.hidden=true; closeBag(); gameScreen.hidden=true; selectScreen.hidden=false; actHeld=false; }
 document.getElementById('startBtn').addEventListener('click',startGame);
 addEventListener('popstate',()=>{ if(!menu.hidden||!bagEl.hidden){ menu.hidden=true; closeBag(); history.pushState({game:1},''); return; } if(!gameScreen.hidden) toTitle(); });
-document.getElementById('menuBtn').addEventListener('click',()=>{ if(sleepScene||discovery)return; cancelQuick(); closeCampOptions(); cancelPlacement(); closeBag(); menu.hidden=false; actHeld=false; });
+document.getElementById('menuBtn').addEventListener('click',()=>{ if(sleepScene||discovery||hutTransition)return; cancelQuick(); closeCampOptions(); cancelPlacement(); closeBag(); menu.hidden=false; actHeld=false; });
 document.getElementById('resumeBtn').addEventListener('click',()=>{ menu.hidden=true; });
 document.getElementById('toTitleBtn').addEventListener('click',()=>{ toTitle(); if(history.state&&history.state.game) history.back(); });
 menu.addEventListener('click',e=>{ if(e.target===menu) menu.hidden=true; });
@@ -522,6 +532,8 @@ const isWater=z=>z===3||z===4, BLOCK=z=>z>=4&&z<=6;
 function waterDepth(x,y){ if(!isWater(zoneAt(x,y))) return 0; let d=0; while(d<KNEE && isWater(zoneAt(x,y-d-2))) d+=2; return d; }
 const OB = BEACH.objs, K = BEACH.k;
 const CLIFF=BEACH.cliff;
+// Rightmost opaque cliff pixel for each row of the foreground sprite.
+const cliffRightEdge=[36,36,36,36,76,76,76,76,92,92,92,92,108,108,108,108,124,124,124,124,140,140,140,140,156,156,156,156,168,168,168,168,180,180,180,180,191,191,191,191,198,198,198,198,205,205,205,204,208,208,207,207,215,214,214,215,222,222,221,221,221,221,221,221,222,222,222,223,227,227,227,228,228,229,229,230,230,231,232,232,233,233,234,234,235,235,235,236,236,236,236,236,236,236,236,236,236,236,235,235,239,239,238,238,242,241,241,241,244,244,244,244,248,247,247,247,251,251,251,251,255,255,256,256,260,260,260,261,261,261,261,261,262,262,262,262,262,262,262,262,262,262,262,262,261,261,261,261,260,260,259,259,258,258,257,257,256,256,255,255,254,254,253,253,253,253,252,252,252,252,252,252,252,253,253,253,253,254,254,255,255,256,256,257,258,259,259,260,261,262,262,263,264,264,265,265,266,266,267,267,267,267,268,268,268,268,268,268,268,268,268,268,267,267,267,267,267,266,266,266,266,265,265,265,265,265,265,265,265,265,265,265,265,265,265,265,265,265,265,266,266,266,266,266,262,262,262,262,262,262,262,262,258,258,258,257,253,253,252,252,248,247,246,246,237,236,236,235,226,225,225,224,215,214,214,213,205,204,203,203,195,195,194,194,190,190,190,190,186,186,186,186,183,183,183,184,180,181,181,182,178,179,179,180,180,181,182,182,182,183,183,184,184,184,185,185,185,185,185,185,185,185,185,185,181,180,180,180,180,180,180,179,179,179,179,179,179,179,179,179,179,179,179,179,179,180,180,180,180,181,181,181,181,182,182,182,183,183,183,183,179,179,179,179,171,171,171,171,163,163,163,162,154,154,154,153,145,145,144,144,136,135,135,135,130,130,130,129,121,121,121,121,113,113,112,112,109,109,109,109,101,101,101,101,98,98,98,98,90,91,91,91,87,87,87,88,84,84,84,84,80,80,80,80,72,72,72,72,64,64,64,64,56,56,56,56,44,44,44,44,36,36,36,36,32,32,32,32,24,24,24,24,16,16,16,16,8,8,8,8,4,4,4,4];
 function cliffDepth(worldX){return CLIFF.floor[Math.floor(worldX)-CLIFF.x]||0;}
 function cliffAhead(x,y){return y<cliffDepth(x);}
 function cliffFootBlocked(x,y){
@@ -530,21 +542,21 @@ function cliffFootBlocked(x,y){
     return floor>0&&y>=floor-12&&y<floor;
   });
 }
-const SOLID = {dryberries:[18,9],beacon:[35,15],gate:[45,52], felled:[41,16], looseRocks:[30,11], smallRocks:[17,9], vineRock:[25,11], vineCut:[20,9], fire:[19,9], hut:[48,18], tree:[16,8], palm:[13,7], stump:[16,7], rock_big:[52,16], rock_pile:[42,12], wreck:[100,18], crate:[26,10], log:[30,8]};   // 덤불은 지나갈 수 있음
+const SOLID = {dryberries:[18,9],drycoconut:[18,9],beacon:[35,15],gate:[45,52], felled:[41,16], looseRocks:[30,11], smallRocks:[17,9], vineRock:[25,11], vineCut:[20,9], fire:[19,9], hut:[48,18], tree:[16,8], palm:[13,7], stump:[16,7], rock_big:[52,16], rock_pile:[42,12], wreck:[100,18], crate:[26,10], log:[30,8]};   // 덤불은 지나갈 수 있음
 const BUSH = {bush_berry:1, bush_empty:1};
 // 이름 (가까이 가면 위에 뜸)
-const NAME = {dryberries:'열매 말리는 자리',palmLeaf:'야자잎',waterBottle:'이름표 달린 물병',beacon:'유목 더미',sosSpot:'마른 모래',fishWater:'낚싯대를 던져보세요',crate:'떠밀려 온 상자',looseRocks:'길가의 돌무더기',smallRocks:'남은 돌무더기',gate:'쓰러진 나무', wreck:'난파선', sharp:'뾰족한 돌', vineRock:'바위에 감긴 덩굴', vineBundle:'잘라낸 덩굴', fire:'모닥불', hut:'움막', branch:'나뭇가지', crab:'게', tree:'나무', palm:'야자수', coconut:'코코넛', shell_conch:'소라 껍데기', shell_clam:'대합', shell_scallop:'가리비', stone:'돌', vine:'덩굴', driftwood:'유목', bush_berry:'열매 덤불'};
+const NAME = {drycoconut:'코코넛 말리는 자리',dryberries:'열매 말리는 자리',palmLeaf:'야자잎',waterBottle:'이름표 달린 물병',beacon:'유목 더미',sosSpot:'마른 모래',fishWater:'낚싯대를 던져보세요',crate:'떠밀려 온 상자',looseRocks:'길가의 돌무더기',smallRocks:'남은 돌무더기',gate:'쓰러진 나무', wreck:'난파선', sharp:'뾰족한 돌', vineRock:'바위에 감긴 덩굴', vineBundle:'잘라낸 덩굴', fire:'모닥불', hut:'움막', branch:'나뭇가지', crab:'게', tree:'나무', palm:'야자수', coconut:'코코넛', shell_conch:'소라 껍데기', shell_clam:'대합', shell_scallop:'가리비', stone:'돌', vine:'덩굴', driftwood:'유목', bush_berry:'열매 덤불'};
 // 가방에 들어가는 것: [아이콘, 이름]
-const ITEMS = {clam:['shell','조개'],cookedClam:['cookedClam','삶은 조개'],driedBerry:['driedBerry','말린 열매'],leaf:['leaf','야자잎'],fiber:['fiber','마른 야자 섬유'],pot:['pot','작은 냄비'],rod:['rod','낡은 낚싯대'],
+const ITEMS = {coconutChips:['coconutChips','코코넛 칩'],clam:['shell','조개'],cookedClam:['cookedClam','삶은 조개'],driedBerry:['driedBerry','말린 열매'],leaf:['leaf','야자잎'],fiber:['fiber','마른 야자 섬유'],pot:['pot','작은 냄비'],rod:['rod','낡은 낚싯대'],
   waterBottle:['waterBottle','이름표 달린 물병'],emptyBottle:['emptyBottle','빈 물병'],rawFish:['rawFish','은빛 물고기'],stripedFish:['stripedFish','줄무늬 물고기'],blueFish:['blueFish','푸른 물고기'],cookedFish:['fishSoup','생선 수프'],fruitFish:['fruitFish','열매 생선 수프'],fruitClam:['fruitClam','과일 조개찜'],sharp:['sharp','돌칼'], mapPiece:['wood','찢어진 지도 조각'], axe:['axe','돌도끼'], branch:['branch','나뭇가지'], wood:['wood','목재'], coconut:['coconut','코코넛'], berries:['berries','열매'], shell:['shell','조개'], stone:['stone','돌'], vine:['vineBundle','덩굴']};
 // 가방 칸: 음식·도구만 칸 수 제한 (음식은 한 칸에 같은 것 5개까지), 재료는 개수 제한 없음
 const CATCH_TYPES=['rawFish','stripedFish','blueFish'];
-const FOODS=['coconut','berries','cookedFish','cookedClam','driedBerry','fruitFish','fruitClam','waterBottle'];
+const FOODS=['coconut','coconutChips','berries','cookedFish','cookedClam','driedBerry','fruitFish','fruitClam','waterBottle'];
 const TOOLS=['sharp','axe','rod','pot','emptyBottle'];
 const USABLE=[...FOODS,'sharp','axe','rod'];
 const MATS=['wood','branch','stone','vine','leaf','fiber','shell','clam','mapPiece',...CATCH_TYPES];
 const FOOD_SLOTS=12, TOOL_SLOTS=6, STACK=5;
-const EAT = {coconut:{food:5,water:8},berries:{food:3},cookedFish:{food:17},cookedClam:{food:12},driedBerry:{food:12},fruitFish:{food:30,hp:8},fruitClam:{food:24,hp:6},waterBottle:{water:27}};   // 먹으면 오르는 양 (배고픔·목마름 100 기준)
+const EAT = {coconut:{food:12,water:8},coconutChips:{food:42},berries:{food:3},cookedFish:{food:17},cookedClam:{food:12},driedBerry:{food:12},fruitFish:{food:30,hp:8},fruitClam:{food:24,hp:6},waterBottle:{water:27}};   // 먹으면 오르는 양 (배고픔·목마름 100 기준)
 const PICK = {sharp:['sharp',1], vineBundle:['vine',2],palmLeaf:['leaf',1],waterBottle:['waterBottle',1], branch:['branch',1], coconut:['coconut',1], shell_conch:['shell',1], shell_clam:['clam',1], shell_scallop:['clam',1], stone:['stone',1], driftwood:['wood',1]};
 // 가까이 가면 버튼이 바뀌는 것
 const A_CHOP={label:'베기', icon:'axe', anim:'chop'}, A_SHAKE_TREE={label:'흔들기', icon:'branch', anim:'shake'};
@@ -557,13 +569,15 @@ const ACTIONS = {
 for(const k in PICK) ACTIONS[k]={label:'줍기', icon:PICK[k][0], anim:'pick', when:o=>!o.fall};
 // 나무: 도끼가 없으면 흔들기(나뭇가지), 있으면 베기
 function actionOf(o){
-  if(o.type==='dryberries') return {label:camp.day>=o.readyDay?'말린 열매 수거':'말리는 중',icon:camp.day>=o.readyDay?'driedBerry':'berries',anim:'pick'};
+  const drying=dryingFood[o.type];
+  if(drying) return {label:camp.day>=o.readyDay?ITEMS[drying.result][1]+' 수거':'말리는 중',
+    icon:camp.day>=o.readyDay?drying.result:drying.input,anim:'pick'};
   if(o.type==='fire'){
     const ember=story.signalPrepared&&!story.beaconLit&&!story.ember;
-    return {label:o.fuel>0?(ember?'불씨 들기':camp.day===1&&isNight()?'불가에서 쉬기':inv.pot?'요리하기':'불 살피기'):'불 피우기',
+    return {label:o.fuel>0?(ember?'불씨 들기':'모닥불 메뉴'):'불 피우기',
       icon:o.fuel>0&&!ember&&inv.pot?'pot':'flame',camp:true};
   }
-  if(o.type==='beacon'&&story.crateOpened&&!story.beaconLit) return {label:story.signalPrepared?'봉화 피우기':equipped==='axe'?'유목 정리':'살펴보기',icon:story.signalPrepared?'flame':'axe',anim:story.signalPrepared?'pick':equipped==='axe'?'chop':'pick'};
+  if(o.type==='beacon'&&story.crateOpened&&!story.beaconLit) return {label:story.signalPrepared?'봉화 피우기':equipped==='axe'?'유목 정리':'도끼 필요',icon:story.signalPrepared?'flame':'axe',anim:story.signalPrepared?'pick':equipped==='axe'?'chop':'pick'};
   if(o.type==='sosSpot'&&story.beaconLit&&!story.sosDrawn&&!story.stormOver) return {label:'SOS 그리기',icon:'branch',anim:'pick'};
   if(o.type==='crate'&&!story.crateOpened) return {label:equipped==='axe'?'상자 부수기':'살펴보기',icon:equipped==='axe'?'axe':'wood',anim:equipped==='axe'?'chop':'pick'};
   if(o.type==='fishWater'&&equipped==='rod') return {label:'낚시',icon:'rod'};
@@ -585,7 +599,12 @@ const RECIPES = [
   {id:'axe', name:'돌도끼', icon:'axe', need:{branch:1, stone:1, vine:1}, msg:'이제 나무를 벨 수 있어요'},
   {id:'fire', name:'모닥불', icon:'branch', structure:true, need:{stone:2, branch:1}, msg:'점화에 마른 섬유 1개와 나뭇가지 1개'},
   {id:'hut', name:'움막', icon:'wood', structure:true, need:{wood:3,vine:1,leaf:5}, msg:'가까이에서 뼈대부터 세워요'},
+  {id:'drycoconut',name:'코코넛 칩 만들기',icon:'coconutChips',structure:true,need:{coconut:3},msg:'다음 날 아침에 코코넛 칩을 수거해요'},
 ];
+const dryingFood={
+  dryberries:{input:'berries',result:'driedBerry',returnLeaf:true},
+  drycoconut:{input:'coconut',result:'coconutChips',returnLeaf:false},
+};
 
 let objs=[], inv={}, crabs=[], leaves=[], told={}, world={};
 let equipped=null, placement=null;
@@ -597,40 +616,61 @@ function resetStory(){
     signalPrepared:false,ember:false,beaconLit:false,sosDrawn:false,hutReady:false,crateOpened:false,bottleFound:false});
   closeDiscovery();paperMapBtn.hidden=true;sleepScene=null;
   Object.assign(story,{wreckSeen:false,visitedB:false,duskLine:false,sleptWithLeaves:false});
-  seenHints.clear();questsExpanded=false;lastQuestDisplay='';clockTime.hidden=true;clock.setAttribute('aria-expanded','false');introPose=-1;dialogueNext=null;story.hutTalk=false;buildMotion=null;leaveHut();
+  seenHints.clear();questsExpanded=false;lastQuestDisplay='';selectedQuest=null;cancelHutTransition();clockTime.hidden=true;clock.setAttribute('aria-expanded','false');introPose=-1;dialogueNext=null;story.hutTalk=false;buildMotion=null;leaveHut();
 }
 const objective=document.getElementById('objective');
 const questList=document.getElementById('questList'),questMore=document.getElementById('questMore');
-let questsExpanded=false,lastQuestDisplay='';
+let questsExpanded=false,lastQuestDisplay='',selectedQuest=null;
 questMore.addEventListener('click',()=>{questsExpanded=!questsExpanded;goal();});
-function renderQuests(title,detail){
-  const options=[];
+function renderQuests(title,detail,recipeId){
+  const optional=[];
   if(!waking&&!story.gateOpen){
-    if(!inv.mapPiece&&!detail.includes('난파선'))options.push('B해변 난파선 살펴보기');
-    if(story.fireLit&&camp.day===1&&isNight()&&!story.sleptWithLeaves)options.push('모닥불 곁에서 쉬기');
-    if(story.dryIdea&&!seenHints.has('quest:driedBerry'))options.push('열매를 말려보기');
-    if(inv.rod&&!seenHints.has('quest:fish'))options.push('낚시로 물고기 잡기');
-    if(inv.pot&&!seenHints.has('quest:cooked'))options.push('냄비로 요리하기');
+    if(!inv.mapPiece&&!detail.includes('난파선'))optional.push(['B해변 난파선 살펴보기','B해변에서 난파선에 다가가세요']);
+    if(story.fireLit&&camp.day===1&&isNight()&&!story.sleptWithLeaves)optional.push(['모닥불 곁에서 쉬기','불이 켜진 모닥불에서 아침까지 쉴 수 있어요']);
+    if(story.dryIdea&&!seenHints.has('quest:driedBerry'))optional.push(['열매를 말려보기','열매와 야자잎을 모으거나 놓아둔 열매를 확인하세요','dryberries']);
+    if(story.dryIdea&&(inv.coconut>=3||built('drycoconut'))&&!seenHints.has('quest:coconutChips'))
+      optional.push(['코코넛 칩 만들기','코코넛을 말려두고 다음 날 아침에 수거하세요','drycoconut']);
+    if(inv.rod&&!seenHints.has('quest:fish'))optional.push(['낚시로 물고기 잡기','낚싯대를 들고 물가로 가세요']);
+    if(inv.pot&&!seenHints.has('quest:cooked'))optional.push(['냄비로 요리하기','불이 켜진 모닥불에서 요리를 고르세요']);
   }
-  if(options.length<3)questsExpanded=false;
-  const visible=questsExpanded?options:options.slice(0,2);
-  const key=JSON.stringify([title,detail,visible,options.length,questsExpanded]);
+  if(optional.length<3)questsExpanded=false;
+  const list=[[title,detail,recipeId],...(questsExpanded?optional:optional.slice(0,2))];
+  const entries=list.map(([name,help,id])=>{
+    const recipe=RECIPES.find(r=>r.id===id);
+    return {name,help,recipe,ready:!!recipe&&canCraft(recipe)};
+  });
+  const key=JSON.stringify([entries,optional.length,questsExpanded,selectedQuest]);
   if(lastQuestDisplay===key)return;
   lastQuestDisplay=key;
-  const main=document.createElement('li');
-  const label=document.createElement('strong');label.textContent=title;main.appendChild(label);
-  if(detail){const help=document.createElement('small');help.textContent=detail;main.appendChild(help);}
-  questList.replaceChildren(main,...visible.map(text=>{
-    const row=document.createElement('li');row.textContent=text;return row;
+  questList.replaceChildren(...entries.map(({name,help,recipe,ready},i)=>{
+    const row=document.createElement('li');
+    const label=document.createElement('button');label.type='button';label.className='questTask';
+    label.textContent=name;label.setAttribute('aria-pressed',String(selectedQuest===name));
+    label.addEventListener('click',()=>{
+      if(waking||dialoguePinned||sleepScene||hutTransition||discovery||!menu.hidden)return;
+      selectedQuest=name;goal();
+      if(help)hint(help,2.8);
+    });
+    row.appendChild(label);
+    const description=recipe&&i>0&&!ready?materials(recipe.need)+' · '+help:help;
+    if(description&&(i===0||selectedQuest===name||ready)){
+      const text=document.createElement('small');text.textContent=description;row.appendChild(text);
+    }
+    if(ready){
+      const button=document.createElement('button');button.type='button';button.className='questCraft';
+      button.textContent=({hut:'움막 자리 정하기',fire:'모닥불 자리 정하기',axe:'돌도끼 만들기',dryberries:'열매 말리기',drycoconut:'코코넛 칩 말리기'})[recipe.id];
+      button.addEventListener('click',()=>craft(recipe));row.appendChild(button);
+    }
+    return row;
   }));
-  questMore.hidden=options.length<3;
-  questMore.textContent=questsExpanded?'접기 ▲':`더보기 +${options.length-2} ▾`;
+  questMore.hidden=optional.length<3;
+  questMore.textContent=questsExpanded?'접기 ▲':`더보기 +${optional.length-2} ▾`;
   questMore.setAttribute('aria-expanded',String(questsExpanded));
 }
 function built(type){ return Object.values(world).flatMap(m=>m.objs).find(o=>o.type===type); }
 const materials=need=>Object.entries(need).map(([k,n])=>`${ITEMS[k][1]} ${Math.min(inv[k],n)}/${n}`).join(' · ');
 function goal(){
-  let title='',detail='';
+  let title='',detail='',recipeId;
   if(waking){ title='해변에서 깨어나기'; }
   else if(story.gateOpen){title='정글길이 열렸어요';detail='해변 이야기 완료';}
   else if(story.stormOver){
@@ -639,22 +679,23 @@ function goal(){
   } else if(!story.fireIdea){title='해변을 살펴보자';detail='폭풍에 떠밀려 온 물건이 있는지 둘러보세요';}
   else if(!story.fireLit){
     title='첫날 밤을 준비하자';
-    if(!built('fire')) detail=materials({stone:2,branch:1});
+    if(!built('fire')){recipeId='fire';detail=materials({stone:2,branch:1});}
     else {title='모닥불 피우기';detail=materials({fiber:1,branch:1});}
   } else if(camp.day===1){title='해변을 둘러보자';detail=isNight()?'모닥불에서 아침까지 쉴 수 있어요':inv.mapPiece?'먹을 것을 챙기거나 해변을 더 둘러보세요':'B해변의 난파선을 살펴볼 수 있어요';}
   else if(!inv.sharp){title='뾰족한 돌 찾기';detail='A해변의 젖은 모래에서 돌칼로 쓸 돌을 찾아보세요';}
   else if(!inv.axe){
     title=inv.vine?'돌도끼 만들기':'덩굴 자르기';
+    if(inv.vine)recipeId='axe';
     detail=inv.vine?materials({branch:1,stone:1,vine:1}):'돌칼을 들고, 바위에 감긴 덩굴로';
   } else if(!story.crateOpened){title='B해변의 상자 열기';detail='돌도끼를 들고 상자에 다가가세요';}
   else if(!story.beaconLit){
     title=!story.signalPrepared?'봉화 자리 정리하기':story.ember?'봉화 피우기':'모닥불에서 불씨 가져오기';
-    detail=story.signalPrepared&&!story.ember?'불이 꺼졌으면 마른 섬유와 가지로 다시 피우세요':'A해변의 유목 더미';
+    detail=!story.signalPrepared?'빠른 칸에서 돌도끼를 들고 A해변의 유목 더미로 가세요':story.ember?'A해변의 유목 더미':'불이 꺼졌으면 마른 섬유와 가지로 다시 피우세요';
   } else if(!story.sosDrawn){title='모래에 SOS 남기기';detail='A해변의 마른 모래';}
-  else if(!built('hut')){title='추위를 피할 움막 짓기';detail=materials({wood:3,vine:1,leaf:5});}
+  else if(!built('hut')){recipeId='hut';title='추위를 피할 움막 짓기';detail=materials({wood:3,vine:1,leaf:5});}
   else if(!story.hutReady){title=(built('hut').stage||0)===0?'움막 뼈대를 세우자':'야자잎으로 지붕을 덮자';detail='움막 자리 가까이에서 오른쪽 행동 버튼';}
   else {title=story.stormNight?'첫 태풍을 견디자':'움막에서 밤을 보내자';detail=story.stormNight?'파도가 잦아들 때까지 기다리세요':'구조 신호를 남겼어요';}
-  renderQuests(title,detail);
+  renderQuests(title,detail,recipeId);
 }
 const dialogue=document.getElementById('dialogue');
 let dialogueLeft=0,dialoguePinned=false,dialogueNext=null,introPose=-1;
@@ -745,8 +786,8 @@ function resetWorld(){
   let pi=0; world={};
   for(const k in MAPS){
     world[k]={
-      objs: MAPS[k].objects.map(([type,x,y])=>{ const spr=type==='palm'?(pi++%2?'palm_s':'palm_b'):type;   // 휜 야자수(코코넛 3)·곧은 야자수(2)를 번갈아
-        const nuts=spr==='palm_b'?3:spr==='palm_s'?2:0;
+      objs: MAPS[k].objects.map(([type,x,y])=>{ const spr=type==='palm'?(pi++%2?'palm_s':'palm_b'):type;   // 야자수 모습은 번갈아, 수확은 한 그루당 하루 한 개
+        const nuts=type==='palm'?1:0;
         return {type,spr,x,y,hp:type==='tree'?4:type==='crate'?2:0,branches:type==='tree'?2:0,nuts,maxNuts:nuts,leafDropped:false,shake:0,fall:0}; }),
       crabs: MAPS[k].crabs.map(([x,y])=>({x,y,hx:x,hy:y,dir:Math.random()<.5?-1:1,mode:'idle',timer:Math.random()*2,dist:0,f:0}))};
   }
@@ -754,13 +795,14 @@ function resetWorld(){
   told={}; camp.elapsed=0; camp.day=1; camp.time=0; camp.cold=false; renderClock();
   document.getElementById('craftCard').hidden=true;
   inv=Object.fromEntries(Object.keys(ITEMS).map(k=>[k,0])); st.inv=inv; renderInv();
-  st.dir='right'; st.walkDist=0; st.act=null; st.wood=0; st.t=0; st.hp=100; st.food=70; st.water=60; warned={}; selFood=null; bagTab='bag'; closeBag(); renderGauges();
+  st.dir='right'; st.walkDist=0;st.stepDistance=0; st.act=null; st.wood=0; st.t=0; st.hp=100; st.food=70; st.water=60; warned={}; selFood=null; bagTab='bag'; closeBag(); renderGauges();
   enterMap('beachA', MAPS.beachA.start[0], MAPS.beachA.start[1], true);
   goal();
   hintLock=0;hint('');
 }
 // 지도 바꾸기: 구역·물건·게를 그 지도 것으로
 function enterMap(k,x,y,first){
+  st.stepDistance=0;
   if(k==='beachB')story.visitedB=true;
   cur=k; Z=ZONES[k].Z; ZG=ZONES[k].g; MAP=MAPS[k]; objs=world[k].objs; crabs=world[k].crabs; leaves=[];
   for(let d=0; d<400 && !walkable(x,y); d+=4){ if(walkable(x,y-d)){ y-=d; break; } if(walkable(x,y+d)){ y+=d; break; } }   // 넘어간 자리가 물·물건이면 가까운 땅으로
@@ -798,12 +840,13 @@ function give(item,n,x,y){
   if(st.act==='pick'||fishing===null&&CATCH_TYPES.includes(item))beachAudio.effect('pickup');
   if(CATCH_TYPES.includes(item))seenHints.add('quest:fish');
   else if(item==='driedBerry')seenHints.add('quest:driedBerry');
+  else if(item==='coconutChips')seenHints.add('quest:coconutChips');
   else if(COOKING.some(recipe=>recipe.result===item))seenHints.add('quest:cooked');
   inv[item]+=n; st.wood=inv.wood; renderInv(item); pops.push({text:`+${n} ${ITEMS[item][1]}`,x,y,t:0}); checkRecipes(); goal(); }
 const foodSlotsUsed=(extra={})=>FOODS.reduce((s,k)=>s+Math.ceil((inv[k]+(extra[k]||0))/STACK),0);
 function roomFor(item,n){ return !FOODS.includes(item) || foodSlotsUsed({[item]:n})<=FOOD_SLOTS; }
-const hasRecipe=r=>r.structure?!!built(r.id):inv[r.id]>0;
-const recipeOpen=r=>r.id==='fire'?story.fireIdea:r.id==='dryberries'?story.dryIdea:r.id==='axe'?story.axeIdea:story.sosDrawn;
+const hasRecipe=r=>r.structure?(!dryingFood[r.id]&&!!built(r.id)):inv[r.id]>0;
+const recipeOpen=r=>r.id==='fire'?story.fireIdea:dryingFood[r.id]?story.dryIdea:r.id==='axe'?story.axeIdea:story.sosDrawn;
 const canCraft=r=>recipeOpen(r)&&!hasRecipe(r) && Object.entries(r.need).every(([k,n])=>inv[k]>=n);
 const visibleRecipes=()=>RECIPES.filter(recipeOpen).sort((a,b)=>Number(canCraft(b))-Number(canCraft(a)));
 let cardRec=null;
@@ -814,7 +857,7 @@ function checkRecipes(){
     document.getElementById('craftMats').textContent=Object.entries(r.need).map(([key,n])=>(key==='branch'?'가지':ITEMS[key][1])+' '+n).join(' · '); document.getElementById('craftCard').hidden=false; return; }
 }
 function craft(r){
-  if(!canCraft(r)) return;
+  if(!canCraft(r)||waking||dialoguePinned||discovery||sleepScene||hutTransition||insideHut||placement||!menu.hidden) return;
   if(r.structure){
     closeBag(); actHeld=false; jv=[0,0];
     placement={recipe:r,x:0,y:0,manual:false,dir:null};
@@ -845,12 +888,12 @@ const SVG={
 };
 const GNAME={hp:'체력', food:'배고픔', water:'목마름'};
 const gaugesEl=document.getElementById('gauges'), gBar={};
-gaugesEl.innerHTML=['hp','water'].map(k=>`<div class="g ${k}" id="g_${k}" role="meter" aria-label="${GNAME[k]}" aria-valuemin="0" aria-valuemax="100">${SVG[k]}<span class="bar"><i></i></span></div>`).join('');
-['hp','water'].forEach(k=>{ gBar[k]={el:document.getElementById('g_'+k), i:document.querySelector('#g_'+k+' i'), v:-1}; });
+gaugesEl.innerHTML=['hp','food','water'].map(k=>`<div class="g ${k}" id="g_${k}" role="meter" aria-label="${GNAME[k]}" aria-valuemin="0" aria-valuemax="100">${SVG[k]}<span class="bar"><i></i></span></div>`).join('');
+['hp','food','water'].forEach(k=>{ gBar[k]={el:document.getElementById('g_'+k), i:document.querySelector('#g_'+k+' i'), v:-1}; });
 function renderGauges(){
-  gaugesEl.classList.toggle('hungry',st.food<=20);
+  gaugesEl.classList.toggle('hungry',st.food<=LOW_FOOD);
   for(const k in gBar){ const v=Math.ceil(st[k]), g=gBar[k]; if(v===g.v) continue; g.v=v;
-    g.i.style.width=v+'%'; g.el.setAttribute('aria-valuenow',v); g.el.classList.toggle('low',v<=20); }
+    g.i.style.width=v+'%'; g.el.setAttribute('aria-valuenow',v); g.el.classList.toggle('low',v<=(k==='food'?LOW_FOOD:20)); }
 }
 const bagBtn=document.getElementById('bagBtn'), bagEl=document.getElementById('bag'), bagVeil=document.getElementById('bagVeil');
 const bagBody=document.getElementById('bagBody'), bagDetail=document.getElementById('bagDetail');
@@ -909,7 +952,7 @@ function renderQuick(){
   }
 }
 let bagTab='bag',selFood=null,pickSlot=null;
-function openBag(tab,slot=null){ if(gameScreen.hidden||!menu.hidden||waking||dialoguePinned||insideHut||buildMotion||sleepScene||discovery)return;
+function openBag(tab,slot=null){ if(gameScreen.hidden||!menu.hidden||waking||dialoguePinned||insideHut||buildMotion||sleepScene||discovery||hutTransition)return;
   cancelQuick();closeCampOptions();cancelPlacement();pickSlot=slot;bagTab=tab||bagTab;bagEl.hidden=false;
   bagVeil.hidden=false;actHeld=false;jv=[0,0];renderBag();
 }
@@ -1110,7 +1153,26 @@ const hutView=document.getElementById('hutView');
 const hutCanvas=document.getElementById('hutCanvas'),hutCtx=hutCanvas.getContext('2d');
 const hutChoices=document.getElementById('hutChoices'),hutRest=document.getElementById('hutRest');
 const hutSleep=document.getElementById('hutSleep');
-let insideHut=null,resting=false,buildMotion=null;
+let insideHut=null,resting=false,buildMotion=null,hutTransition=null;
+const sceneCurtain=document.getElementById('sceneCurtain');
+const HUT_FADE=.22;
+function cancelHutTransition(){hutTransition=null;sceneCurtain.hidden=true;sceneCurtain.style.opacity='0';}
+function moveThroughHut(hut){
+  if(hutTransition)return;
+  hutTransition={hut,left:HUT_FADE*2,swapped:false};
+  jv=[0,0];actHeld=false;st.moving=false;sceneCurtain.hidden=false;
+}
+function tickHutTransition(dt){
+  const transition=hutTransition;
+  transition.left=Math.max(0,transition.left-dt);
+  if(!transition.swapped&&transition.left<=HUT_FADE){
+    transition.swapped=true;
+    if(transition.hut)enterHut(transition.hut);else leaveHut();
+  }
+  sceneCurtain.style.opacity=String(1-Math.abs(transition.left-HUT_FADE)/HUT_FADE);
+  if(!transition.left)cancelHutTransition();
+}
+
 function renderHutChoices(){
   hutChoices.hidden=!insideHut||dialoguePinned;
   hutSleep.hidden=!isNight();
@@ -1139,7 +1201,7 @@ hutSleep.addEventListener('click',()=>{
   if(!insideHut||!isNight()||dialoguePinned)return;
   advanceCamp(cycleLength()-camp.time);resting=false;renderHutChoices();
 });
-document.getElementById('hutExit').addEventListener('click',()=>{if(!dialoguePinned)leaveHut();});
+document.getElementById('hutExit').addEventListener('click',()=>{if(!dialoguePinned)moveThroughHut(null);});
 function drawHutView(){
   if(hutCanvas.width!==Math.round(VW*dpr)||hutCanvas.height!==Math.round(VH*dpr)){
     hutCanvas.width=Math.round(VW*dpr);hutCanvas.height=Math.round(VH*dpr);
@@ -1151,7 +1213,8 @@ function drawHutView(){
   const f=hutFire(insideHut);
   if(f&&IMG.camp.naturalWidth){
     const x=VW/2+Math.max(-VW*.23,Math.min(VW*.23,f.side/135*VW*.23));
-    const y=VH*.69,s=Math.max(.34,.75-f.forward/475);
+    const y=Math.min(VH*.86,Math.max(VH*.74,(VH-h)/2+h*(.80-Math.min(.025,f.forward/9000))));
+    const s=Math.max(.34,.75-f.forward/475);
     const lit=f.fire.fuel>0, frame=lit?1+Math.floor(st.t*7)%3:0;
     if(night&&lit&&typeof hutCtx.createRadialGradient==='function'){
       const grd=hutCtx.createRadialGradient(x,y-6,4,x,y-4,79);
@@ -1193,7 +1256,8 @@ function campOptions(o){
     const b=document.createElement('button');b.type='button';b.textContent=text;b.disabled=disabled;
     b.addEventListener('click',()=>{closeCampOptions();run();});campChoices.appendChild(b);
   };
-  if(o.fuel>0&&isNight()&&camp.day===1)add('아침까지 쉬기',()=>startBeachSleep(o));
+  if(o.fuel>0&&!isNight())add('저녁까지 쉬기',()=>startBeachSleep(o,false));
+  if(o.fuel>0&&isNight()&&camp.day===1)add('아침까지 쉬기',()=>startBeachSleep(o,true));
   add('모닥불 수거',()=>{
     if(!objs.includes(o)||reachDist(o)>=1) return;
     objs.splice(objs.indexOf(o),1);
@@ -1276,10 +1340,9 @@ function storyDawn(){
 let ignition=null;
 function useCamp(o){
   actHeld=false;
-  if(o.type==='hut'){if((o.stage||0)<2)buildStep(o);else enterHut(o);return;}
+  if(o.type==='hut'){if((o.stage||0)<2)buildStep(o);else moveThroughHut(o);return;}
   if(o.fuel>0){
     if(story.signalPrepared&&!story.beaconLit&&!story.ember){story.ember=true;goal();hint('불붙인 가지를 들었어요',2);}
-    else if(inv.pot&&!(camp.day===1&&isNight())) showCooking(o);
     else campOptions(o);
     return;
   }
@@ -1325,27 +1388,28 @@ function advanceCamp(dt){
     if(wasDay===1)say(story.sleptWithLeaves?'야자잎을 덮었는데도 새벽엔 추웠어. 바람을 막아줄 곳이 필요해.':'새벽엔 정말 추웠어. 바람을 막아줄 곳이 필요해.',true,true);
   }
 }
-const DROP={food:40/900,water:50/900};
+const DROP={food:35/240,water:40/540};
+const LOW_FOOD=35, LOW_WATER=20;
 const HP_LOSS=1/4, HP_GAIN=1/10;                 // 굶거나 목마르면 4초에 1씩 줄고, 둘 다 30 넘으면 10초에 1씩 참
 let warned={};
 function survive(dt){
   st.food=Math.max(0,st.food-DROP.food*dt); st.water=Math.max(0,st.water-DROP.water*dt);
-  const starving=(st.food<=0)+(st.water<=0);
+  const starving=Number(st.food<=LOW_FOOD)+Number(st.water<=LOW_WATER)+Number(st.food<=0)+Number(st.water<=0);
   const cold=isNight()&&!insideHut&&!objs.some(o=>
     (o.type==='fire'&&o.fuel>0&&Math.hypot(o.x-st.x,o.y-st.y)<WARM_RADIUS)||
     (o.type==='hut'&&o.stage===2&&Math.abs(o.x-st.x)<58&&Math.abs(o.y-st.y)<44));
   const chilled=cold && !camp.cold;
   camp.cold=cold;
   if(starving||cold) st.hp=Math.max(0,st.hp-HP_LOSS*(starving+Number(cold))*dt);
-  else if(st.food>30&&st.water>30) st.hp=Math.min(100,st.hp+HP_GAIN*(resting?2:1)*dt);
-  for(const k of ['food','water']){ const low=st[k]<=20; if(low&&!warned[k]){ warned[k]=1; hint(k==='food'?'배가 고파요. 가방에서 먹을 것을 찾아보세요':'목이 말라요. 코코넛을 마셔 보세요',2.6); } if(st[k]>30) warned[k]=0; }
+  else if(st.food>LOW_FOOD&&st.water>LOW_WATER) st.hp=Math.min(100,st.hp+HP_GAIN*(resting?2:1)*dt);
+  for(const k of ['food','water']){ const threshold=k==='food'?LOW_FOOD:LOW_WATER; const low=st[k]<=threshold; if(low&&!warned[k]){ warned[k]=1; hint(k==='food'?'배가 고파요. 가방에서 먹을 것을 찾아보세요':'목이 말라요. 코코넛을 마셔 보세요',2.6); } if(st[k]>threshold+5) warned[k]=0; }
   if(chilled) hint('밤공기가 차가워요. 모닥불 근처로 가세요',3);
   if(st.hp<=0) faint();
 }
 function faint(){                                // 쓰러지면 처음 해변에서 깨어남 (가방은 그대로)
   if(insideHut)leaveHut();
   buildMotion=null;
-  st.hp=30; st.food=Math.max(st.food,25); st.water=Math.max(st.water,25); warned={};
+  st.hp=30; st.food=Math.max(st.food,LOW_FOOD+8); st.water=Math.max(st.water,LOW_WATER+8); warned={};
   enterMap('beachA', MAPS.beachA.start[0], MAPS.beachA.start[1]); hint('쓰러졌어요… 처음 해변에서 정신을 차렸어요',3);
 }
 
@@ -1420,9 +1484,10 @@ function drawObj(o){
     }
     return;
   }
-  if(o.type==='dryberries'){
+  if(dryingFood[o.type]){
     if(IMG.story.naturalWidth)ctx.drawImage(IMG.story,0,0,48,48,o.x-28,o.y-39,56,47);
-    if(camp.day>=o.readyDay&&IMG.cooking.naturalWidth)
+    if(o.type==='drycoconut'&&IMG.chips.naturalWidth)ctx.drawImage(IMG.chips,o.x-14,o.y-25,28,27);
+    else if(camp.day>=o.readyDay&&IMG.cooking.naturalWidth)
       ctx.drawImage(IMG.cooking,48,0,48,48,o.x-13,o.y-20,26,26);
     else {
       ctx.fillStyle='#8e3444';
@@ -1512,13 +1577,13 @@ const keys={};
 addEventListener('keydown',e=>{
   if(gameScreen.hidden||!menu.hidden) return;
   const k=e.key.toLowerCase();
-  if(sleepScene)return;
+  if(sleepScene||hutTransition)return;
   if(discovery){
     if(k==='escape'){e.preventDefault();closeDiscovery();}
     return;
   }
   if(k==='i'||k==='b'){ bagOpen()?closeBag():openBag(); return; }
-  if(k==='escape'){if(dialoguePinned)return; if(insideHut){leaveHut();return;}clearDialogue();cancelQuick();closeCampOptions();cancelPlacement();closeBag();return;}
+  if(k==='escape'){if(dialoguePinned)return; if(insideHut){moveThroughHut(null);return;}clearDialogue();cancelQuick();closeCampOptions();cancelPlacement();closeBag();return;}
   if(dialoguePinned){ if(k===' '||k==='enter'){e.preventDefault();nextDialogue();}return;}
   if(bagOpen()||waking||insideHut||buildMotion) return;
   if(/^[1-5]$/.test(k)&&!e.repeat){quickTap(+k-1);return;}
@@ -1577,14 +1642,14 @@ actBtn.addEventListener('lostpointercapture',actEnd);
 actBtn.addEventListener('contextmenu',e=>e.preventDefault());
 actBtn.addEventListener('click',e=>{if(e.detail===0)doAction();});
 // ---------- 가까이 가면 동작 ----------
-const st={walkDist:0,x:640,y:300,dir:'down',moving:false,t:0,act:null,actT:0,hit:false,wood:0,depth:0,target:null,blocked:0,inv:{},hp:100,food:70,water:60};
+const st={walkDist:0,stepDistance:0,x:640,y:300,dir:'down',moving:false,t:0,act:null,actT:0,hit:false,wood:0,depth:0,target:null,blocked:0,inv:{},hp:100,food:70,water:60};
 const REACH=44;
 function reachDist(o){ const s=SOLID[o.type]||[10,6]; const dx=(st.x-o.x)/(s[0]+REACH), dy=(st.y-o.y)/(s[1]+REACH*0.8); return Math.hypot(dx,dy); }
 function canAct(o){ return !!actionOf(o); }
 function findTarget(){ const water=findFishingWater();if(water)return water;let best=null, bd=1; for(const o of objs){ if(!canAct(o)) continue; const d=reachDist(o); if(d<bd){ bd=d; best=o; } } return best; }
 function faceTo(o){ const vx=o.x-st.x, vy=(o.y-st.y)*1.6; st.dir=Math.abs(vx)>Math.abs(vy)?(vx>0?'right':'left'):(vy>0?'down':'up'); }
 function doAction(){
-  if(gameScreen.hidden||!menu.hidden||bagOpen()||discovery||sleepScene)return;
+  if(gameScreen.hidden||!menu.hidden||bagOpen()||discovery||sleepScene||hutTransition)return;
   if(dialoguePinned){nextDialogue();return;}
   if(st.act||waking||ignition||buildMotion||insideHut||!campChoices.hidden)return;
   if(fishing){reelFishing();return;}
@@ -1724,19 +1789,21 @@ const TIMES={chop:[.14,.24,.46], pick:[.16,.30,.48], shake:[.16,.55,.95]};   // 
 function hitNow(t){
   if(!t || !objs.includes(t) || reachDist(t)>=1.15) return;
   if(st.act==='chop'&&equipped==='axe'&&actionOf(t)?.anim==='chop'){beachAudio.effect('chop');pulse(32);}
-  if(t.type==='dryberries'){
+  if(dryingFood[t.type]){
+    const drying=dryingFood[t.type];
     actHeld=false;
-    if(camp.day<t.readyDay){hint('다음 날 아침에 말린 열매를 거둘 수 있어요',2.4);return;}
-    if(!roomFor('driedBerry',1)){hint('가방의 음식 칸이 꽉 찼어요',2.4);return;}
+    if(camp.day<t.readyDay){hint('다음 날 아침에 '+ITEMS[drying.result][1]+' 수거할 수 있어요',2.4);return;}
+    if(!roomFor(drying.result,1)){hint('가방의 음식 칸이 꽉 찼어요',2.4);return;}
     objs.splice(objs.indexOf(t),1);
-    give('leaf',1,t.x,t.y-48);give('driedBerry',1,t.x,t.y-25);
+    if(drying.returnLeaf)give('leaf',1,t.x,t.y-48);
+    give(drying.result,1,t.x,t.y-25);
   }else if(t.type==='beacon'){
     actHeld=false;
-    if(!story.signalPrepared&&equipped==='axe'){
+    if(!story.signalPrepared&&equipped==='axe'&&st.act==='chop'){
       story.signalPrepared=true;
       say('구조대가 분명 나를 찾고 있겠지? 연기를 올리면 여기 있는 게 보일 거야.',true,true);
     }else if(!story.signalPrepared){
-      say('유목을 정리하면 여기서 구조 신호를 보낼 수 있겠어.',true);
+      hint('빠른 칸에서 돌도끼를 들어야 유목을 정리할 수 있어요',3.4);
     }else if(story.ember){
       story.ember=false;story.beaconLit=true;
       say('연기가 올라간다. 모래에도 멀리서 보이는 표시를 남기자.',true);
@@ -1847,6 +1914,7 @@ function update(dt){
   let vx=jv[0]+((keys.arrowright||keys.d)?1:0)-((keys.arrowleft||keys.a)?1:0);
   let vy=jv[1]+((keys.arrowdown||keys.s)?1:0)-((keys.arrowup||keys.w)?1:0);
   const m=Math.hypot(vx,vy); st.moving=false;
+  if(m<=.2)st.stepDistance=0;
   if(fishing){
     if(m>.2&&fishing.phase!=='reel')fishing=null;
     else {tickFishing(dt);if(fishing)return;}
@@ -1876,8 +1944,11 @@ function update(dt){
     const oldDistance=st.walkDist;
     st.walkDist+=Math.hypot(st.x-ox0,st.y-oy0);
     st.moving=st.walkDist>oldDistance;
-    const stride=st.dir==='left'||st.dir==='right'?24:15;
-    if(Math.floor(oldDistance/stride)!==Math.floor(st.walkDist/stride))beachAudio.step(zoneAt(st.x,st.y));
+    st.stepDistance+=(st.walkDist-oldDistance);
+    if(st.stepDistance>=39){
+      st.stepDistance%=39;
+      beachAudio.step(zoneAt(st.x,st.y));
+    }
     if(st.blocked>0 && (zoneAt(nx,ny)===4||zoneAt(nx+vx*12,ny+vy*12)===4)) hint('더 깊은 곳은 못 들어가요',1.2);
     else if(st.blocked>0){ const n=noteAt(nx+vx*12,ny+vy*12); if(n) hint(n,1.6); }
   }
@@ -1895,7 +1966,7 @@ function update(dt){
   if(!st.act&&actHeld&&t&&t.type!=='fire'&&t.type!=='hut'&&t.type!=='fishWater')doAction();
   if(!st.act){
     const hut=t?null:objs.find(o=>o.type==='hut' && reachDist(o)<1);
-    if(t) hint(NAME[t.type]||'');
+    if(t) hint(t.type==='beacon'&&!story.signalPrepared&&equipped!=='axe'?'돌도끼를 들고 유목을 정리하세요':NAME[t.type]||'');
     else if(cur==='beachB'&&story.gateOpen&&st.y<114&&st.x>=840) hint('해변 이야기 완료');
     else if(hut){
       hint('움막 가까이에서 행동 버튼을 눌러요');
@@ -1940,7 +2011,7 @@ function drawRipples(x,y){
   ctx.restore();
 }
 function drawPlayer(){
-  if(sleepScene&&IMG.wake.naturalWidth){
+  if(sleepScene?.night&&IMG.wake.naturalWidth){
     ctx.drawImage(IMG.wake,0,chosen==='boy'?0:184,192,184,st.x-96,st.y-159,192,184);
     if(IMG.story.naturalWidth){
       for(let i=0;i<3;i++){
@@ -2027,6 +2098,17 @@ function drawCampLight(cx,cy){
   ctx.imageSmoothingEnabled=false;
   ctx.drawImage(nightLayer,cx,cy,VW,VH);
 }
+function cliffCanCoverPlayer(x,y){
+  const edge=cliffRightEdge[Math.floor(y)-CLIFF.y]||0;
+  return x>=CLIFF.x&&x<CLIFF.x+edge&&cliffAhead(x,y);
+}
+function drawPlayerWithCliff(){
+  drawPlayer();
+  if(cur!=='beachA'||!IMG.cliff.naturalWidth||!cliffCanCoverPlayer(st.x,st.y))return;
+  const x=Math.floor(st.x)-53;
+  ctx.save();ctx.beginPath();ctx.rect(x,st.y-115,106,116);ctx.clip();
+  ctx.drawImage(IMG.cliff,CLIFF.x,CLIFF.y);ctx.restore();
+}
 function drawWorld(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   const cx=Math.round(cam.x*dpr)/dpr, cy=Math.round(cam.y*dpr)/dpr;
@@ -2043,26 +2125,20 @@ function drawWorld(){
   ctx.translate(-cx,-cy);
   ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
   const vis=objs.filter(inView);
+  vis.forEach(o=>{if(o.type==='sosSpot')drawObj(o);});
   drawFishingFloat();
   vis.forEach(o=>{ if(o.type!=='sosSpot'&&zoneAt(o.x,o.y)<3 && !(o.fall>.15)) drawShadow(o.x,o.y,shadowWidth(o),o.type==='crate'); });
   crabs.forEach(c=>drawShadow(c.x,c.y,22));   // 떨어지는 코코넛은 땅에 닿을 때쯤 그림자
   if(st.depth<5) drawShadow(st.x,st.y,36);
-  if(st.target && st.target.type!=='fishWater' && !st.act){
+  if(st.target && !['fishWater','sosSpot'].includes(st.target.type) && !st.act){
     const s=SOLID[st.target.type]||[12,6], p=(Math.sin(st.t*6)+1)/2;
     ctx.save(); ctx.globalAlpha=.55+p*.4; ctx.strokeStyle='#F2C14E'; ctx.lineWidth=2.5;
     ctx.beginPath(); ctx.ellipse(st.target.x,st.target.y,s[0]+10+p*3,s[1]+6+p*2,0,0,Math.PI*2); ctx.stroke(); ctx.restore();
   }
-  const items=vis.map(o=>({y:o.y,draw:()=>drawObj(o)}));
-  items.push({y:st.y,draw:drawPlayer});
+  const items=vis.filter(o=>o.type!=='sosSpot').map(o=>({y:o.y,draw:()=>drawObj(o)}));
+  items.push({y:st.y,draw:drawPlayerWithCliff});
   crabs.forEach(c=>{ if(c.x>cam.x-40&&c.x<cam.x+VW+40&&c.y>cam.y-20&&c.y<cam.y+VH+40) items.push({y:c.y,draw:()=>drawCrab(c)}); });
   items.sort((a,b)=>a.y-b.y).forEach(it=>it.draw());
-  if(cur==='beachA'&&IMG.cliff.naturalWidth&&st.x<CLIFF.x+CLIFF.floor.length+54&&st.y>CLIFF.y){
-    const x0=Math.max(CLIFF.x,Math.floor(st.x-54)),x1=Math.min(CLIFF.x+CLIFF.floor.length,Math.ceil(st.x+54));
-    // Only the parts of the silhouette whose ground contact lies in front of the character occlude it.
-    ctx.save();ctx.beginPath();
-    for(let x=x0;x<x1;x++)if(cliffAhead(x,st.y))ctx.rect(x,st.y-119,1,119);
-    ctx.clip();ctx.drawImage(IMG.cliff,CLIFF.x,CLIFF.y);ctx.restore();
-  }
   if(placement){
     const {recipe,x,y}=placement;
     const solid=SOLID[recipe.id];
@@ -2189,17 +2265,26 @@ function showTool(item){
   });
   findButton('나중에',closeDiscovery);
 }
-function startBeachSleep(fire){
-  if(camp.day!==1||!isNight()||!objs.includes(fire)||!fire.fuel||reachDist(fire)>=1)return;
-  closeCampOptions();jv=[0,0];actHeld=false;st.act=null;sleepScene={left:1.65};
-  story.sleptWithLeaves=true;say('이거라도 덮으면 좀 낫겠지.',true);
+function startBeachSleep(fire,night=true){
+  if(night!==isNight()||(night&&camp.day!==1)||!objs.includes(fire)||!fire.fuel||reachDist(fire)>=1)return;
+  closeCampOptions();jv=[0,0];actHeld=false;st.act=null;st.moving=false;
+  sleepScene={left:1.65,night};
+  if(night)story.sleptWithLeaves=true;
+  say(night?'이거라도 덮으면 좀 낫겠지.':'해가 질 때까지 여기서 잠깐 쉬자.',true);
 }
 function tickBeachSleep(dt){
   sleepScene.left-=dt;
-  if(sleepScene.left<=0){sleepScene=null;advanceCamp(cycleLength()-camp.time);}
+  if(sleepScene.left>0)return;
+  const {night}=sleepScene;sleepScene=null;
+  const wait=(night?cycleLength():dayLength())-camp.time;
+  // Rest still consumes supplies, at one fifth of the active rate.
+  st.food=Math.max(0,st.food-DROP.food*wait*.20);
+  st.water=Math.max(0,st.water-DROP.water*wait*.20);
+  advanceCamp(wait);
+  renderGauges();
 }
 function testJump(toDawn){
-  if(waking||dialoguePinned||discovery||sleepScene||buildMotion)return;
+  if(waking||dialoguePinned||discovery||sleepScene||buildMotion||hutTransition)return;
   fishing=null;
   menu.hidden=true;
   if(!isNight())advanceCamp(dayLength()-camp.time);
@@ -2213,6 +2298,7 @@ function loop(now){
   requestAnimationFrame(loop);                     // 먼저 다음 장면을 예약 (한 장면에서 오류가 나도 게임이 멈추지 않음)
   const dt=Math.max(0,Math.min(.05,(now-last)/1000)); last=now;
   if(gameScreen.hidden){drawPick(now/1000);return;}
+  if(hutTransition){tickHutTransition(dt);if(insideHut)drawHutView();else drawWorld();return;}
   if(now>=nextSoundUpdate){
     nextSoundUpdate=now+160;
     const zone=zoneAt(st.x,st.y);

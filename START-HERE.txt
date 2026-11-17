@@ -1,25 +1,25 @@
-표류섬 v32 해변 음원 추가 ZIP
+표류섬 v33 · 기존 v32(음원 적용판)용 업데이트
 
-기존 v32의 index.html이 있는 위치에 audio 폴더와 sw-castaway-isle.js를 올리세요.
-낮·밤 음악 ZIP을 이미 올렸다면 이번 파일로 덮어쓰세요.
-이 텍스트는 안내용입니다.
+1. 기존 index.html이 있는 위치에 index.html, beach-audio.js, coconut-chips.png, version.json을 올립니다.
+2. 기존 audio 폴더 안에 이 ZIP의 grass-1.wav, grass-2.wav, grass-3.wav를 각각 덮어씁니다.
+3. index.html이 있는 위치에 sw-castaway-isle.js를 마지막으로 올립니다.
+4. 공개 게임을 다시 열고 모험 시작 아래에 v33이 표시되는지 확인합니다.
+   START-HERE.txt는 안내용입니다.
 
-음원 출처 — 각 공개 페이지 표기 CC0
-Feel Good Island Loop (낮) — Brandon Morris, 편집 AntumDeluge
-https://opengameart.org/content/feel-good-island-loop
-Etirwer (밤) — Kistol
-https://opengameart.org/content/etirwer
-Beach Ocean Waves (파도) — jasinski 녹음, 네 가지 파도를 이어 편집
-https://opengameart.org/content/beach-ocean-waves
-Water Splash and sand footsteps (찌 착수, 입질, 마른 모래, 젖은 모래)
-https://opengameart.org/content/water-splash-and-sand-footsteps
-Rpg Sound Effect Pack (풀밭, 아이템 줍기) — Delta12 Studio
-https://opengameart.org/content/rpg-sound-effect-pack
-50 RPG sound effects (옷 스치는 소리, 도끼질) — Kenney
-https://opengameart.org/content/50-rpg-sound-effects
-Random Sounds Samples (덩굴, 귀뚜라미)
+v33 변경 사항
+- 발소리는 일정한 걸음 간격에만 작게 재생합니다. 풀밭 음원을 세 가지 새 소리로 교체했습니다.
+- 배고픔 막대를 복원했습니다. 배고픔 수치가 35 이하이면 체력이 줄기 시작하며, 음식과 물을 챙기면 회복됩니다.
+- 코코넛은 야자수 한 그루당 하루 한 개입니다. 코코넛 세 개는 다음 날 수거하는 코코넛 칩 한 개로 말릴 수 있습니다.
+- 말린 열매와 코코넛 칩은 자리를 여럿 만들어 한 번에 준비할 수 있습니다.
+- 불이 켜진 모닥불 메뉴에서 저녁까지 쉬기를 선택할 수 있습니다.
+- 봉화에 돌도끼가 필요하면 행동 버튼과 안내에서 표시합니다.
+- 제작 재료가 충분하면 퀘스트 카드에서 바로 제작 또는 자리 정하기로 이어집니다.
+- SOS는 캐릭터 아래 지면에 그립니다. 절벽 가장자리에서 실제 절벽 실루엣을 기준으로 캐릭터 가림을 판단합니다.
+- 움막 출입은 약 0.44초 동안 어두워졌다 밝아집니다. 안에서 보이는 모닥불을 마른 모래 쪽에 배치했습니다.
+
+교체한 풀밭 소리 출처
+Fantozzi's Footsteps — Fantozzi / 편집·게시 qubodup / CC0
+https://opengameart.org/content/fantozzis-footsteps-grasssand-stone
+Random Sounds Samples의 moving leaves stereo — HaelDB 게시 / CC0
 https://opengameart.org/content/random-sounds-samples
-Fireplace Sound loop (모닥불)
-https://opengameart.org/content/fireplace-sound-loop
-
-마른 모래·풀밭·젖은 모래는 각각 세 가지. 젖은 모래는 모래와 물소리를 섞었습니다.
+위 두 소리를 편집해 풀밭 발소리 세 가지를 만들었습니다.
