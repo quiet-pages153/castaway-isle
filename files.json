@@ -1,4 +1,22 @@
 {
-  "day": "day.ogg",
-  "night": "night.ogg"
+  "day": "day.mp3",
+  "night": "night.mp3",
+  "waves": "waves.mp3",
+  "fire": "fire.mp3",
+  "cast": "cast.wav",
+  "bite": "bite.wav",
+  "wake": "wake.wav",
+  "chop": "chop.wav",
+  "pickup": "pickup.wav",
+  "vine": "vine.wav",
+  "cricket": "cricket.wav",
+  "sand-1": "sand-1.wav",
+  "grass-1": "grass-1.wav",
+  "wet-1": "wet-1.wav",
+  "sand-2": "sand-2.wav",
+  "grass-2": "grass-2.wav",
+  "wet-2": "wet-2.wav",
+  "sand-3": "sand-3.wav",
+  "grass-3": "grass-3.wav",
+  "wet-3": "wet-3.wav"
 }

@@ -1,13 +1,25 @@
-표류섬 v32 해변 배경음악 추가 파일
+표류섬 v32 해변 음원 추가 ZIP
 
-기존 v32의 index.html이 있는 위치에 audio 폴더와 sw-castaway-isle.js를 그대로 올리세요.
-audio/files.json도 덮어씁니다. 이 안내 텍스트는 읽기용입니다.
-서비스워커 파일은 이전의 빈 음원 목록 캐시를 갱신합니다.
+기존 v32의 index.html이 있는 위치에 audio 폴더와 sw-castaway-isle.js를 올리세요.
+낮·밤 음악 ZIP을 이미 올렸다면 이번 파일로 덮어쓰세요.
+이 텍스트는 안내용입니다.
 
-포함
-낮 — Feel Good Island Loop / Brandon Morris, 편집 AntumDeluge / CC0
+음원 출처 — 각 공개 페이지 표기 CC0
+Feel Good Island Loop (낮) — Brandon Morris, 편집 AntumDeluge
 https://opengameart.org/content/feel-good-island-loop
-밤 — Etirwer (Looped) / Kistol / CC0
+Etirwer (밤) — Kistol
 https://opengameart.org/content/etirwer
+Beach Ocean Waves (파도) — jasinski 녹음, 네 가지 파도를 이어 편집
+https://opengameart.org/content/beach-ocean-waves
+Water Splash and sand footsteps (찌 착수, 입질, 마른 모래, 젖은 모래)
+https://opengameart.org/content/water-splash-and-sand-footsteps
+Rpg Sound Effect Pack (풀밭, 아이템 줍기) — Delta12 Studio
+https://opengameart.org/content/rpg-sound-effect-pack
+50 RPG sound effects (옷 스치는 소리, 도끼질) — Kenney
+https://opengameart.org/content/50-rpg-sound-effects
+Random Sounds Samples (덩굴, 귀뚜라미)
+https://opengameart.org/content/random-sounds-samples
+Fireplace Sound loop (모닥불)
+https://opengameart.org/content/fireplace-sound-loop
 
-파도와 효과음은 이 ZIP에 포함되지 않았습니다.
+마른 모래·풀밭·젖은 모래는 각각 세 가지. 젖은 모래는 모래와 물소리를 섞었습니다.
