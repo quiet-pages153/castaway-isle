@@ -1,0 +1,45 @@
+표류섬 v31 → v32 · 해변 변경 파일
+
+기준: v31이 설치된 GitHub 저장소.
+ZIP을 풀고 START-HERE.txt를 제외한 파일과 audio 폴더를
+기존 index.html이 있는 경로에 그대로 추가하거나 덮어쓰세요.
+ZIP 자체를 업로드하는 방식은 아닙니다.
+
+반영: 상단 상태바, 남은 낮·밤 시간, 퀘스트 목록, 제작 알림,
+대화 버튼, 봉화와 SOS, 해변별 낚시, 지원 기기 진동,
+배경음악·환경음·효과음 볼륨 저장 기능.
+
+음원 상태: 선택한 음원의 원본을 이 작업 환경에서 내려받을 수 없었습니다.
+아래 파일은 포함되지 않았으므로, 이 ZIP으로 업데이트해도 소리는 재생되지 않습니다.
+이는 음원 준비 전 해변 수정본입니다. audio/files.json은 빈 목록입니다.
+
+해변 음원 및 효과음 출처(게시 페이지 표기 기준 CC0)
+  낮 / Feel Good Island Loop / Brandon Morris, 편집 AntumDeluge
+  https://opengameart.org/content/feel-good-island-loop
+  밤 / Etirwer / Kistol
+  https://opengameart.org/content/etirwer
+  파도 / Calm ocean waves / SamsterBirdies
+  https://freesound.org/s/578524/
+  1 낚싯찌 착수 / Fishing Lure Plop Water / el_boss
+  https://freesound.org/s/853278/
+  2 덩굴 / Plant Harvest 01 / Valenspire
+  https://freesound.org/s/699490/
+  3 줍기 / Videogame Menu Highlight / Fupicat
+  https://freesound.org/s/471936/
+  4 교체한 도끼음 / Axe chopping wood / xkeril
+  https://freesound.org/s/753925/
+  5 모닥불 / Small Campfire / kyles
+  https://freesound.org/s/637344/
+  6 마른 모래 / walking in beach sand / 21100495
+  https://freesound.org/s/655366/
+  7 풀밭 / Footsteps grass / jedg
+  https://freesound.org/s/505833/
+  8 젖은 모래 / footsteps in wet coarse sand / bruno.auzet
+  https://freesound.org/s/539175/
+  9 기상 / Cotton clothes rustling / khenshom
+  https://freesound.org/s/481075/
+  귀뚜라미(짧게 컷) / Crickets - Warm Summer Night / Speziax
+  https://freesound.org/s/645329/
+
+기본 상대 볼륨은 마른 모래를 올리고(0.82), 풀밭(0.55)을 기준으로
+젖은 모래를 내리는(0.32) 방향입니다. 실제 원본을 편집한 뒤 청감으로 조정해야 합니다.
