@@ -434,7 +434,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='39', NOTE="달리기, 연속 줍기, 불씨 들기 동작과 해변의 정글 입구를 수정했어요.";
+const APP='castaway-isle', APP_V='41', NOTE="소녀 캐릭터 표시 오류와 이미지 버전 불일치 방지 기능을 수정했어요.";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -464,7 +464,7 @@ const MAPS = {"beachA":{"name":"해변 A","floor":"floor_beachA.png","start":[76
 const IMG = {};
 let loaded = 0;
 [['boy','boy.png'],['girl','girl.png'],['boy_x','boy_x.png'],['girl_x','girl_x.png'],['objs','beach_objs.png'],...Object.keys(MAPS).map(k=>['floor_'+k,MAPS[k].floor])].forEach(([k,src])=>{
-  const im=new Image(); im.onload=()=>{loaded++;}; im.src=src; IMG[k]=im;
+  const im=new Image(); im.onload=()=>{loaded++;}; im.src=['boy','girl','boy_x','girl_x'].includes(k)?src+'?sprite=v41':src; IMG[k]=im;
 });
 IMG.chips=new Image(); IMG.chips.src='coconut-chips.png';
 IMG.camp=new Image();
@@ -505,7 +505,16 @@ function drawFrame(c, ch, anim, i, x, y, h, flip){
   const list = FRAMES[ch][anim]; if(!list) return;
   const f = list[i % list.length], im = IMG[f[6]?ch+'_'+f[6]:ch]; if(!im.complete) return;   // 'x' = 나중에 받은 동작 묶음
   const [sx,sy,sw,sh,ax,ay] = f, s = h/SRC_H*((FRAMES[ch]._fix||{})[anim]||1);   // 줍기 그림은 크게 그려져 있어 줄임
-  const paint=(...args)=>ch==='girl'?drawDense(c,im,...args):c.drawImage(im,...args);
+  // v40: 이미지의 실제 해상도를 기준으로 프레임을 추출합니다.
+  // 오래된 캐시(1배율)와 새 원본(2배율)이 섞여도 여러 포즈가 함께 보이지 않게 합니다.
+  const factor = im.naturalWidth / (f[6] ? 1200 : 2000);
+  if (!Number.isFinite(factor) || factor < 0.9 || factor > 2.1) return;
+  const paint=(sx,sy,sw,sh,dx,dy,dw,dh)=>{
+    const left=sx*factor, top=sy*factor;
+    const srcW=Math.min(sw*factor, im.naturalWidth-left), srcH=Math.min(sh*factor, im.naturalHeight-top);
+    if(srcW<=0 || srcH<=0) return;
+    c.drawImage(im,left,top,srcW,srcH,dx,dy,dw*srcW/(sw*factor),dh*srcH/(sh*factor));
+  };
   c.save(); c.translate(x,y); if(flip) c.scale(-1,1);
   if(anim==='fish_side'&&ch==='girl'){
     const cut=fishingRodArt.girl.cuts[i];
