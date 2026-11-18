@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="42">
+<meta name="app-version" content="43">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -299,7 +299,8 @@
   .objective .questHeading{font-size:14px;font-weight:700;color:#ffebbe;padding:0 3px;text-shadow:0 1px 3px #24170e,0 0 6px #24170e}
   .questBox{box-sizing:border-box;pointer-events:auto;
     border:1px solid #b98b55;border-radius:5px;background:#30251ceb;box-shadow:inset 0 0 0 2px #1c1813b8,0 2px 4px #170e0844}
-  .questScroll{max-height:min(24dvh,160px);overflow-y:auto;overscroll-behavior:contain;padding:5px 7px}
+  .questScroll{max-height:min(24dvh,160px);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:5px 7px}
+  .questBox.is-expanded .questScroll{max-height:min(40dvh,280px)}
   .questFooter{display:flex;justify-content:space-between;align-items:center;gap:3px;padding:1px 5px;border-top:1px solid #a47c4b5e}
   .questFooter button{min-height:27px;padding:1px 3px;background:none;border:0;color:#f4d49b;font:inherit;font-size:11px;cursor:pointer}
   .questFooter button:focus-visible{outline:2px solid #ffda91}
@@ -307,10 +308,11 @@
   .questBox.is-folded .questFooter{border-top:0}
   .objective ol{list-style:none;display:grid;gap:4px;margin:0;padding:0}
   .objective li{color:#fbefdb;font-size:12px;line-height:1.25;overflow-wrap:anywhere}
-  .objective li:first-child .questTask{font-weight:700}
-  .objective li small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;color:#ead3a8;font-size:11px;margin-top:2px}
+  .objective li:first-child .questTask,.questName{font-weight:700}
+  .objective li small{display:block;color:#ead3a8;font-size:11px;margin-top:2px}
   .questTask{pointer-events:auto;display:block;width:100%;min-height:28px;text-align:left;border:0;background:none;padding:0;color:inherit;font:inherit;cursor:pointer}
-  .questTask[aria-pressed="true"]{color:#ffda91}
+  .questTask.is-open,.questName{color:#ffda91}
+  .questName{display:block;padding:4px 0 1px}
   .questCraft{pointer-events:auto;margin-top:3px;min-height:24px;background:#74502d;border:1px solid #c79a60;border-radius:4px;padding:1px 5px;color:#fff1d7;font:inherit;font-size:11px;line-height:1.2;cursor:pointer}
   .questTask:focus-visible,.questCraft:focus-visible{outline:2px solid #ffda91}
   .ic.coconutChips{background:url(coconut-chips.png) center/contain no-repeat}
@@ -436,7 +438,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='42', NOTE="해변에서 깨어나는 장면, 달리기 동작, 야자수 수확 모습과 숲길 경계를 손봤어요.";
+const APP='castaway-isle', APP_V='43', NOTE="옆면 달리기의 팔 동작과 퀘스트 목록을 손봤어요.";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -778,12 +780,9 @@ function setQuestFold(folded){
 }
 questFold.addEventListener('click',()=>setQuestFold(!questScroll.hidden));
 let questsExpanded=false,lastQuestDisplay='',selectedQuest=null;
-let questPage=0;
 questMore.addEventListener('click',()=>{
-  if(!questsExpanded){questsExpanded=true;questPage=0;}
-  else if(questMore.dataset.next==='true')questPage++;
-  else{questsExpanded=false;questPage=0;}
-  goal();
+  questsExpanded=!questsExpanded;selectedQuest=null;
+  goal();questScroll.scrollTop=0;
 });
 function renderQuests(title,detail,recipeId){
   const optional=[];
@@ -796,28 +795,43 @@ function renderQuests(title,detail,recipeId){
     if(inv.rod&&!seenHints.has('quest:fish'))optional.push(['낚시로 물고기 잡기','낚싯대를 들고 물가로 가세요']);
     if(inv.pot&&!seenHints.has('quest:cooked'))optional.push(['냄비로 요리하기','불이 켜진 모닥불에서 요리를 고르세요']);
   }
-  if(!optional.length)questsExpanded=false;
-  questPage=Math.min(questPage,Math.max(0,Math.ceil(optional.length/2)-1));
-  const list=[[title,detail,recipeId],...(questsExpanded?optional.slice(questPage*2,questPage*2+2):[])];
-  const entries=list.map(([name,help,id])=>{
+  const entries=[[title,detail,recipeId],...optional].map(([name,help,id],i)=>{
     const recipe=RECIPES.find(r=>r.id===id);
-    return {name,help,recipe,ready:!!recipe&&canCraft(recipe)};
+    const needs=recipe?materials(recipe.need):'';
+    const description=needs&&help!==needs?[needs,help].filter(Boolean).join(' · '):help;
+    return {name,help,description,recipe,main:i===0,ready:!!recipe&&canCraft(recipe)};
   });
-  const key=JSON.stringify([entries,optional.length,questsExpanded,selectedQuest]);
+  const ready=entries.filter(q=>q.ready);
+  const pending=entries.filter(q=>!q.ready);
+  const hiddenCount=pending.filter(q=>!q.main).length;
+  if(!hiddenCount)questsExpanded=false;
+  const visible=[...ready,...(questsExpanded?pending:pending.filter(q=>q.main))];
+  if(!questsExpanded||!pending.some(q=>q.name===selectedQuest))selectedQuest=null;
+  const key=JSON.stringify([visible,hiddenCount,questsExpanded,selectedQuest]);
   if(lastQuestDisplay===key)return;
   lastQuestDisplay=key;
-  questList.replaceChildren(...entries.map(({name,help,recipe,ready},i)=>{
+  questList.replaceChildren(...visible.map(({name,help,description,recipe,main,ready},i)=>{
     const row=document.createElement('li');
-    const label=document.createElement('button');label.type='button';label.className='questTask';
-    label.textContent=name;label.setAttribute('aria-pressed',String(selectedQuest===name));
-    label.addEventListener('click',()=>{
-      if(waking||dialoguePinned||sleepScene||hutTransition||discovery||!menu.hidden)return;
-      selectedQuest=name;goal();
-      if(help)hint(help,2.8);
-    });
+    const label=document.createElement(ready?'span':'button');
+    label.className=ready?'questName':'questTask';label.textContent=name;
+    const selected=selectedQuest===name;
+    const showDetails=ready||selected||(!questsExpanded&&main);
+    if(!ready){
+      label.type='button';
+      if(description)label.setAttribute('aria-expanded',String(showDetails));
+      if(selected)label.classList.add('is-open');
+      label.addEventListener('click',()=>{
+        if(waking||dialoguePinned||sleepScene||hutTransition||discovery||!menu.hidden)return;
+        if(!questsExpanded){if(help)hint(help,2.8);return;}
+        if(!description)return;
+        selectedQuest=selected?null:name;goal();
+        const current=questList.children[i];
+        current?.firstElementChild?.focus?.({preventScroll:true});
+        if(selectedQuest)current?.scrollIntoView?.({block:'nearest'});
+      });
+    }
     row.appendChild(label);
-    const description=recipe&&i>0&&!ready?materials(recipe.need)+' · '+help:help;
-    if(description&&(i===0||selectedQuest===name||ready)){
+    if(description&&showDetails){
       const text=document.createElement('small');text.textContent=description;row.appendChild(text);
     }
     if(ready){
@@ -827,11 +841,10 @@ function renderQuests(title,detail,recipeId){
     }
     return row;
   }));
-  questMore.dataset.available=String(optional.length>0);
-  questMore.hidden=questScroll.hidden||!optional.length;
-  const remaining=optional.length-(questPage+1)*2;
-  questMore.dataset.next=String(remaining>0);
-  questMore.textContent=questsExpanded?(remaining>0?`더보기 +${remaining} ▾`:'추가 접기 ▴'):`더보기 +${optional.length} ▾`;
+  questBoxEl.classList.toggle('is-expanded',questsExpanded);
+  questMore.dataset.available=String(hiddenCount>0);
+  questMore.hidden=questScroll.hidden||!hiddenCount;
+  questMore.textContent=questsExpanded?'추가 접기 ▴':`더보기 +${hiddenCount} ▾`;
   questMore.setAttribute('aria-expanded',String(questsExpanded));
 }
 function built(type){ return Object.values(world).flatMap(m=>m.objs).find(o=>o.type===type); }

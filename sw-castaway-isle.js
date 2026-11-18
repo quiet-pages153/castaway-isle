@@ -1,6 +1,6 @@
 // 표류섬 서비스워커 — 이 앱 주소(/castaway-isle/) 것만 다룸
 const APP = 'castaway-isle';
-const VERSION = '42';
+const VERSION = '43';
 const CACHE = APP + '-' + VERSION;
 const FILES = [
   "./manifest.webmanifest", "./icon-192.png", "./icon-192.png?v=5", "./icon-512.png?v=5",
@@ -19,6 +19,7 @@ const SPRITES = {
   "castaway_run.png":[1920,1920], "palm_empty.png":[754,500], "cliff_notch.png":[39,37]
 };
 const AUDIO = ["./audio/hut.mp3", "./audio/files.json", "./audio/day.mp3", "./audio/night.mp3", "./audio/waves.mp3", "./audio/fire.mp3", "./audio/cast.wav", "./audio/bite.wav", "./audio/wake.wav", "./audio/chop.wav", "./audio/pickup.wav", "./audio/pickup-hard.wav", "./audio/vine.wav", "./audio/cricket.wav", "./audio/sand-1.wav", "./audio/grass-1.wav", "./audio/wet-1.wav", "./audio/sand-2.wav", "./audio/grass-2.wav", "./audio/wet-2.wav", "./audio/sand-3.wav", "./audio/grass-3.wav", "./audio/wet-3.wav"];
+const RUN_HASH = 'cb8ed7ef2bece2dd46ad44250e988a567d6db74f9d512de86de3265f219b1b8f';
 const APP_TAG = '<meta name="app-id" content="castaway-isle">';
 const VERSION_TAG = '<meta name="app-version" content="'+VERSION+'">';
 const myScope = () => new URL('./', self.registration.scope).pathname;
@@ -28,9 +29,14 @@ async function cacheSprite(cache,file,[width,height]){
   const req=new Request('./'+file+'?sprite=v'+VERSION,{cache:'reload'});
   const res=await fetch(req);
   if(!res.ok)throw new Error(file);
-  const header=new DataView(await res.clone().arrayBuffer());
+  const bytes=await res.clone().arrayBuffer(),header=new DataView(bytes);
   if(header.byteLength<24||header.getUint32(0)!==0x89504e47||header.getUint32(12)!==0x49484452||
       header.getUint32(16)!==width||header.getUint32(20)!==height)throw new Error(file);
+  if(file==='castaway_run.png'){
+    const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',bytes));
+    const hash=Array.from(digest,b=>b.toString(16).padStart(2,'0')).join('');
+    if(hash!==RUN_HASH)throw new Error(file);
+  }
   await cache.put(req,res);
 }
 
