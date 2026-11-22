@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="47">
+<meta name="app-version" content="48">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -33,11 +33,11 @@
 
   /* ---------- 첫 화면 ---------- */
   #selectScreen{position:fixed;inset:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;
-    background:linear-gradient(180deg,rgba(10,20,30,.2),rgba(10,20,30,.85) 72%),url(floor_beachA.webp) 62% 40%/auto 160% no-repeat #12202b;
+    background:linear-gradient(180deg,rgba(10,20,30,.2),rgba(10,20,30,.85) 72%),url(title_ship.webp) 50% 30%/cover no-repeat #0b1626;
     padding:calc(env(safe-area-inset-top) + 2rem) 1rem calc(env(safe-area-inset-bottom) + 1.5rem)}
   .sel{width:100%;max-width:440px;display:flex;flex-direction:column;gap:1rem}
   .logo{text-align:center;font-size:3.25rem;line-height:1;color:var(--gold);text-shadow:0 3px 0 #6b3d12,0 0 18px rgba(0,0,0,.45);letter-spacing:.04em;margin:0}
-  .tag{text-align:center;color:var(--ink);font-size:.9375rem;margin:.375rem 0 0;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+  .tag{text-align:center;color:var(--ink);font-size:.9375rem;margin:.375rem 0 0;word-break:keep-all;text-shadow:0 1px 3px rgba(0,0,0,.8)}
   .pick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:.5rem}
   .who{background:rgba(16,22,34,.55);border:2px solid var(--rim);border-radius:1.125rem;padding:.625rem .5rem .75rem;display:flex;flex-direction:column;align-items:center;gap:.25rem;cursor:pointer;min-width:0}
   .who[aria-pressed="true"]{border-color:var(--gold);background:rgba(60,44,16,.62);box-shadow:0 0 0 3px rgba(242,193,78,.25)}
@@ -187,6 +187,8 @@
   .band span{flex:1;min-width:0}
   .band button{min-height:44px;border-radius:.625rem;border:none;background:var(--gold);color:#3a2608;font-weight:700;padding:0 .875rem;cursor:pointer;flex-shrink:0}
   .band .x{background:transparent;color:var(--ink);font-size:1.25rem;padding:0 .5rem}
+  .nameNeed{color:#FFD27A;font-weight:700;margin:0}
+  .names input.need{outline:3px solid #FFD27A}
   .names{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left;margin:10px auto;max-width:360px}
   .names label{color:#f1d9b5;font-size:12px}.names input{width:100%;min-height:38px;margin-top:4px;padding:6px 8px;border-radius:6px;border:1px solid #a78358;color:#fff7e3;background:#241d1b;}
   .quickBar .ic{width:min(40px,100%);height:40px}.quickBar .bagBtn svg{width:39px;height:39px}.quickBar .bagBtn{right:auto}
@@ -231,6 +233,8 @@
   .bag .mat b{position:absolute;right:2px;bottom:1px;font-size:10px}
   .bag .mat .ic{width:min(27px,100%);height:27px}
   .bag .detail{flex-wrap:wrap}.bag .detail p{margin:0;font-size:12px}
+  .ic.grilledFish,.ic.grilledScallop,.ic.coconutSoup,.ic.clamSoup,.ic.berryJuice{background-image:url(beach_dishes.webp);background-size:500% 100%}
+  .ic.grilledFish{background-position:0 0}.ic.grilledScallop{background-position:25% 0}.ic.coconutSoup{background-position:50% 0}.ic.clamSoup{background-position:75% 0}.ic.berryJuice{background-position:100% 0}
   .ic.fishSoup,.ic.fruitFish,.ic.fruitClam{background-image:url(beach_soups.webp);background-size:300% 100%;background-position:0 0}
   .ic.fruitFish{background-position:50% 0}.ic.fruitClam{background-position:100% 0}
   .cookList{max-height:min(320px,42vh);overflow:auto}
@@ -335,14 +339,15 @@
   <div class="sel">
     <div>
       <h1 class="logo jua">표류섬</h1>
-      <p class="tag">눈을 떠 보니 낯선 섬의 해변이었다</p>
+      <p class="tag">동물 보호 구역의 부모님께 가던 배를<br>폭풍이 덮쳤다.</p>
     </div>
     <div class="pick">
       <button type="button" class="who" data-ch="boy" aria-pressed="true"><canvas width="300" height="400" aria-hidden="true"></canvas><b>소년</b><span>나무 베기·사냥이 빠름</span></button>
       <button type="button" class="who" data-ch="girl" aria-pressed="false"><canvas width="300" height="400" aria-hidden="true"></canvas><b>소녀</b><span>낚시·요리·제작이 빠름</span></button>
     </div>
     <p class="note">고르지 않은 사람은 섬 어딘가에서 만나게 됩니다.</p>
-    <div class="names"><label>소년 이름<input id="boyName" maxlength="12" placeholder="소년" autocomplete="off"></label><label>소녀 이름<input id="girlName" maxlength="12" placeholder="소녀" autocomplete="off"></label></div>
+    <div class="names"><label>소년 이름<input id="boyName" maxlength="12" placeholder="A" autocomplete="off"></label><label>소녀 이름<input id="girlName" maxlength="12" placeholder="B" autocomplete="off"></label></div>
+    <p class="note nameNeed" id="nameNeed" role="alert" hidden>두 사람 이름을 정해 주세요</p>
     <button type="button" class="start" id="startBtn" disabled>모험 시작</button>
     <p class="note" id="assetStatus" role="status">게임 그림을 불러오는 중이에요.</p>
     <p class="ver" id="verText"></p>
@@ -438,7 +443,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='47', NOTE="해변 퀘스트와 물체 동작 코드를 정리했어요.";
+const APP='castaway-isle', APP_V='48', NOTE="이름을 정하고 시작해요. 새 첫 화면과 이야기, 요리가 바뀌었어요(구운 생선·코코넛 생선 수프·조개탕·가리비 구이·열매 주스).";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -579,7 +584,7 @@ const sprite = (dir, action) => [action+'_'+((dir==='left'||dir==='right')?'side
 
 // ---------- 첫 화면 ----------
 let chosen='boy', waking=0;
-const names={boy:'소년',girl:'소녀'};
+const names={boy:'A',girl:'B'};
 const partner=()=>names[chosen==='boy'?'girl':'boy'];
 const whoBtns = [...document.querySelectorAll('.who')];
 whoBtns.forEach(b=>b.addEventListener('click',()=>{ chosen=b.dataset.ch; whoBtns.forEach(o=>o.setAttribute('aria-pressed', String(o===b))); }));
@@ -597,14 +602,25 @@ function startGame(){
   if(startBtn.disabled)return;
   beachAudio.unlock();
   selectScreen.hidden=true; gameScreen.hidden=false;
-  names.boy=document.getElementById('boyName').value?.trim()||'소년';
-  names.girl=document.getElementById('girlName').value?.trim()||'소녀';
+  names.boy=document.getElementById('boyName').value?.trim()||'A';
+  names.girl=document.getElementById('girlName').value?.trim()||'B';
   layout(); resetWorld();
   history.pushState({game:1},'');                  // 뒤로가기 → 첫 화면 (앱 밖으로 안 나감)
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden)beachAudio.scene(false);});
 function toTitle(){ cancelHutTransition();hutSleepScene=0;faintScene=0;cookingScene=null;fishingBait=null;beachAudio.scene(false); fishing=null; closeDiscovery(); sleepScene=null; leaveHut(); clearDialogue(); cancelQuick(); closeCampOptions(); cancelPlacement(); menu.hidden=true; closeBag(); gameScreen.hidden=true; selectScreen.hidden=false; actHeld=false; }
-startBtn.addEventListener('click',startGame);
+// 두 사람 이름을 모두 정해야 시작 (v48)
+function tryStart(){
+  const inputs=[document.getElementById('boyName'),document.getElementById('girlName')];
+  const val=el=>String(el.value||'').trim();
+  const empty=inputs.filter(el=>!val(el));
+  inputs.forEach(el=>el.classList.toggle('need',!val(el)));
+  document.getElementById('nameNeed').hidden=!empty.length;
+  if(empty.length){empty[0].focus?.();return;}
+  startGame();
+}
+for(const id of ['boyName','girlName'])document.getElementById(id).addEventListener('input',e=>{e.target.classList.remove('need');if(String(document.getElementById('boyName').value||'').trim()&&String(document.getElementById('girlName').value||'').trim())document.getElementById('nameNeed').hidden=true;});
+startBtn.addEventListener('click',tryStart);
 addEventListener('popstate',()=>{ if(!menu.hidden||!bagEl.hidden){ menu.hidden=true; closeBag(); history.pushState({game:1},''); return; } if(!gameScreen.hidden) toTitle(); });
 document.getElementById('menuBtn').addEventListener('click',()=>{ if(sleepScene||discovery||hutTransition||hutSleepScene||faintScene||cookingScene)return; cancelQuick(); closeCampOptions(); cancelPlacement(); closeBag(); menu.hidden=false; actHeld=false; });
 document.getElementById('resumeBtn').addEventListener('click',()=>{ menu.hidden=true; });
@@ -694,14 +710,14 @@ const BUSH = {bush_berry:1, bush_empty:1};
 const NAME = {drycoconut:'코코넛 말리는 자리',dryberries:'열매 말리는 자리',palmLeaf:'야자잎',waterBottle:'이름표 달린 물병',beacon:'유목 더미',sosSpot:'마른 모래',fishWater:'낚싯대를 던져보세요',crate:'떠밀려 온 상자',looseRocks:'길가의 돌무더기',smallRocks:'남은 돌무더기',gate:'쓰러진 나무', wreck:'난파선', sharp:'뾰족한 돌', vineRock:'바위에 감긴 덩굴', vineBundle:'잘라낸 덩굴', fire:'모닥불', hut:'움막', branch:'나뭇가지', crab:'게', tree:'나무', palm:'야자수', coconut:'코코넛', shell_conch:'소라 껍데기', shell_clam:'대합', shell_scallop:'가리비', stone:'돌', vine:'덩굴', driftwood:'유목', bush_berry:'열매 덤불'};
 // 표의 키 순서는 가방 데이터의 기존 순서, bagOrder는 분류별 표시 순서.
 const ITEM_DB = {
-  coconutChips:{icon:'coconutChips', name:'코코넛 칩', kind:'food', bagOrder:1, eat:{food:42}, usable:true},
+  coconutChips:{icon:'coconutChips', name:'코코넛 칩', kind:'food', bagOrder:1, eat:{food:30}, usable:true},
   clam:{icon:'clamIcon', name:'대합', kind:'mat', bagOrder:7, bait:true},
   scallop:{icon:'scallopIcon', name:'가리비', kind:'mat', bagOrder:8, bait:true},
-  cookedClam:{icon:'cookedClam', name:'삶은 조개', kind:'food', bagOrder:4, eat:{food:12}, usable:true},
-  driedBerry:{icon:'driedBerry', name:'말린 열매', kind:'food', bagOrder:5, eat:{food:12}, usable:true},
+  clamSoup:{icon:'clamSoup', name:'조개탕', kind:'food', bagOrder:4, eat:{food:34,water:10}, usable:true},
+  driedBerry:{icon:'driedBerry', name:'말린 열매', kind:'food', bagOrder:5, eat:{food:30}, usable:true},
   leaf:{icon:'leaf', name:'야자잎', kind:'mat', bagOrder:4},
   fiber:{icon:'fiber', name:'마른 야자 섬유', kind:'mat', bagOrder:5},
-  pot:{icon:'pot', name:'작은 냄비', kind:'tool', bagOrder:3},
+  pot:{icon:'pot', name:'냄비와 국자', kind:'tool', bagOrder:3},
   rod:{icon:'rod', name:'낡은 낚싯대', kind:'tool', bagOrder:2, usable:true},
   waterBottle:{icon:'waterBottle', name:'이름표 달린 물병', kind:'food', bagOrder:9, eat:{water:27}, usable:true},
   emptyBottle:{icon:'emptyBottle', name:'빈 물병', kind:'tool', bagOrder:4},
@@ -709,17 +725,18 @@ const ITEM_DB = {
   stripedFish:{icon:'stripedFish', name:'줄무늬 물고기', kind:'mat', bagOrder:11, bait:true, catch:true},
   blueFish:{icon:'blueFish', name:'푸른 물고기', kind:'mat', bagOrder:12, catch:true},
   tideFish:{icon:'tideFish', name:'금지느러미 물고기', kind:'mat', bagOrder:13, catch:true},
-  tideSoup:{icon:'fishSoup', name:'금지느러미 수프', kind:'food', bagOrder:8, eat:{food:24,hp:18}, usable:true},
-  cookedFish:{icon:'fishSoup', name:'생선 수프', kind:'food', bagOrder:3, eat:{food:17}, usable:true},
-  fruitFish:{icon:'fruitFish', name:'열매 생선 수프', kind:'food', bagOrder:6, eat:{food:30,hp:8}, usable:true},
-  fruitClam:{icon:'fruitClam', name:'과일 조개찜', kind:'food', bagOrder:7, eat:{food:24,hp:6}, usable:true},
+  tideSoup:{icon:'fishSoup', name:'금지느러미 수프', kind:'food', bagOrder:8, eat:{food:35,hp:18}, usable:true},
+  cookedFish:{icon:'grilledFish', name:'구운 생선', kind:'food', bagOrder:3, eat:{food:20}, usable:true},
+  coconutSoup:{icon:'coconutSoup', name:'코코넛 생선 수프', kind:'food', bagOrder:6, eat:{food:38,water:12}, usable:true},
+  grilledScallop:{icon:'grilledScallop', name:'가리비 구이', kind:'food', bagOrder:7, eat:{food:20}, usable:true},
+  berryJuice:{icon:'berryJuice', name:'열매 주스', kind:'food', bagOrder:10, eat:{food:15,water:30}, usable:true},
   sharp:{icon:'sharp', name:'돌칼', kind:'tool', bagOrder:0, usable:true},
   mapPiece:{icon:'mapPiece', name:'찢어진 지도 조각', kind:'mat', bagOrder:9},
   axe:{icon:'axe', name:'돌도끼', kind:'tool', bagOrder:1, usable:true},
   branch:{icon:'branch', name:'나뭇가지', kind:'mat', bagOrder:1},
   wood:{icon:'wood', name:'목재', kind:'mat', bagOrder:0},
-  coconut:{icon:'coconut', name:'코코넛', kind:'food', bagOrder:0, eat:{food:12,water:8}, usable:true},
-  berries:{icon:'berries', name:'열매', kind:'food', bagOrder:2, eat:{food:3}, usable:true},
+  coconut:{icon:'coconut', name:'코코넛', kind:'food', bagOrder:0, eat:{food:10,water:8}, usable:true},
+  berries:{icon:'berries', name:'열매', kind:'food', bagOrder:2, eat:{food:5}, usable:true},
   shell:{icon:'conchIcon', name:'빈 소라 껍데기', kind:'mat', bagOrder:6},
   stone:{icon:'stone', name:'돌', kind:'mat', bagOrder:2},
   vine:{icon:'vineBundle', name:'덩굴', kind:'mat', bagOrder:3},
@@ -950,7 +967,7 @@ const BEACH_CRAFT_LABELS={hut:'움막 자리 정하기',fire:'모닥불 자리 �
 
 const dryingFood={
   dryberries:{input:'berries',result:'driedBerry',returnLeaf:true},
-  drycoconut:{input:'coconut',result:'coconutChips',returnLeaf:false},
+  drycoconut:{input:'coconut',result:'coconutChips',returnLeaf:false,count:2},   // v48: 코코넛 3개 → 칩 2개
 };
 function dryingAction(o){
   const drying=dryingFood[o.type];
@@ -997,7 +1014,8 @@ const OBJECT_ACTIONS = {
 const gateRockFirst=new Set(['gate','vineRock','tree']);
 
 const BEACH_DIALOGUE={
-  wake:(name,who)=>['여긴… 어디지? 나, 살아 있는 건가?','맞아… 파도가 배를 덮쳤어. 갑판이 기울고, 나도 바다에 빠졌지.',
+  wake:(name,who)=>['여긴… 어디지? 나, 살아 있는 건가?','맞아… 동물들을 싣고 가던 배에 파도가 덮쳤어. 갑판이 기울고, 나도 바다에 빠졌지.',
+    '선원 아저씨들은 구명보트에 탔을까? 우리에 있던 동물들은…',
     `잠깐. ${name}도 같이 타고 있었잖아. 어디 있는 거지?`,`${who}! ${who}! 어디 있니?`],
   fireIdea:'옷이 아직 축축해. 해가 지면 더 추워질 텐데… 오늘 밤을 버티려면 불부터 피워야겠어.',
   dryIdea:'오늘은 열매로 버텼지만, 내일 먹을 것도 필요하겠어. 몇 알은 야자잎에 펼쳐 말려두자.',
@@ -1005,14 +1023,13 @@ const BEACH_DIALOGUE={
   searchB:name=>name+'! 혹시 여기 있어?',
   wreck:'난파선이네… 안에 쓸 만한 게 남아 있을까?',
   east:'모래사장이 동쪽으로 이어지네. 저쪽도 한번 살펴봐야겠어.',
-  fruitFishIdea:'앗, 비려! …말린 열매를 같이 끓이면 향이 좀 나아질까?',
+  fruitFishIdea:'구운 생선만 먹으니 좀 비려. …코코넛을 같이 끓이면 맛있는 수프가 되지 않을까?',
   emptyBottle:'정글에서 물이 흐르는 곳을 찾으면 이 병에 담아 와야겠다.',
   hutComfort:'야자잎으로 지은 움막인데… 생각보다 아늑하네.',
-  hutFamily:name=>`가족도, 친구들도 보고 싶다. ${name}도 어디선가 밤을 보내고 있겠지?`,
+  hutFamily:name=>`엄마 아빠는 보호 구역에서 기다리고 있을 텐데. ${name}도 어디선가 밤을 보내고 있겠지?`,
   hutHope:'누군가 곧 구하러 오겠지… 오늘은 일단 좀 쉬자.',
   hutStorm:'바람이 세졌어… 오늘 밤은 여기 안에 있자.',
   hutSleep:'이제 눈을 좀 붙이자.',
-  fruitClamIdea:'가리비에 말린 열매를 넣으면 달큰한 향이 나겠어.',
   fiberIdea:'코코넛을 먹고 나면 껍질에 마른 섬유가 남겠어.',
   fireLit:'됐다… 오늘 밤은 이 불 곁에 있자.',
   afterSunset:'해가 졌네.',
@@ -1021,10 +1038,10 @@ const BEACH_DIALOGUE={
   dawnWithLeaves:'야자잎을 덮었는데도 새벽엔 추웠어.',
   dawnCold:'새벽엔 정말 추웠어.',
   dawnShelter:'바람을 막아줄 곳이 필요해.',
-  prepareBeacon:'구조대가 분명 나를 찾고 있겠지? 연기를 올리면 여기 있는 게 보일 거야.',
+  prepareBeacon:'배가 안 왔으니 엄마 아빠가 벌써 찾고 있을 거야. 연기를 올리면 여기 있는 게 보일 거야.',
   beaconLit:'연기가 올라간다. 모래에도 멀리서 보이는 표시를 남기자.',
   sos:'하늘에서도 보이겠지. 기다리는 동안 추위를 피할 곳을 만들자.',
-  openCrate:'냄비랑 낚싯대는 쓸 수 있겠어. 나머지는 다 깨졌네.',
+  openCrate:'냄비랑 국자, 낚싯대는 쓸 수 있겠어. 나머지는 다 깨졌네.',
   closedCrate:'뚜껑이 꽉 끼었네. 도구가 있으면 열 수 있겠다.',
   axeIdea:'이 덩굴로 뾰족한 돌 대신 단단한 돌을 가지에 묶으면 도끼가 되겠어.',
   gateOpen:'이제 안쪽을 살펴볼 수 있겠어.',
@@ -1080,13 +1097,14 @@ function callName(name){
   const ch=name.charCodeAt(name.length-1);
   return ch>=0xac00&&ch<=0xd7a3?name+((ch-0xac00)%28?'아':'야'):name;
 }
+const WAKE_POSE=[0,1,1,2,3];
 function intro(i=0){
   const who=callName(partner());
   const lines=BEACH_DIALOGUE.wake(partner(),who);
   if(i===lines.length){introPose=-1;goal();return;}
   if(i===1)beachAudio.effect('wake');
-  if(i===2)beachAudio.step(zoneAt(st.x,st.y));
-  introPose=i;say(lines[i],i<3,true,()=>intro(i+1));
+  if(i===3)beachAudio.step(zoneAt(st.x,st.y));
+  introPose=i;say(lines[i],i<4,true,()=>intro(i+1));
 }
 function noticeOnce(key,text){
   if(seenHints.has(key)||dialoguePinned||!dialogue.hidden)return false;
@@ -1381,12 +1399,12 @@ const MATERIAL_HELP={
  vine:'돌도끼의 손잡이와 움막 뼈대를 묶는 데 써요.',
  leaf:'움막 지붕에 5장이 필요해요. 열매를 말릴 때는 받침으로 썼다가 돌려받아요.',
  fiber:'코코넛을 먹을 때 얻어요. 나뭇가지와 함께 모닥불을 피우는 데 써요.',
- clam:'냄비에서 삶아 먹거나 낚시 미끼로 쓸 수 있어요.',
- scallop:'말린 열매와 찌면 허기와 하트를 회복해요. 미끼로도 쓸 수 있어요.',
+ clam:'2개를 냄비에 끓이면 조개탕이 돼요. 낚시 미끼로도 쓸 수 있어요.',
+ scallop:'모닥불에 구우면 가리비 구이가 돼요. 미끼로도 쓸 수 있어요.',
  shell:'물가에서 주운 빈 소라 껍데기예요.',
- rawFish:'A해변 연안에서 잡히는 물고기예요. 냄비와 불을 쓰면 수프로 만들 수 있어요.',
- stripedFish:'B해변 연안에서 잡히는 물고기예요. 냄비와 불을 쓰면 수프로 만들 수 있어요.',
- blueFish:'깊은 물에서 잡히는 물고기예요. 냄비와 불을 쓰면 수프로 만들 수 있어요.',
+ rawFish:'A해변 연안에서 잡히는 물고기예요. 모닥불에 굽거나, 코코넛과 냄비에 끓여 수프로 만들 수 있어요.',
+ stripedFish:'B해변 연안에서 잡히는 물고기예요. 모닥불에 굽거나, 코코넛과 냄비에 끓여 수프로 만들 수 있어요.',
+ blueFish:'깊은 물에서 잡히는 물고기예요. 모닥불에 굽거나, 코코넛과 냄비에 끓여 수프로 만들 수 있어요.',
  tideFish:'물이 빠진 B해변 바위틈에서만 잡혀요. 수프로 만들면 하트를 크게 회복해요.',
  mapPiece:'옛 난파선에서 찾은 찢어진 지도 조각이에요.'
 };
@@ -1729,14 +1747,12 @@ function campOptions(o){
   add('닫기',()=>{});
   campChoices.hidden=false;
 }
-const COOKING=[
-  ...CATCH_TYPES.map(fish=>({result:fish==='tideFish'?'tideSoup':'cookedFish',need:{[fish]:1},count:fish==='stripedFish'?2:1})),
-  {result:'fruitFish',need:{rawFish:1,driedBerry:1},idea:'fruitFishIdea'},
-  {result:'fruitFish',need:{stripedFish:1,driedBerry:1},idea:'fruitFishIdea'},
-  {result:'fruitFish',need:{blueFish:1,driedBerry:1},idea:'fruitFishIdea'},
-  {result:'cookedClam',need:{clam:1}},
-  {result:'cookedClam',need:{scallop:1}},
-  {result:'fruitClam',need:{scallop:1,driedBerry:1},idea:'fruitClamIdea'}
+const COOKING=[   // v48: 섬에서 할 법한 요리로 다시 짬 (구이·수프·탕·주스)
+  ...CATCH_TYPES.map(fish=>fish==='tideFish'?{result:'tideSoup',need:{tideFish:1}}:{result:'cookedFish',need:{[fish]:1},count:fish==='stripedFish'?2:1}),
+  ...['rawFish','stripedFish','blueFish'].map(fish=>({result:'coconutSoup',need:{[fish]:1,coconut:1},idea:'fruitFishIdea'})),
+  {result:'clamSoup',need:{clam:2}},
+  {result:'grilledScallop',need:{scallop:1}},
+  {result:'berryJuice',need:{berries:3,coconut:1}}
 ];
 for(const key of [...Object.values(PICK).map(([item])=>item),...RECIPES.flatMap(({id,structure,need})=>[...Object.keys(need),...(structure?[]:[id])]),...COOKING.flatMap(({result,need})=>[result,...Object.keys(need)])]) if(!Object.hasOwn(ITEM_DB,key)) console.error('ITEM_DB에 없는 아이템:',key);
 const cookingOpen=r=>!r.idea||story[r.idea];
@@ -1770,10 +1786,6 @@ function showCooking(o){
   const heading=document.createElement('strong');heading.textContent='냄비 요리';
   const close=document.createElement('button');close.type='button';close.textContent='닫기';
   close.addEventListener('click',closeCampOptions);top.append(heading,close);list.appendChild(top);
-  if(!story.fruitClamIdea&&inv.scallop&&inv.driedBerry){
-    story.fruitClamIdea=true;
-    say(BEACH_DIALOGUE.fruitClamIdea,true);
-  }
   const available=COOKING.filter(r=>cookingOpen(r)&&inv[Object.keys(r.need)[0]]>0);
   if(!available.length){
     const empty=document.createElement('p');empty.textContent='물고기나 조개를 가져와 보세요.';list.appendChild(empty);
@@ -2363,10 +2375,10 @@ function hitNow(t){
     const drying=dryingFood[t.type];
     actHeld=false;
     if(camp.day<t.readyDay){hint('다음 날 아침에 '+ITEMS[drying.result][1]+' 수거할 수 있어요',2.4);return;}
-    if(!roomFor(drying.result,1)){hint('가방의 음식 칸이 꽉 찼어요',2.4);return;}
+    if(!roomFor(drying.result,drying.count||1)){hint('가방의 음식 칸이 꽉 찼어요',2.4);return;}
     objs.splice(objs.indexOf(t),1);
     if(drying.returnLeaf)give('leaf',1,t.x,t.y-48);
-    give(drying.result,1,t.x,t.y-25);
+    give(drying.result,drying.count||1,t.x,t.y-25);
   }else if(t.type==='beacon'){
     actHeld=false;
     if(!story.signalPrepared&&equipped==='axe'&&st.act==='chop'){
@@ -2678,7 +2690,7 @@ function drawPlayer(){
     return;
   }
   if(waking||introPose>=0){
-    const i=Math.max(0,introPose);
+    const i=WAKE_POSE[Math.max(0,introPose)]??3;   // v48: 대사 5줄 → 기상 그림 4장 (배 생각하는 줄은 앉은 그림 그대로)
     drawDense(ctx,'wake',i*192,chosen==='boy'?0:184,192,184,st.x-96,st.y-159,192,184);
     return;
   }
