@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="45">
+<meta name="app-version" content="46">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -438,7 +438,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='45', NOTE="아이템 정보와 물체 동작 코드를 정리했어요.";
+const APP='castaway-isle', APP_V='46', NOTE="여자아이 옆으로 걷기 크기 흔들림을 고치고, 말리기는 한 번에 여러 개 놓을 수 있어요. 지도를 찾으면 첫날 둘러보기가 끝나요.";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -540,12 +540,14 @@ function drawDense(c,key,sx,sy,sw,sh,dx,dy,dw,dh){
   c.drawImage(im,sx*factor,sy*factor,sw*factor,sh*factor,dx,dy,dw,dh);
   return true;
 }
+// 장면마다 그림 크기가 조금씩 달라 걸을 때 커졌다 작아졌다 하는 것을 맞춤 (얼굴 넓이 비교로 잰 값, v46)
+const FRAME_SIZE_FIX={girl:{walk_side:[1.020,1.027,0.976,0.981]}};
 function drawFrame(c, ch, anim, i, x, y, h, flip){
   const list = FRAMES[ch][anim]; if(!list) return;
   const f=list[i%list.length], key=f[6]?ch+'_'+f[6]:ch;
   const im=IMG[key], factor=sheetScale(im,heroSheets[key],true);
   if(!factor)return;
-  const [sx,sy,sw,sh,ax,ay]=f, s=h/SRC_H*((FRAMES[ch]._fix||{})[anim]||1);   // 줍기 그림은 크게 그려져 있어 줄임
+  const [sx,sy,sw,sh,ax,ay]=f, s=h/SRC_H*((FRAMES[ch]._fix||{})[anim]||1)*((FRAME_SIZE_FIX[ch]?.[anim]||[])[i%list.length]||1);   // 줍기 그림은 크게 그려져 있어 줄임
   const paint=(sx,sy,sw,sh,dx,dy,dw,dh)=>{
     const left=sx*factor, top=sy*factor;
     const srcW=Math.min(sw*factor, im.naturalWidth-left), srcH=Math.min(sh*factor, im.naturalHeight-top);
@@ -846,7 +848,7 @@ function renderQuests(title,detail,recipeId){
   const optional=[];
   if(!waking&&!story.gateOpen){
     if(!inv.mapPiece&&!detail.includes('난파선'))optional.push(['B해변 난파선 살펴보기','B해변에서 난파선에 다가가세요']);
-    if(story.fireLit&&camp.day===1&&isNight()&&!story.sleptWithLeaves)optional.push(['모닥불 곁에서 쉬기','불이 켜진 모닥불에서 아침까지 쉴 수 있어요']);
+    if(story.fireLit&&camp.day===1&&isNight()&&!story.sleptWithLeaves&&!inv.mapPiece)optional.push(['모닥불 곁에서 쉬기','불이 켜진 모닥불에서 아침까지 쉴 수 있어요']);
     if(story.dryIdea&&!seenHints.has('quest:driedBerry'))optional.push(['열매를 말려보기','열매와 야자잎을 모으거나 놓아둔 열매를 확인하세요','dryberries']);
     if(story.dryIdea&&(inv.coconut>=3||built('drycoconut'))&&!seenHints.has('quest:coconutChips'))
       optional.push(['코코넛 칩 만들기','코코넛을 말려두고 다음 날 아침에 수거하세요','drycoconut']);
@@ -924,7 +926,8 @@ function goal(){
     title='첫날 밤을 준비하자';
     if(!built('fire')){recipeId='fire';detail=materials({stone:2,branch:1});}
     else {title='모닥불 피우기';detail=materials({fiber:1,branch:1});}
-  } else if(camp.day===1){title='해변을 둘러보자';detail=isNight()?'모닥불에서 아침까지 쉴 수 있어요':inv.mapPiece?'먹을 것을 챙기거나 해변을 더 둘러보세요':'B해변의 난파선을 살펴볼 수 있어요';}
+  } else if(camp.day===1&&!inv.mapPiece){title='해변을 둘러보자';detail=isNight()?'모닥불에서 아침까지 쉴 수 있어요':'B해변의 난파선을 살펴보세요';}
+  else if(camp.day===1){title='첫날 밤을 보내자';detail=isNight()?'불이 켜진 모닥불에서 아침까지 쉬세요':'해가 지면 모닥불에서 아침까지 쉴 수 있어요';}   // v46: 지도를 찾으면 둘러보기 끝
   else if(!inv.sharp){title='뾰족한 돌 찾기';detail='A해변의 젖은 모래에서 돌칼로 쓸 돌을 찾아보세요';}
   else if(!inv.axe){
     title=inv.vine?'돌도끼 만들기':'덩굴 자르기';
@@ -1156,6 +1159,7 @@ function completeCraft(r){
   if(r.id!=='hut') pops.push({text:r.name+' 완성!',x:st.x,y:st.y-130,t:0});
   hint(r.msg,2.8); lastAct=null;
   if(r.id==='axe')showTool('axe');
+  if(dryingFood[r.id])seenHints.add(r.id==='dryberries'?'quest:driedBerry':'quest:coconutChips');   // v46: 한 번 널어 두면 퀘스트 끝
 }
 // ---------- 가방 판: 가방 / 만들기 ----------
 const px=(rows,pal)=>{ let r=''; rows.forEach((row,y)=>[...row].forEach((c,x)=>{ if(c!=='.') r+=`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${pal[c]}"/>`; })); return `<svg viewBox="0 0 ${rows[0].length} ${rows.length}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`; };
@@ -1420,6 +1424,7 @@ function confirmPlace(){
   const {recipe,x,y,dir}=placement;
   if(!canCraft(recipe)||!placeCamp(recipe.id,x,y,dir||'down')) return;
   cancelPlacement(); completeCraft(recipe);
+  if(dryingFood[recipe.id]&&canCraft(recipe)){craft(recipe);hint('재료가 남았어요. 하나 더 놓거나 취소를 누르세요',2.8);}   // v46: 재료가 있으면 이어서 놓기
 }
 document.getElementById('cancelPlace').addEventListener('click',cancelPlacement);
 const hutAim=document.getElementById('hutAim'),hutAimText=document.getElementById('hutAimText');
