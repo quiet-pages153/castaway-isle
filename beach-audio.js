@@ -4,7 +4,7 @@
 function createBeachAudio(store, settings) {
   const volumes = {music: .6, ambient: .55, effects: .65};
   const groups = {
-    music: ['day', 'night', 'hut'],
+    music: ['day', 'night', 'hut', 'jungle-day', 'jungle-night'],
     ambient: ['waves', 'fire', 'cricket'],
     effects: ['sand', 'grass', 'wet', 'wake', 'chop', 'vine', 'pickup', 'pickup-hard', 'cast', 'bite'],
   };
@@ -12,7 +12,7 @@ function createBeachAudio(store, settings) {
   for (const [group, names] of Object.entries(groups)) {
     for (const name of names) sounds[name] = {group};
   }
-  const tracks = {day: 0, night: 0, hut: 0, waves: 0, fire: 0};
+  const tracks = {day: 0, night: 0, hut: 0, waves: 0, fire: 0, 'jungle-day': 0, 'jungle-night': 0};
   const steps = {
     sand: {level: .16, clips: 3},
     grass: {level: .13, clips: 3},
@@ -92,7 +92,7 @@ function createBeachAudio(store, settings) {
 
   let previousStep = -1;
   function step(zone) {
-    const name = zone === 0 ? 'grass' : zone === 1 ? 'sand' : 'wet';
+    const name = zone === 0 || zone === 7 ? 'grass' : zone === 1 ? 'sand' : 'wet';
     const {level, clips} = steps[name];
     const pick = (previousStep + 1 + Math.floor(Math.random() * (clips - 1))) % clips;
     previousStep = pick;
@@ -126,7 +126,7 @@ function createBeachAudio(store, settings) {
   }
 
   let warmed = false;
-  function scene(active, night, zone, fire, indoors, menuOpen) {
+  function scene(active, night, zone, fire, indoors, menuOpen, jungle = false) {
     if (!ctx) return;
     if (active && ctx.state === 'running') {
       if (!warmed) {
@@ -139,12 +139,14 @@ function createBeachAudio(store, settings) {
         }
       }
       const scale = menuOpen ? .65 : indoors ? .48 : 1;
-      tracks.day = night || indoors ? 0 : .56 * scale;
-      tracks.night = night && !indoors ? .46 * scale : 0;
+      tracks.day = night || indoors || jungle ? 0 : .56 * scale;
+      tracks.night = night && !indoors && !jungle ? .46 * scale : 0;
+      tracks['jungle-day'] = jungle && !night && !indoors ? .5 * scale : 0;
+      tracks['jungle-night'] = jungle && night && !indoors ? .44 * scale : 0;
       tracks.hut = indoors ? (menuOpen ? .29 : .44) : 0;
-      tracks.waves = (night ? .27 : .48) * (zone === 0 ? .55 : 1) * scale;
+      tracks.waves = jungle ? 0 : (night ? .27 : .48) * (zone === 0 ? .55 : 1) * scale;
       tracks.fire = Math.max(0, fire) * .42 * scale;
-      if (night && zone === 0 && !indoors && !menuOpen && ctx.currentTime >= nextCricket) {
+      if (night && (zone === 0 || jungle) && !indoors && !menuOpen && ctx.currentTime >= nextCricket) {
         nextCricket = ctx.currentTime + 22 + Math.random() * 24;
         oneShot('cricket', .21);
       }

@@ -20,5 +20,7 @@
   "grass-3": "grass-3.wav",
   "wet-3": "wet-3.wav",
   "hut": "hut.mp3",
-  "pickup-hard": "pickup-hard.wav"
+  "pickup-hard": "pickup-hard.wav",
+  "jungle-day": "jungle-day.mp3",
+  "jungle-night": "jungle-night.mp3"
 }
