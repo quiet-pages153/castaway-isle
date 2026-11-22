@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="46">
+<meta name="app-version" content="47">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -438,7 +438,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='46', NOTE="여자아이 옆으로 걷기 크기 흔들림을 고치고, 말리기는 한 번에 여러 개 놓을 수 있어요. 지도를 찾으면 첫날 둘러보기가 끝나요.";
+const APP='castaway-isle', APP_V='47', NOTE="해변 퀘스트와 물체 동작 코드를 정리했어요.";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -749,51 +749,12 @@ const ACTIONS = {
   bush_berry:{label:'따기',  icon:'berries', anim:'pick'},
 };
 for(const k in PICK) ACTIONS[k]={label:'줍기', icon:PICK[k][0], anim:'pick', when:o=>!o.fall};
-const OBJECT_ACTIONS = {
-  sandHole:o=>{
-    if(exposedTide()&&o.dugDay!==camp.day)
-      return {label:equipped==='sharp'?'모래 파기':'살펴보기',icon:'sharp',anim:'pick'};
-  },
-  fire:o=>{
-    const ember=story.signalPrepared&&!story.beaconLit&&!story.ember;
-    return {label:o.fuel>0?(ember?'불씨 들기':'모닥불 메뉴'):'불 피우기',
-      icon:ember&&o.fuel>0?'ember':o.fuel>0&&inv.pot?'pot':'flame',camp:true};
-  },
-  beacon:()=>{
-    if(story.crateOpened&&!story.beaconLit)
-      return {label:story.signalPrepared?'봉화 피우기':equipped==='axe'?'유목 정리':'도끼 필요',icon:story.signalPrepared?'ember':'axe',anim:story.signalPrepared?'pick':equipped==='axe'?'chop':'pick'};
-  },
-  sosSpot:()=>{
-    if(story.beaconLit&&!story.sosDrawn&&!story.stormOver) return {label:'SOS 그리기',icon:'branch',anim:'pick'};
-  },
-  crate:()=>{
-    if(!story.crateOpened) return {label:equipped==='axe'?'상자 부수기':'살펴보기',icon:equipped==='axe'?'axe':'wood',anim:equipped==='axe'?'chop':'pick'};
-  },
-  fishWater:()=>{
-    if(equipped==='rod') return {label:fishingBait&&inv[fishingBait]?'미끼로 낚기':'낚시',icon:'rod'};
-  },
-  hut:o=>{
-    const n=o.stage||0;
-    return {label:n===0?'뼈대 세우기':n===1?'야자잎 덮기':'움막 들어가기',icon:n===1?'leaf':'wood',camp:true};
-  },
-  wreck:()=>{
-    if(!inv.mapPiece) return {label:'난파선 살펴보기',icon:'mapPiece',anim:'pick'};
-  },
-  gate:()=>story.stormOver&&story.bottleFound&&gateRocksCleared()&&equipped==='axe'
-    ? {label:'가지 쳐내기',icon:'axe',anim:'chop'} : {label:'살펴보기',icon:'wood',anim:'pick'},
-  vineRock:()=>equipped==='sharp'
-    ? {label:'덩굴 자르기',icon:'sharp',anim:'pick'} : {label:'살펴보기',icon:'vineBundle',anim:'pick'},
-  tree:o=>equipped==='axe'&&inv.axe ? A_CHOP : (o.branches>0 ? A_SHAKE_TREE : null),
-};
-const gateRockFirst=new Set(['gate','vineRock','tree']);
 function actionOf(o){
   if(o.type==='sandHole'){
     const digging=OBJECT_ACTIONS.sandHole(o);
     if(digging) return digging;
   }
-  const drying=dryingFood[o.type];
-  if(drying) return {label:camp.day>=o.readyDay?ITEMS[drying.result][1]+' 수거':'말리는 중',
-    icon:camp.day>=o.readyDay?drying.result:drying.input,anim:'pick'};
+  if(Object.hasOwn(dryingFood,o.type)) return OBJECT_ACTIONS[o.type](o);
   // 앞선 종류별 동작이 없을 때 돌무더기를 검사하되, 세 종류에서는 속성이 우선한다.
   if(o.type!=='sandHole'&&!(o.gateRock&&gateRockFirst.has(o.type))&&Object.hasOwn(OBJECT_ACTIONS,o.type)){
     const action=OBJECT_ACTIONS[o.type](o);
@@ -810,11 +771,6 @@ const RECIPES = [
   {id:'hut', name:'움막', icon:'wood', structure:true, need:{wood:3,vine:1,leaf:5}, msg:'가까이에서 뼈대부터 세워요'},
   {id:'drycoconut',name:'코코넛 칩 만들기',icon:'coconutChips',structure:true,need:{coconut:3},msg:'다음 날 아침에 코코넛 칩을 수거해요'},
 ];
-const dryingFood={
-  dryberries:{input:'berries',result:'driedBerry',returnLeaf:true},
-  drycoconut:{input:'coconut',result:'coconutChips',returnLeaf:false},
-};
-
 let objs=[], inv={}, crabs=[], leaves=[], told={}, world={};
 let equipped=null, placement=null;
 const story={};
@@ -845,16 +801,8 @@ questMore.addEventListener('click',()=>{
   goal();questScroll.scrollTop=0;
 });
 function renderQuests(title,detail,recipeId){
-  const optional=[];
-  if(!waking&&!story.gateOpen){
-    if(!inv.mapPiece&&!detail.includes('난파선'))optional.push(['B해변 난파선 살펴보기','B해변에서 난파선에 다가가세요']);
-    if(story.fireLit&&camp.day===1&&isNight()&&!story.sleptWithLeaves&&!inv.mapPiece)optional.push(['모닥불 곁에서 쉬기','불이 켜진 모닥불에서 아침까지 쉴 수 있어요']);
-    if(story.dryIdea&&!seenHints.has('quest:driedBerry'))optional.push(['열매를 말려보기','열매와 야자잎을 모으거나 놓아둔 열매를 확인하세요','dryberries']);
-    if(story.dryIdea&&(inv.coconut>=3||built('drycoconut'))&&!seenHints.has('quest:coconutChips'))
-      optional.push(['코코넛 칩 만들기','코코넛을 말려두고 다음 날 아침에 수거하세요','drycoconut']);
-    if(inv.rod&&!seenHints.has('quest:fish'))optional.push(['낚시로 물고기 잡기','낚싯대를 들고 물가로 가세요']);
-    if(inv.pot&&!seenHints.has('quest:cooked'))optional.push(['냄비로 요리하기','불이 켜진 모닥불에서 요리를 고르세요']);
-  }
+  const optional=waking||story.gateOpen?[]:BEACH_OPTIONAL_QUESTS
+    .filter(quest=>quest.when(detail)).map(quest=>[quest.title,quest.detail,quest.recipe]);
   const entries=[[title,detail,recipeId],...optional].map(([name,help,id],i)=>{
     const recipe=RECIPES.find(r=>r.id===id);
     const needs=recipe?materials(recipe.need):'';
@@ -896,7 +844,7 @@ function renderQuests(title,detail,recipeId){
     }
     if(ready){
       const button=document.createElement('button');button.type='button';button.className='questCraft';
-      button.textContent=({hut:'움막 자리 정하기',fire:'모닥불 자리 정하기',axe:'돌도끼 만들기',dryberries:'열매 말리기',drycoconut:'코코넛 칩 말리기'})[recipe.id];
+      button.textContent=BEACH_CRAFT_LABELS[recipe.id];
       button.addEventListener('click',()=>craft(recipe));row.appendChild(button);
     }
     return row;
@@ -912,36 +860,212 @@ const materials=need=>Object.entries(need).map(([k,n])=>`${ITEMS[k][1]} ${Math.m
 function gateRocksCleared(){
   return !world.beachB.objs.some(o=>o.gateRock);
 }
+// ===== 해변 전용 시작 =====
+const BEACH_QUESTS=[
+  {id:'wake',when:()=>waking,
+    title:()=>'해변에서 깨어나기',detail:()=>''},
+  {id:'jungleOpen',when:()=>story.gateOpen,
+    objects:['gate'],
+    title:()=>'정글길이 열렸어요',detail:()=>'해변 이야기 완료'},
+  {id:'findBottle',when:()=>story.stormOver&&!story.bottleFound,
+    items:['waterBottle'],objects:['waterBottle'],
+    title:()=>'B해변 물가 확인하기',detail:()=>'태풍 뒤 떠밀려 온 물건을 찾아보세요'},
+  {id:'clearRocks',when:()=>story.stormOver&&!gateRocksCleared(),
+    objects:['looseRocks'],
+    title:()=>'숲길의 돌무더기 치우기',detail:()=>`길에 남은 돌무더기 ${world.beachB.objs.filter(o=>o.gateRock).length}곳`},
+  {id:'clearGate',when:()=>story.stormOver,
+    items:['axe'],objects:['gate'],
+    title:()=>'걸린 가지를 쳐내자',detail:()=>`돌도끼로 ${world.beachB.objs.find(o=>o.type==='gate')?.hits||0}/3회`},
+  {id:'explore',when:()=>!story.fireIdea,
+    title:()=>'해변을 살펴보자',detail:()=>'폭풍에 떠밀려 온 물건이 있는지 둘러보세요'},
+  {id:'buildFire',when:()=>!story.fireLit&&!built('fire'),
+    items:['stone','branch'],objects:['fire'],
+    title:()=>'첫날 밤을 준비하자',detail:()=>materials({stone:2,branch:1}),recipe:'fire'},
+  {id:'lightFire',when:()=>!story.fireLit,
+    items:['fiber','branch'],objects:['fire'],
+    title:()=>'모닥불 피우기',detail:()=>materials({fiber:1,branch:1})},
+  {id:'findMap',when:()=>camp.day===1&&!inv.mapPiece,
+    items:['mapPiece'],objects:['fire','wreck'],
+    title:()=>'해변을 둘러보자',detail:()=>isNight()?'모닥불에서 아침까지 쉴 수 있어요':'B해변의 난파선을 살펴보세요'},
+  {id:'firstNight',when:()=>camp.day===1,
+    objects:['fire'],
+    title:()=>'첫날 밤을 보내자',detail:()=>isNight()?'불이 켜진 모닥불에서 아침까지 쉬세요':'해가 지면 모닥불에서 아침까지 쉴 수 있어요'},
+  {id:'findSharp',when:()=>!inv.sharp,
+    items:['sharp'],objects:['sharp'],
+    title:()=>'뾰족한 돌 찾기',detail:()=>'A해변의 젖은 모래에서 돌칼로 쓸 돌을 찾아보세요'},
+  {id:'craftAxe',when:()=>!inv.axe&&inv.vine,
+    items:['axe','branch','stone','vine'],
+    title:()=>'돌도끼 만들기',detail:()=>materials({branch:1,stone:1,vine:1}),recipe:'axe'},
+  {id:'cutVine',when:()=>!inv.axe,
+    items:['axe','sharp','vine'],objects:['vineRock','vineBundle'],
+    title:()=>'덩굴 자르기',detail:()=>'돌칼을 들고, 바위에 감긴 덩굴로'},
+  {id:'openCrate',when:()=>!story.crateOpened,
+    items:['axe'],objects:['crate'],
+    title:()=>'B해변의 상자 열기',detail:()=>'돌도끼를 들고 상자에 다가가세요'},
+  {id:'prepareBeacon',when:()=>!story.beaconLit&&!story.signalPrepared,
+    items:['axe'],objects:['beacon'],
+    title:()=>'봉화 자리 정리하기',detail:()=>'빠른 칸에서 돌도끼를 들고 A해변의 유목 더미로 가세요'},
+  {id:'lightBeacon',when:()=>!story.beaconLit&&story.ember,
+    objects:['beacon'],
+    title:()=>'봉화 피우기',detail:()=>'A해변의 유목 더미'},
+  {id:'carryEmber',when:()=>!story.beaconLit,
+    items:['fiber','branch'],objects:['fire'],
+    title:()=>'모닥불에서 불씨 가져오기',detail:()=>'불이 꺼졌으면 마른 섬유와 가지로 다시 피우세요'},
+  {id:'drawSOS',when:()=>!story.sosDrawn,
+    objects:['sosSpot'],
+    title:()=>'모래에 SOS 남기기',detail:()=>'A해변의 마른 모래'},
+  {id:'placeHut',when:()=>!built('hut'),
+    items:['wood','vine','leaf'],objects:['hut'],
+    title:()=>'추위를 피할 움막 짓기',detail:()=>materials({wood:3,vine:1,leaf:5}),recipe:'hut'},
+  {id:'buildHut',when:()=>!story.hutReady,
+    items:['wood','vine','leaf'],objects:['hut'],
+    title:()=>(built('hut').stage||0)===0?'움막 뼈대를 세우자':'야자잎으로 지붕을 덮자',
+    detail:()=>'움막 자리 가까이에서 오른쪽 행동 버튼'},
+  {id:'waitStorm',when:()=>true,
+    objects:['hut'],
+    title:()=>story.stormNight?'첫 태풍을 견디자':'움막에서 밤을 보내자',
+    detail:()=>story.stormNight?'파도가 잦아들 때까지 기다리세요':'구조 신호를 남겼어요'},
+];
+const BEACH_OPTIONAL_QUESTS=[
+  {id:'inspectWreck',when:detail=>!inv.mapPiece&&!detail.includes('난파선'),
+    items:['mapPiece'],objects:['wreck'],
+    title:'B해변 난파선 살펴보기',detail:'B해변에서 난파선에 다가가세요'},
+  {id:'restAtFire',when:()=>story.fireLit&&camp.day===1&&isNight()&&!story.sleptWithLeaves&&!inv.mapPiece,
+    items:['mapPiece'],objects:['fire'],
+    title:'모닥불 곁에서 쉬기',detail:'불이 켜진 모닥불에서 아침까지 쉴 수 있어요'},
+  {id:'dryBerries',when:()=>story.dryIdea&&!seenHints.has('quest:driedBerry'),
+    items:['driedBerry'],objects:['dryberries'],
+    title:'열매를 말려보기',detail:'열매와 야자잎을 모으거나 놓아둔 열매를 확인하세요',recipe:'dryberries'},
+  {id:'dryCoconut',when:()=>story.dryIdea&&(inv.coconut>=3||built('drycoconut'))&&!seenHints.has('quest:coconutChips'),
+    items:['coconut','coconutChips'],objects:['drycoconut'],
+    title:'코코넛 칩 만들기',detail:'코코넛을 말려두고 다음 날 아침에 수거하세요',recipe:'drycoconut'},
+  {id:'catchFish',when:()=>inv.rod&&!seenHints.has('quest:fish'),
+    items:['rod'],objects:['fishWater'],
+    title:'낚시로 물고기 잡기',detail:'낚싯대를 들고 물가로 가세요'},
+  {id:'cookFish',when:()=>inv.pot&&!seenHints.has('quest:cooked'),
+    items:['pot'],objects:['fire'],
+    title:'냄비로 요리하기',detail:'불이 켜진 모닥불에서 요리를 고르세요'},
+];
+const BEACH_CRAFT_LABELS={hut:'움막 자리 정하기',fire:'모닥불 자리 정하기',axe:'돌도끼 만들기',dryberries:'열매 말리기',drycoconut:'코코넛 칩 말리기'};
+
+const dryingFood={
+  dryberries:{input:'berries',result:'driedBerry',returnLeaf:true},
+  drycoconut:{input:'coconut',result:'coconutChips',returnLeaf:false},
+};
+function dryingAction(o){
+  const drying=dryingFood[o.type];
+  return {label:camp.day>=o.readyDay?ITEMS[drying.result][1]+' 수거':'말리는 중',
+    icon:camp.day>=o.readyDay?drying.result:drying.input,anim:'pick'};
+}
+const OBJECT_ACTIONS = {
+  ...Object.fromEntries(Object.keys(dryingFood).map(type=>[type,dryingAction])),
+  sandHole:o=>{
+    if(exposedTide()&&o.dugDay!==camp.day)
+      return {label:equipped==='sharp'?'모래 파기':'살펴보기',icon:'sharp',anim:'pick'};
+  },
+  fire:o=>{
+    const ember=story.signalPrepared&&!story.beaconLit&&!story.ember;
+    return {label:o.fuel>0?(ember?'불씨 들기':'모닥불 메뉴'):'불 피우기',
+      icon:ember&&o.fuel>0?'ember':o.fuel>0&&inv.pot?'pot':'flame',camp:true};
+  },
+  beacon:()=>{
+    if(story.crateOpened&&!story.beaconLit)
+      return {label:story.signalPrepared?'봉화 피우기':equipped==='axe'?'유목 정리':'도끼 필요',icon:story.signalPrepared?'ember':'axe',anim:story.signalPrepared?'pick':equipped==='axe'?'chop':'pick'};
+  },
+  sosSpot:()=>{
+    if(story.beaconLit&&!story.sosDrawn&&!story.stormOver) return {label:'SOS 그리기',icon:'branch',anim:'pick'};
+  },
+  crate:()=>{
+    if(!story.crateOpened) return {label:equipped==='axe'?'상자 부수기':'살펴보기',icon:equipped==='axe'?'axe':'wood',anim:equipped==='axe'?'chop':'pick'};
+  },
+  fishWater:()=>{
+    if(equipped==='rod') return {label:fishingBait&&inv[fishingBait]?'미끼로 낚기':'낚시',icon:'rod'};
+  },
+  hut:o=>{
+    const n=o.stage||0;
+    return {label:n===0?'뼈대 세우기':n===1?'야자잎 덮기':'움막 들어가기',icon:n===1?'leaf':'wood',camp:true};
+  },
+  wreck:()=>{
+    if(!inv.mapPiece) return {label:'난파선 살펴보기',icon:'mapPiece',anim:'pick'};
+  },
+  gate:()=>story.stormOver&&story.bottleFound&&gateRocksCleared()&&equipped==='axe'
+    ? {label:'가지 쳐내기',icon:'axe',anim:'chop'} : {label:'살펴보기',icon:'wood',anim:'pick'},
+  vineRock:()=>equipped==='sharp'
+    ? {label:'덩굴 자르기',icon:'sharp',anim:'pick'} : {label:'살펴보기',icon:'vineBundle',anim:'pick'},
+  tree:o=>equipped==='axe'&&inv.axe ? A_CHOP : (o.branches>0 ? A_SHAKE_TREE : null),
+};
+const gateRockFirst=new Set(['gate','vineRock','tree']);
+
+const BEACH_DIALOGUE={
+  wake:(name,who)=>['여긴… 어디지? 나, 살아 있는 건가?','맞아… 파도가 배를 덮쳤어. 갑판이 기울고, 나도 바다에 빠졌지.',
+    `잠깐. ${name}도 같이 타고 있었잖아. 어디 있는 거지?`,`${who}! ${who}! 어디 있니?`],
+  fireIdea:'옷이 아직 축축해. 해가 지면 더 추워질 텐데… 오늘 밤을 버티려면 불부터 피워야겠어.',
+  dryIdea:'오늘은 열매로 버텼지만, 내일 먹을 것도 필요하겠어. 몇 알은 야자잎에 펼쳐 말려두자.',
+  vineIdea:'아까 바위에 감긴 덩굴이 있었지. 그 돌로 잘라볼까?',
+  searchB:name=>name+'! 혹시 여기 있어?',
+  wreck:'난파선이네… 안에 쓸 만한 게 남아 있을까?',
+  east:'모래사장이 동쪽으로 이어지네. 저쪽도 한번 살펴봐야겠어.',
+  fruitFishIdea:'앗, 비려! …말린 열매를 같이 끓이면 향이 좀 나아질까?',
+  emptyBottle:'정글에서 물이 흐르는 곳을 찾으면 이 병에 담아 와야겠다.',
+  hutComfort:'야자잎으로 지은 움막인데… 생각보다 아늑하네.',
+  hutFamily:name=>`가족도, 친구들도 보고 싶다. ${name}도 어디선가 밤을 보내고 있겠지?`,
+  hutHope:'누군가 곧 구하러 오겠지… 오늘은 일단 좀 쉬자.',
+  hutStorm:'바람이 세졌어… 오늘 밤은 여기 안에 있자.',
+  hutSleep:'이제 눈을 좀 붙이자.',
+  fruitClamIdea:'가리비에 말린 열매를 넣으면 달큰한 향이 나겠어.',
+  fiberIdea:'코코넛을 먹고 나면 껍질에 마른 섬유가 남겠어.',
+  fireLit:'됐다… 오늘 밤은 이 불 곁에 있자.',
+  afterSunset:'해가 졌네.',
+  beforeSunset:'곧 해가 지겠어.',
+  sunsetFire:' 불 피울 준비를 해야겠다.',
+  dawnWithLeaves:'야자잎을 덮었는데도 새벽엔 추웠어.',
+  dawnCold:'새벽엔 정말 추웠어.',
+  dawnShelter:'바람을 막아줄 곳이 필요해.',
+  prepareBeacon:'구조대가 분명 나를 찾고 있겠지? 연기를 올리면 여기 있는 게 보일 거야.',
+  beaconLit:'연기가 올라간다. 모래에도 멀리서 보이는 표시를 남기자.',
+  sos:'하늘에서도 보이겠지. 기다리는 동안 추위를 피할 곳을 만들자.',
+  openCrate:'냄비랑 낚싯대는 쓸 수 있겠어. 나머지는 다 깨졌네.',
+  closedCrate:'뚜껑이 꽉 끼었네. 도구가 있으면 열 수 있겠다.',
+  axeIdea:'이 덩굴로 뾰족한 돌 대신 단단한 돌을 가지에 묶으면 도끼가 되겠어.',
+  gateOpen:'이제 안쪽을 살펴볼 수 있겠어.',
+  gateBottle:'나무가 좀 밀렸네. 해변에 떠밀려 온 것부터 살펴봐야겠어.',
+  gateBranches:'나무가 좀 밀렸네. 걸린 가지를 도끼로 쳐내면 지나갈 수 있겠는데?',
+  gateRocks:'발밑에 돌이 쌓였네. 먼저 치우고 가까이 가보자.',
+  gateSeen:'그을린 옆에 드러난 나무가 아직 하얗네. 난파된 날 밤에 쓰러졌나?',
+  betterAxe:'돌도끼로는 한참 걸리네. 더 튼튼한 도끼가 있으면 좋겠어.',
+  bottleFound:name=>`잠깐, 이 이름표… ${name} 거잖아.`,
+  bottleTrail:'이 근처에 떠밀려 왔던 걸까? 숲길 안쪽을 봐야겠어.',
+  campAtNight:'모닥불 옆에 자리를 잡자.',
+  campUntilNight:'해가 질 때까지 여기서 잠깐 쉬자.',
+};
+const BEACH_NO_ACTION=new Set(['grass','rock_big','rock_pile','log']);
+function validateBeachData(){
+  const hasAction=type=>Object.hasOwn(OBJECT_ACTIONS,type)||Object.hasOwn(ACTIONS,type);
+  for(const {id,items=[],objects=[],recipe} of [...BEACH_QUESTS,...BEACH_OPTIONAL_QUESTS]){
+    const craftRecipe=recipe&&RECIPES.find(r=>r.id===recipe);
+    if(recipe&&!craftRecipe) console.error('해변 퀘스트에 정의되지 않은 제작법:',id,recipe);
+    const recipeItems=craftRecipe?Object.keys(craftRecipe.need):[];
+    if(craftRecipe&&!craftRecipe.structure) recipeItems.push(craftRecipe.id);
+    for(const item of new Set([...items,...recipeItems])){
+      if(!Object.hasOwn(ITEM_DB,item)) console.error('해변 퀘스트에 정의되지 않은 아이템:',id,item);
+    }
+    const recipeObjects=craftRecipe?.structure?[craftRecipe.id]:[];
+    for(const type of new Set([...objects,...recipeObjects])){
+      if(!hasAction(type)) console.error('해변 퀘스트에 동작이 정의되지 않은 물체:',id,type);
+    }
+  }
+  for(const [mapId,{objects}] of Object.entries(MAPS)){
+    for(const type of new Set(objects.map(([type])=>type))){
+      if(!hasAction(type)&&!BEACH_NO_ACTION.has(type)) console.error('지도에 동작이 정의되지 않은 물체:',mapId,type);
+    }
+  }
+}
+validateBeachData();
+// ===== 해변 전용 끝 =====
+
 function goal(){
-  let title='',detail='',recipeId;
-  if(waking){ title='해변에서 깨어나기'; }
-  else if(story.gateOpen){title='정글길이 열렸어요';detail='해변 이야기 완료';}
-  else if(story.stormOver){
-    const rocks=world.beachB.objs.filter(o=>o.gateRock).length;
-    title=!story.bottleFound?'B해변 물가 확인하기':rocks?'숲길의 돌무더기 치우기':'걸린 가지를 쳐내자';
-    detail=!story.bottleFound?'태풍 뒤 떠밀려 온 물건을 찾아보세요':rocks?`길에 남은 돌무더기 ${rocks}곳`:
-      `돌도끼로 ${world.beachB.objs.find(o=>o.type==='gate')?.hits||0}/3회`;
-  } else if(!story.fireIdea){title='해변을 살펴보자';detail='폭풍에 떠밀려 온 물건이 있는지 둘러보세요';}
-  else if(!story.fireLit){
-    title='첫날 밤을 준비하자';
-    if(!built('fire')){recipeId='fire';detail=materials({stone:2,branch:1});}
-    else {title='모닥불 피우기';detail=materials({fiber:1,branch:1});}
-  } else if(camp.day===1&&!inv.mapPiece){title='해변을 둘러보자';detail=isNight()?'모닥불에서 아침까지 쉴 수 있어요':'B해변의 난파선을 살펴보세요';}
-  else if(camp.day===1){title='첫날 밤을 보내자';detail=isNight()?'불이 켜진 모닥불에서 아침까지 쉬세요':'해가 지면 모닥불에서 아침까지 쉴 수 있어요';}   // v46: 지도를 찾으면 둘러보기 끝
-  else if(!inv.sharp){title='뾰족한 돌 찾기';detail='A해변의 젖은 모래에서 돌칼로 쓸 돌을 찾아보세요';}
-  else if(!inv.axe){
-    title=inv.vine?'돌도끼 만들기':'덩굴 자르기';
-    if(inv.vine)recipeId='axe';
-    detail=inv.vine?materials({branch:1,stone:1,vine:1}):'돌칼을 들고, 바위에 감긴 덩굴로';
-  } else if(!story.crateOpened){title='B해변의 상자 열기';detail='돌도끼를 들고 상자에 다가가세요';}
-  else if(!story.beaconLit){
-    title=!story.signalPrepared?'봉화 자리 정리하기':story.ember?'봉화 피우기':'모닥불에서 불씨 가져오기';
-    detail=!story.signalPrepared?'빠른 칸에서 돌도끼를 들고 A해변의 유목 더미로 가세요':story.ember?'A해변의 유목 더미':'불이 꺼졌으면 마른 섬유와 가지로 다시 피우세요';
-  } else if(!story.sosDrawn){title='모래에 SOS 남기기';detail='A해변의 마른 모래';}
-  else if(!built('hut')){recipeId='hut';title='추위를 피할 움막 짓기';detail=materials({wood:3,vine:1,leaf:5});}
-  else if(!story.hutReady){title=(built('hut').stage||0)===0?'움막 뼈대를 세우자':'야자잎으로 지붕을 덮자';detail='움막 자리 가까이에서 오른쪽 행동 버튼';}
-  else {title=story.stormNight?'첫 태풍을 견디자':'움막에서 밤을 보내자';detail=story.stormNight?'파도가 잦아들 때까지 기다리세요':'구조 신호를 남겼어요';}
-  renderQuests(title,detail,recipeId);
+  const quest=BEACH_QUESTS.find(q=>q.when());
+  renderQuests(quest.title(),quest.detail(),quest.recipe);
 }
 const dialogue=document.getElementById('dialogue'),talkTap=document.getElementById('talkTap');
 let dialogueLeft=0,dialoguePinned=false,dialogueNext=null,introPose=-1;
@@ -958,8 +1082,7 @@ function callName(name){
 }
 function intro(i=0){
   const who=callName(partner());
-  const lines=['여긴… 어디지? 나, 살아 있는 건가?','맞아… 파도가 배를 덮쳤어. 갑판이 기울고, 나도 바다에 빠졌지.',
-    `잠깐. ${partner()}도 같이 타고 있었잖아. 어디 있는 거지?`,`${who}! ${who}! 어디 있니?`];
+  const lines=BEACH_DIALOGUE.wake(partner(),who);
   if(i===lines.length){introPose=-1;goal();return;}
   if(i===1)beachAudio.effect('wake');
   if(i===2)beachAudio.step(zoneAt(st.x,st.y));
@@ -972,23 +1095,23 @@ function noticeOnce(key,text){
 function survivalIdeas(){
   if(introPose>=0||dialoguePinned)return;
   if(!story.fireIdea&&!st.act&&(st.walkDist>=105||st.t>=13)){
-    say('옷이 아직 축축해. 해가 지면 더 추워질 텐데… 오늘 밤을 버티려면 불부터 피워야겠어.',true,true,
+    say(BEACH_DIALOGUE.fireIdea,true,true,
       ()=>{story.fireIdea=true;goal();checkRecipes();});
     return;
   }
   if(story.fireLit&&!story.dryIdea&&!st.act&&(camp.day>=2||camp.time>=dayLength()-80)&&dialogue.hidden){
     story.dryIdea=true;
-    say('오늘은 열매로 버텼지만, 내일 먹을 것도 필요하겠어. 몇 알은 야자잎에 펼쳐 말려두자.',true);
+    say(BEACH_DIALOGUE.dryIdea,true);
     checkRecipes();
   }
   if(story.fireLit&&camp.day>=2&&st.t>36&&inv.sharp&&!story.axeIdea)
-    noticeOnce('vine','아까 바위에 감긴 덩굴이 있었지. 그 돌로 잘라볼까?');
-  if(camp.day===1&&cur==='beachB'&&st.x>155&&st.x<355&&!st.act)noticeOnce('searchB',callName(partner())+'! 혹시 여기 있어?');
+    noticeOnce('vine',BEACH_DIALOGUE.vineIdea);
+  if(camp.day===1&&cur==='beachB'&&st.x>155&&st.x<355&&!st.act)noticeOnce('searchB',BEACH_DIALOGUE.searchB(callName(partner())));
   if(cur==='beachB'&&!story.wreckSeen&&!inv.mapPiece&&!st.act&&dialogue.hidden&&objs.some(o=>o.type==='wreck'&&Math.hypot(o.x-st.x,o.y-st.y)<195)){
-    story.wreckSeen=true;say('난파선이네… 안에 쓸 만한 게 남아 있을까?',true);
+    story.wreckSeen=true;say(BEACH_DIALOGUE.wreck,true);
   }
   if(story.fireLit&&!inv.mapPiece&&!story.visitedB&&cur==='beachA'&&st.t>85)
-    noticeOnce('east','모래사장이 동쪽으로 이어지네. 저쪽도 한번 살펴봐야겠어.');
+    noticeOnce('east',BEACH_DIALOGUE.east);
 }
 function say(message,thought=false,pinned=false,next=null){
   const limit=VW<360?36:45;
@@ -1334,10 +1457,10 @@ function eat(k){
   renderGauges(); renderInv(); goal(); checkRecipes();
   if((k==='cookedFish'||k==='tideSoup')&&!story.fruitFishIdea){
     story.fruitFishIdea=true;closeBag();
-    say('앗, 비려! …말린 열매를 같이 끓이면 향이 좀 나아질까?',true,true);
+    say(BEACH_DIALOGUE.fruitFishIdea,true,true);
   }
   if(k==='coconut') pops.push({text:'+1 마른 야자 섬유',x:st.x,y:st.y-108,t:0});
-  if(k==='waterBottle'){closeBag();say('정글에서 물이 흐르는 곳을 찾으면 이 병에 담아 와야겠다.',true);}
+  if(k==='waterBottle'){closeBag();say(BEACH_DIALOGUE.emptyBottle,true);}
 }
 
 // ---------- 생존: 배고픔·목마름은 시간에 따라 줄고, 0이면 체력이 줄어듦 ----------
@@ -1488,9 +1611,9 @@ function renderHutChoices(){
 function hutMonologue(){
   if(!insideHut||!isNight()||story.hutTalk||dialoguePinned)return;
   story.hutTalk=true;
-  say('야자잎으로 지은 움막인데… 생각보다 아늑하네.',true,true,
-    ()=>say(`가족도, 친구들도 보고 싶다. ${partner()}도 어디선가 밤을 보내고 있겠지?`,true,true,
-      ()=>say('누군가 곧 구하러 오겠지… 오늘은 일단 좀 쉬자.',true,true)));
+  say(BEACH_DIALOGUE.hutComfort,true,true,
+    ()=>say(BEACH_DIALOGUE.hutFamily(partner()),true,true,
+      ()=>say(BEACH_DIALOGUE.hutHope,true,true)));
 }
 function enterHut(o){
   if((o.stage||0)!==2)return;
@@ -1516,7 +1639,7 @@ hutSleep.addEventListener('click',()=>{
   clearDialogue();
   const storm=beginStorm();
   hutSleepScene=storm?2.8:1.05;
-  say(storm?'바람이 세졌어… 오늘 밤은 여기 안에 있자.':'이제 눈을 좀 붙이자.',true);
+  say(storm?BEACH_DIALOGUE.hutStorm:BEACH_DIALOGUE.hutSleep,true);
   renderHutChoices();
 });
 function tickHutSleep(dt){
@@ -1649,7 +1772,7 @@ function showCooking(o){
   close.addEventListener('click',closeCampOptions);top.append(heading,close);list.appendChild(top);
   if(!story.fruitClamIdea&&inv.scallop&&inv.driedBerry){
     story.fruitClamIdea=true;
-    say('가리비에 말린 열매를 넣으면 달큰한 향이 나겠어.',true);
+    say(BEACH_DIALOGUE.fruitClamIdea,true);
   }
   const available=COOKING.filter(r=>cookingOpen(r)&&inv[Object.keys(r.need)[0]]>0);
   if(!available.length){
@@ -1696,7 +1819,7 @@ function useCamp(o){
     return;
   }
   if(!inv.branch||!inv.fiber){
-    if(!inv.fiber)noticeOnce('fiber','코코넛을 먹고 나면 껍질에 마른 섬유가 남겠어.');
+    if(!inv.fiber)noticeOnce('fiber',BEACH_DIALOGUE.fiberIdea);
     hint('불 피우기 · 마른 야자 섬유 1개 + 나뭇가지 1개',2.8);return;
   }
   inv.branch--;inv.fiber--;renderInv();
@@ -1709,7 +1832,7 @@ function tickIgnition(dt){
   ignition.t-=dt;
   if(ignition.t>0)return;
   const o=ignition.o;ignition=null;
-  o.fuel=cycleLength()-camp.time;story.fireLit=true;goal();say('됐다… 오늘 밤은 이 불 곁에 있자.',true);
+  o.fuel=cycleLength()-camp.time;story.fireLit=true;goal();say(BEACH_DIALOGUE.fireLit,true);
 }
 function advanceCamp(dt,{deferDawnThought=false}={}){
   const wasNight=isNight(),wasDay=camp.day;
@@ -1721,8 +1844,8 @@ function advanceCamp(dt,{deferDawnThought=false}={}){
   if(camp.day===1&&!story.duskLine&&camp.time>=dayLength()-35){
     story.duskLine=true;
     const litHere=objs.some(o=>o.type==='fire'&&o.fuel>0);
-    const sunset=isNight()?'해가 졌네.':'곧 해가 지겠어.';
-    say(litHere?sunset:sunset+' 불 피울 준비를 해야겠다.',true);
+    const sunset=isNight()?BEACH_DIALOGUE.afterSunset:BEACH_DIALOGUE.beforeSunset;
+    say(litHere?sunset:sunset+BEACH_DIALOGUE.sunsetFire,true);
   }
   if(!wasNight&&isNight()){
     hint(camp.day===1?'밤이 됐어요. 모닥불에서 아침까지 쉴 수 있어요':'밤이 됐어요. 불 가까이에서 몸을 데우세요',3);
@@ -1735,8 +1858,8 @@ function advanceCamp(dt,{deferDawnThought=false}={}){
   }
 }
 function firstDawnThought(){
-  say(story.sleptWithLeaves?'야자잎을 덮었는데도 새벽엔 추웠어.':'새벽엔 정말 추웠어.',true,true,
-    ()=>say('바람을 막아줄 곳이 필요해.',true,true));
+  say(story.sleptWithLeaves?BEACH_DIALOGUE.dawnWithLeaves:BEACH_DIALOGUE.dawnCold,true,true,
+    ()=>say(BEACH_DIALOGUE.dawnShelter,true,true));
 }
 const DROP={food:35/240,water:40/540};
 const LOW_FOOD=35, LOW_WATER=20;
@@ -2248,26 +2371,26 @@ function hitNow(t){
     actHeld=false;
     if(!story.signalPrepared&&equipped==='axe'&&st.act==='chop'){
       story.signalPrepared=true;
-      say('구조대가 분명 나를 찾고 있겠지? 연기를 올리면 여기 있는 게 보일 거야.',true,true);
+      say(BEACH_DIALOGUE.prepareBeacon,true,true);
     }else if(!story.signalPrepared){
       hint('빠른 칸에서 돌도끼를 들어야 유목을 정리할 수 있어요',3.4);
     }else if(story.ember){
       story.ember=false;story.beaconLit=true;story.beaconLitDay=camp.day;
-      say('연기가 올라간다. 모래에도 멀리서 보이는 표시를 남기자.',true);
+      say(BEACH_DIALOGUE.beaconLit,true);
     }else hint('모닥불에서 불씨를 가져오세요',2.5);
     goal();
   }else if(t.type==='sosSpot'){
     story.sosDrawn=true;goal();
-    say('하늘에서도 보이겠지. 기다리는 동안 추위를 피할 곳을 만들자.',true,true);
+    say(BEACH_DIALOGUE.sos,true,true);
   }else if(t.type==='crate'){
     if(equipped==='axe'&&st.act==='chop'){
       t.shake=.25;t.hp--;
       if(t.hp<=0){
         objs.splice(objs.indexOf(t),1);story.crateOpened=true;
         give('wood',2,t.x,t.y-28);give('pot',1,t.x,t.y-48);give('rod',1,t.x,t.y-68);
-        say('냄비랑 낚싯대는 쓸 수 있겠어. 나머지는 다 깨졌네.',true,true,()=>showTool('rod'));
+        say(BEACH_DIALOGUE.openCrate,true,true,()=>showTool('rod'));
       }
-    }else say('뚜껑이 꽉 끼었네. 도구가 있으면 열 수 있겠다.',true);
+    }else say(BEACH_DIALOGUE.closedCrate,true);
   }else if(t.type==='wreck'&&!inv.mapPiece){
     give('mapPiece',1,t.x,t.y-45); goal();
     story.wreckSeen=true;paperMapBtn.hidden=false;showPaperMap(true);
@@ -2275,7 +2398,7 @@ function hitNow(t){
     if(st.act==='pick'&&equipped==='sharp'){
       beachAudio.effect('vine');pulse(16);
       t.type='vineCut';story.axeIdea=true;
-      noticeOnce('axe','이 덩굴로 뾰족한 돌 대신 단단한 돌을 가지에 묶으면 도끼가 되겠어.');
+      noticeOnce('axe',BEACH_DIALOGUE.axeIdea);
       goal();
       objs.push({type:'vineBundle',x:t.x+27,y:t.y+13,fall:0,shake:0});
       hint('잘라낸 덩굴을 주워 보세요',2);
@@ -2286,14 +2409,14 @@ function hitNow(t){
       if(t.hits<3){hint(`걸린 가지 · ${t.hits}/3회`,1.4);goal();return;}
       t.type='felled'; t.x=904; t.y=169;
       story.gateOpen=true; goal();
-      say('이제 안쪽을 살펴볼 수 있겠어.',true,true);
+      say(BEACH_DIALOGUE.gateOpen,true,true);
     } else if(story.stormOver){
-      const next=!story.bottleFound?'나무가 좀 밀렸네. 해변에 떠밀려 온 것부터 살펴봐야겠어.':
-        gateRocksCleared()?'나무가 좀 밀렸네. 걸린 가지를 도끼로 쳐내면 지나갈 수 있겠는데?':'발밑에 돌이 쌓였네. 먼저 치우고 가까이 가보자.';
+      const next=!story.bottleFound?BEACH_DIALOGUE.gateBottle:
+        gateRocksCleared()?BEACH_DIALOGUE.gateBranches:BEACH_DIALOGUE.gateRocks;
       say(next,true,true);
     } else{
       story.gateSeen=true;
-      say('그을린 옆에 드러난 나무가 아직 하얗네. 난파된 날 밤에 쓰러졌나?',true,true);
+      say(BEACH_DIALOGUE.gateSeen,true,true);
     }
   } else if(st.act==='pick'&&(t.type==='looseRocks'||t.type==='smallRocks')){
     const remaining=t.type==='looseRocks';
@@ -2304,7 +2427,7 @@ function hitNow(t){
   } else if(st.act==='chop' && t.type==='tree'){
     t.shake=.25;t.hp--;
     if(t.hp<=0){t.type='stump';give('wood',1,t.x,t.y-30);}
-    else if(t.hp===5)noticeOnce('betterAxe','돌도끼로는 한참 걸리네. 더 튼튼한 도끼가 있으면 좋겠어.');
+    else if(t.hp===5)noticeOnce('betterAxe',BEACH_DIALOGUE.betterAxe);
   } else if(st.act==='shake' && t.type==='tree' && t.branches>0){
     t.shake=.45; t.branches--;
     const side=-(st.side||1), nx=t.x+side*(30+Math.random()*14), ny=t.y+16+Math.random()*10;
@@ -2330,8 +2453,8 @@ function hitNow(t){
       if(item==='sharp')showTool('sharp');
       if(item==='waterBottle'){
         story.bottleFound=true;goal();
-        say(`잠깐, 이 이름표… ${partner()} 거잖아.`,true,true,
-          ()=>say('이 근처에 떠밀려 왔던 걸까? 숲길 안쪽을 봐야겠어.',true,true));
+        say(BEACH_DIALOGUE.bottleFound(partner()),true,true,
+          ()=>say(BEACH_DIALOGUE.bottleTrail,true,true));
       }
     }
   }
@@ -2867,8 +2990,8 @@ function startBeachSleep(fire,night=true){
   if(night){
     story.sleptWithLeaves=true;
     faceTo(bed);
-    say('모닥불 옆에 자리를 잡자.',true);
-  }else say('해가 질 때까지 여기서 잠깐 쉬자.',true);
+    say(BEACH_DIALOGUE.campAtNight,true);
+  }else say(BEACH_DIALOGUE.campUntilNight,true);
 }
 function advanceBeachRest(night){
   const wait=(night?cycleLength():dayLength())-camp.time;
