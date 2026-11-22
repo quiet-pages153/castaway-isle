@@ -1,6 +1,6 @@
 // 표류섬 서비스워커 — 이 앱 주소(/castaway-isle/) 것만 다룸
 const APP = 'castaway-isle';
-const VERSION = '49';
+const VERSION = '50';
 const CACHE = APP + '-' + VERSION;
 const FILES = [
   "./manifest.webmanifest", "./icon-192.png", "./icon-192.png?v=5", "./icon-512.png?v=5",
