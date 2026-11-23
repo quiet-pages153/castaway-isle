@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="59">
+<meta name="app-version" content="60">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -220,6 +220,10 @@
   .say.below:after{top:-7px;bottom:auto;transform:rotate(225deg)}
   .say.noTail:after{display:none}
   .talkTap{position:absolute;inset:0;z-index:7;border:0;background:none;touch-action:manipulation}
+  .mateJob{position:absolute;z-index:3;left:0;top:0;width:30px;height:30px;display:grid;place-items:center;pointer-events:none;background:#fff4dfee;border:2px solid #6b4a2e;border-radius:50%;box-shadow:0 2px 0 #0004}
+  .mateJob::after{content:'';position:absolute;bottom:-7px;left:50%;margin-left:-5px;border:5px solid transparent;border-top-color:#6b4a2e;border-bottom:0}
+  .mateJob .ic{width:22px;height:22px}
+  .mateJob b{position:absolute;right:-8px;top:-7px;min-width:17px;height:17px;padding:0 3px;border-radius:9px;background:#c0462e;color:#fff;font:700 11px/17px sans-serif;text-align:center}
   .exitCue{position:absolute;z-index:2;right:8px;top:45%;display:flex;align-items:center;gap:5px;pointer-events:none;padding:4px 7px;color:#fff2d2;background:#30251ddc;border:1px solid #b98b55;border-radius:5px;font-size:12px}
   .exitCue.back{left:8px;right:auto}.exitCue.down{left:50%;right:auto;top:auto;bottom:calc(env(safe-area-inset-bottom) + 150px);transform:translateX(-50%)}.exitCue.jungle{left:50%;right:auto;top:calc(env(safe-area-inset-top) + 68px);transform:translateX(-50%)}
   .ic.ember{background:url(carried_ember.webp) center/contain no-repeat}
@@ -389,6 +393,7 @@
   </section>
   <button type="button" class="talkTap" id="talkTap" tabindex="-1" aria-label="대사 계속" hidden></button>
   <button type="button" class="say" id="dialogue" hidden></button>
+  <div class="mateJob" id="mateJob" hidden></div>
   <div class="exitCue" id="exitCue" hidden></div>
   <p class="hint" id="hint" aria-live="polite"></p>
   <div class="craft" id="craftCard" hidden><span class="ic" id="craftIcon"></span><span class="craftInfo"><strong id="craftText"></strong><small id="craftMats"></small></span><button type="button" id="craftBtn">만들기</button><button type="button" class="x" id="craftX" aria-label="닫기">✕</button></div>
@@ -454,7 +459,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='59', NOTE="정글: 나무 창을 만들어 닭을 잡을 수 있어요";
+const APP='castaway-isle', APP_V='60', NOTE="동료에게 열매·나뭇가지 일을 맡길 수 있어요";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -831,6 +836,7 @@ const story={};
 const seenHints=new Set();
 function resetStory(){
   Object.assign(story,{mapPiece2:false,jungleEntered:false,footprintSeen:false,fordCrossed:false,jungleBEntered:false,springFound:false,reunited:false,knifeGot:false,bottleFilled:false,toughVineCut:false,spearMade:false,huntHesitated:false,henCaught:false,spearMissed:false});   // 정글 이야기 (v52~, 사냥 v59)
+  Object.assign(story,{mateJob:null,mateWork:0,mateHeld:{},mateFruitN:0,mateFishDay:0,mateDryDay:0,mateDryTold:false,mateFullTold:false});   // v60 동료 일 맡기기
   Object.assign(story,{stormOver:false,stormNight:false,gateOpen:false,stoneFound:false,gateSeen:false,
     fireIdea:false,fireLit:false,dryIdea:false,axeIdea:false,fruitFishIdea:false,fruitClamIdea:false,
     signalPrepared:false,ember:false,beaconLit:false,beaconLitDay:0,sosDrawn:false,hutReady:false,crateOpened:false,bottleFound:false});
@@ -1343,11 +1349,123 @@ function giveKnife(){
     if(inv.sharp)say(jLines('stoneRetired')[0][1],true);
   });
 }
-OBJECT_ACTIONS.mate=o=>story.reunited?{label:'이야기하기',icon:'dialogueIcon',talk:talkMate}:{label:'부르기',icon:'dialogueIcon',talk:startReunion};
+OBJECT_ACTIONS.mate=o=>story.reunited?{label:'이야기하기',icon:'dialogueIcon',talk:mateMenu}:{label:'부르기',icon:'dialogueIcon',talk:startReunion};
+function faceMate(t){mate.mode='talk';mate.timer=t;mate.dir=Math.abs(st.x-mate.x)>Math.abs(st.y-mate.y)?(st.x>mate.x?'right':'left'):(st.y>mate.y?'down':'up');}
 function talkMate(){
-  mate.mode='talk';mate.timer=4;mate.dir=Math.abs(st.x-mate.x)>Math.abs(st.y-mate.y)?(st.x>mate.x?'right':'left'):(st.y>mate.y?'down':'up');
+  faceMate(4);
   const text=story.spearMade&&!story.henCaught&&!seenHints.has('mateHens')?(seenHints.add('mateHens'),jLines('mateHens')[0][1]):MATE_LINES[mate.line++%MATE_LINES.length];
   playLines([['friend',text]],()=>{mate.mode='idle';mate.timer=1.5;});
+}
+// ===== 동료 일 맡기기 (Claude, v60) =====
+// 맡길 일: 열매 / 나뭇가지 (+ 동료가 소녀면 물고기 하루 1마리). 동료가 소년이면 맡기지 않아도 이틀마다 말린 열매 2개.
+// 일은 낮에만 함(게임 시간 기준, 잠으로 건너뛴 낮 포함). 모은 것은 동료가 들고 있다가 곁에 가면 저절로 가방에. 가방이 꽉 차면 계속 들고 있음.
+// 숫자는 폰에서 보고 고칠 수 있게 여기 한곳에: every = 한 번 모으는 데 걸리는 낮 시간(초), n = 한 번에, cap = 들고 있을 수 있는 최대
+const MATE_JOB={
+  fruit:{ask:'열매 따 와 줘',icon:'redBerry',every:240,n:3,cap:6,items:['redBerry','yellowBerry']},
+  branch:{ask:'나뭇가지 모아 줘',icon:'branch',every:180,n:2,cap:4,items:['branch']},
+  fish:{ask:'물고기 잡아 와 줘',icon:'rawFish',every:240,n:1,cap:1,items:['rawFish'],girlOnly:true},   // 하루 1마리
+};
+const MATE_DRY={days:2,n:2,cap:4};   // 소년 동료: 이틀마다 말린 열매 2개
+const MATE_SAY={
+  fruit:'좋아. 덤불 돌면서 따 놓을게.',
+  branch:'알았어. 마른 걸로 골라 둘게.',
+  fish:'여울에서 해 볼게. 하루 한 마리는 잡을 수 있을 거야.',
+  stop:'그래, 잠깐 쉴게.',
+  same:'지금 하고 있어. 모이면 줄게.',
+  fishDone:'오늘 건 벌써 잡았어. 내일 또 해 볼게.',
+  full:'가방이 꽉 찼네. 내가 들고 있을게.',
+  dryFirst:'남은 열매 말려 봤어. 이틀이면 마르더라.',
+};
+const mateHeldN=keys=>keys.reduce((s,k)=>s+(story.mateHeld[k]||0),0);
+function mateMenu(){
+  if(mate.mode==='come')return;
+  campChoices.textContent='';
+  const add=(text,run)=>{const b=document.createElement('button');b.type='button';b.textContent=text;
+    b.addEventListener('click',()=>{closeCampOptions();run();});campChoices.appendChild(b);};
+  add('이야기하기',talkMate);
+  for(const [k,J] of Object.entries(MATE_JOB))if(!J.girlOnly||mateCh()==='girl')add((story.mateJob===k?'✓ ':'')+J.ask,()=>setMateJob(k));
+  if(story.mateJob)add('그만 쉬어',()=>setMateJob(null));
+  add('닫기',()=>{});
+  campChoices.hidden=false;
+}
+function setMateJob(k){
+  faceMate(3);
+  let line;
+  if(k&&story.mateJob===k)line=MATE_SAY.same;
+  else{
+    story.mateJob=k;story.mateWork=0;
+    line=!k?MATE_SAY.stop:k==='fish'&&story.mateFishDay===camp.day?MATE_SAY.fishDone:MATE_SAY[k];
+  }
+  playLines([['friend',line]],()=>{mate.mode='idle';mate.timer=1.5;});
+  renderMateJob();
+}
+// advanceCamp에서 부름: 낮 시간만큼 일이 쌓임
+function mateWork(dt,t0,day0){
+  if(!story.reunited||!story.mateJob)return;
+  // 건너뛴 시간 중 낮 부분만 셈 (잠으로 밤을 넘겨도 밤에는 일하지 않음)
+  const dl=d=>d===1?420:DAY,cl=d=>dl(d)+(d===1?240:NIGHT);
+  let t=t0,d=day0,rest=dt,work=0;
+  while(rest>1e-6){
+    if(t<dl(d)){const a=Math.min(rest,dl(d)-t);work+=a;t+=a;rest-=a;}
+    else{const a=Math.min(rest,cl(d)-t);t+=a;rest-=a;if(t>=cl(d)-1e-6){t=0;d++;}}
+  }
+  if(!work)return;
+  const J=MATE_JOB[story.mateJob];
+  story.mateWork+=work;
+  while(story.mateWork>=J.every){
+    if(mateHeldN(J.items)+J.n>J.cap){story.mateWork=J.every;break;}   // 손이 꽉 차면 기다림
+    if(story.mateJob==='fish'){
+      if(story.mateFishDay===camp.day){story.mateWork=0;break;}
+      story.mateFishDay=camp.day;
+    }
+    story.mateWork-=J.every;
+    const item=story.mateJob==='fruit'?J.items[story.mateFruitN++%2]:J.items[0];
+    story.mateHeld[item]=(story.mateHeld[item]||0)+J.n;
+  }
+}
+// 날이 바뀔 때: 소년 동료는 스스로 열매를 말림
+function mateDawn(){
+  if(!story.reunited||mateCh()!=='boy')return;
+  if(!story.mateDryDay)story.mateDryDay=camp.day+MATE_DRY.days-1;
+  if(camp.day<story.mateDryDay)return;
+  story.mateDryDay=camp.day+MATE_DRY.days;
+  story.mateHeld.driedBerry=Math.min(MATE_DRY.cap,(story.mateHeld.driedBerry||0)+MATE_DRY.n);
+}
+// 곁에 가면 저절로 받기
+function mateHandOff(dt){
+  if(!mate||cur!=='jungleB'||!story.reunited||reunionOn||mate.mode==='come'||dialoguePinned||insideHut)return;
+  mate.handT=Math.max(0,(mate.handT||0)-dt);
+  if(mate.handT>0||Math.hypot(st.x-mate.x,st.y-mate.y)>90)return;
+  const held=Object.entries(story.mateHeld).filter(([,n])=>n>0);
+  if(!held.length)return;
+  mate.handT=1;
+  let row=0,left=false,dried=false;
+  for(const [k,n] of held){
+    let m=n;while(m>0&&!roomFor(k,m))m--;
+    if(m<n)left=true;
+    if(!m)continue;
+    story.mateHeld[k]=n-m;give(k,m,mate.x,mate.y-150-row*22);row++;
+    if(k==='driedBerry')dried=true;
+  }
+  if(row)beachAudio.effect('pickup');
+  if(dried&&!story.mateDryTold){story.mateDryTold=true;faceMate(3);playLines([['friend',MATE_SAY.dryFirst]],()=>{mate.mode='idle';mate.timer=1.5;});}
+  else if(left&&!story.mateFullTold){story.mateFullTold=true;faceMate(3);playLines([['friend',MATE_SAY.full]],()=>{mate.mode='idle';mate.timer=1.5;});}
+  if(!left)story.mateFullTold=false;
+  renderMateJob();
+}
+// 머리 위: 하는 일 아이콘, 들고 있는 개수
+const mateJobEl=document.getElementById('mateJob'),mateJobIc=document.createElement('span'),mateJobN=document.createElement('b');
+mateJobIc.className='ic';mateJobN.hidden=true;mateJobEl.appendChild(mateJobIc);mateJobEl.appendChild(mateJobN);
+function renderMateJob(){
+  const heldAll=Object.values(story.mateHeld||{}).reduce((s,n)=>s+n,0);
+  const show=mate&&cur==='jungleB'&&story.reunited&&!insideHut&&(story.mateJob||heldAll>0)&&!gameScreen.hidden;
+  if(!show){if(!mateJobEl.hidden)mateJobEl.hidden=true;return;}
+  const icon=story.mateJob?MATE_JOB[story.mateJob].icon:Object.keys(story.mateHeld).find(k=>story.mateHeld[k]>0);
+  const ic=mateJobIc,badge=mateJobN;
+  if(ic._icon!==icon){ic.className='ic '+ITEMS[icon][0];ic._icon=icon;}
+  badge.hidden=!heldAll;if(heldAll&&badge.textContent!==String(heldAll))badge.textContent=heldAll;
+  mateJobEl.hidden=false;
+  mateJobEl.style.transform=`translate(${Math.round(mate.x-cam.x-15)}px,${Math.round(mate.y-cam.y-playerHeight-40)}px)`;
 }
 // 동료: 쉬기 → 걷기 → (가끔 쪼그려 살피기) → 쉬기. 밤에는 자기 자리로. 정글 B에 있을 때만 움직임
 function mateCanStand(x,y){
@@ -1373,7 +1491,7 @@ function updateMate(dt){
   if(mate.mode==='idle'||mate.mode==='look'){
     mate.timer-=dt;
     if(mate.timer<=0){
-      if(mate.mode==='idle'&&Math.random()<.35){mate.mode='look';mate.timer=1.6;return;}
+      if(mate.mode==='idle'&&Math.random()<(story.mateJob?.6:.35)){mate.mode='look';mate.timer=1.6;return;}
       mate.pts??=JSPOT.wander.filter(([x,y])=>mateCanStand(x,y));   // 정글 B에서 처음 한 번 걸러 둠
       const far=Math.random()<.25,pool=mate.pts.filter(([x,y])=>{const d=Math.hypot(x-mate.x,y-mate.y);return d>60&&(far||d<240);});
       if(!pool.length){mate.timer=1;return;}
@@ -2402,9 +2520,10 @@ function tickIgnition(dt){
   o.fuel=cycleLength()-camp.time;story.fireLit=true;goal();say(BEACH_DIALOGUE.fireLit,true);
 }
 function advanceCamp(dt,{deferDawnThought=false}={}){
-  const wasNight=isNight(),wasDay=camp.day;
+  const wasNight=isNight(),wasDay=camp.day,wasTime=camp.time;
   camp.elapsed+=dt;camp.time+=dt;
   while(camp.time>=cycleLength()){camp.time-=cycleLength();camp.day++;}
+  mateWork(dt,wasTime,wasDay);if(wasDay!==camp.day)mateDawn();   // v60 동료 일
   for(const map of Object.values(world)) for(const o of map.objs){
     if(o.type==='fire')o.fuel=Math.max(0,o.fuel-dt);
   }
@@ -3194,7 +3313,7 @@ function update(dt){
   const wantDepth=waterDepth(st.x,st.y); st.depth+=(wantDepth-st.depth)*Math.min(1,dt*12);
   updatePlacement();
   const t=placement?null:findTarget(); st.target=t;
-  if(!campChoices.hidden&&(!t||t.type!=='fire'))closeCampOptions();
+  if(!campChoices.hidden&&(!t||t.type!=='fire'&&t.type!=='mate'))closeCampOptions();   // v60 동료 일 고르기 창도 곁에 있는 동안 유지
   setAction(placement?{label:'놓기',icon:placement.recipe.icon}:t?actionOf(t):null);
   if(!st.act&&actHeld&&m<=.2&&heldMode!=='run'&&!placement&&!fishing&&campChoices.hidden){
     if(t?.type==='fire'&&heldMode===null&&heldTime>=.46){heldMode='camp';campOptions(t);}
@@ -3218,13 +3337,14 @@ function update(dt){
   objs.forEach(o=>{ o.shake=Math.max(0,o.shake-dt); if(o.fall>0) o.fall=Math.max(0,o.fall-dt); });
   pops.forEach(p=>p.t+=dt); while(pops.length&&pops[0].t>1) pops.shift();
   // 카메라: 캐릭터를 가운데보다 조금 위에 (아래 조작을 피함)
-  // v58: 가는 쪽을 미리 보여 줌 (위쪽은 상단 바·퀘스트 카드가 가려서 더 많이). 멈추면 천천히 원래 자리로
+  // v58: 가는 쪽을 미리 보여 줌 (위쪽은 상단 바·퀘스트 카드가 가려서 더 많이)
+  // v60: 멈추면 카메라도 그 자리에 멈춤 (되돌아가며 화면이 혼자 미끄러지던 것 고침). 다시 걸을 때만 앞쪽으로 옮김
   if(st.moving&&!st.act){const [mx,my]=movementInput(),mm=Math.hypot(mx,my)||1;cam.leadTX=mx/mm*VW*.10;cam.leadTY=my<0?my/mm*VH*.17:my/mm*VH*.06;}
-  else{cam.leadTX=0;cam.leadTY=0;}
+  else{cam.leadTX=cam.lx||0;cam.leadTY=cam.ly||0;}
   const lk=Math.min(1,dt*(st.moving?2.2:1.2));cam.lx=(cam.lx||0)+((cam.leadTX||0)-(cam.lx||0))*lk;cam.ly=(cam.ly||0)+((cam.leadTY||0)-(cam.ly||0))*lk;
   const tx=st.x-VW/2+cam.lx, ty=st.y-60-VH/2+VH*0.06+cam.ly;
   renderExitCue();
-  if(camInit){ cam.lx=cam.ly=0; cam.x=tx-0; cam.y=ty; camInit=false; } else { const k=Math.min(1,dt*7); cam.x+=(tx-cam.x)*k; cam.y+=(ty-cam.y)*k; }
+  if(camInit){ cam.lx=cam.ly=cam.leadTX=cam.leadTY=0; cam.x=tx-0; cam.y=ty; camInit=false; } else { const k=Math.min(1,dt*7); cam.x+=(tx-cam.x)*k; cam.y+=(ty-cam.y)*k; }
   clampCam();
 }
 
@@ -3770,7 +3890,7 @@ function loop(now){
       if(insideHut){st.t+=dt;renderHutChoices();hutMonologue();}
       else if(buildMotion)tickBuild(dt);
       else if(!ignition)update(dt);
-      survive(dt);if(!insideHut&&!buildMotion){survivalIdeas();jungleStory();}updateMate(dt);renderGauges();
+      survive(dt);if(!insideHut&&!buildMotion){survivalIdeas();jungleStory();}updateMate(dt);mateHandOff(dt);renderMateJob();renderGauges();
     }
   }
   if(insideHut)drawHutView();else drawWorld();
@@ -3886,6 +4006,7 @@ if(inApp && web){
   else btn.addEventListener('click',()=>{ location.href='intent://'+location.host+location.pathname+'#Intent;scheme=https;package=com.android.chrome;end'; setTimeout(()=>{ document.getElementById('inappText').textContent='안 열리면 오른쪽 위 점 세 개 → "다른 브라우저로 열기"를 눌러 주세요.'; },1500); });
 }
 
+window.__story=story; window.__inv=()=>inv; window.__mate=()=>mate; window.__advance=dt=>advanceCamp(dt); window.__mateMenu=()=>mateMenu();   // v60 시험용
 window.__st=st; window.__objs=()=>objs; window.__crabs=()=>crabs; window.__loaded=()=>loaded; window.__cam=cam; window.__zoneAt=(x,y)=>zoneAt(x,y);
 window.__map=()=>cur; window.__survive=sec=>{ for(let i=0;i<sec*10;i++) survive(.1); renderGauges(); }; window.__bagOpen=bagOpen; window.__go=(k,x,y)=>enterMap(k,x,y,true); window.__walkable=(x,y)=>walkable(x,y);
 })();
