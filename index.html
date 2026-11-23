@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="56">
+<meta name="app-version" content="57">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -451,7 +451,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='56', NOTE="대사를 다시 다듬었어요";
+const APP='castaway-isle', APP_V='57', NOTE="대사를 다시 썼어요";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -1045,46 +1045,46 @@ const OBJECT_ACTIONS = {
 const gateRockFirst=new Set(['gate','vineRock','tree']);
 
 const BEACH_DIALOGUE={
-  wake:(name,who)=>['입 안까지 모래가 들어왔어.','동물 실은 배가… 파도에 부서졌어.',
-    '우리 안에 있던 애들은… 다 나왔을까?',
-    `${name}도 물에 빠졌을까?`,`…${who}? ${who}!`],
-  fireIdea:'옷이 몸에 붙어. 손가락도 시려.',
-  dryIdea:'열매만 먹으니까 배가 금방 꺼져.',
-  vineIdea:'바위에 감긴 덩굴… 이 돌이면 끊어질까.',
-  searchB:name=>name+'… 내 목소리 들려?',
-  wreck:'저 배도 우리처럼 떠밀려 왔나.',
-  east:'모래밭이 끝도 없네.',
-  fruitFishIdea:'또 생선 냄새야. 코코넛 수프면 좀 다를까.',
-  emptyBottle:'물이 한 방울도 안 남았네.',
-  hutComfort:'여기선 바람 소리가 좀 작네.',
-  hutFamily:name=>`보호 구역엔 불 켜졌을까. ${name}도 추울까.`,
-  hutHope:'엄마 아빠가 기다릴 텐데.',
-  hutStorm:'지붕아, 날아가지 마.',
-  hutSleep:'눈 감으니까 파도 소리만 커져.',
-  fiberIdea:'코코넛 껍질 털, 불쏘시개로 딱인데.',
-  fireLit:'손끝이 이제 좀 펴지네.',
-  afterSunset:'…해가 졌다.',
-  beforeSunset:'그림자가 엄청 길어졌어.',
-  sunsetFire:' 손이 시려.',
-  dawnWithLeaves:'잎 밑으로 바람이 다 들어왔어.',
-  dawnCold:'발가락이 아직도 시려.',
-  dawnShelter:'바람 소리만 좀 멎었으면.',
-  prepareBeacon:'엄마가 이 연기 봤으면 좋겠다.',
-  beaconLit:'연기 냄새가 옷에 다 배겠다.',
-  sos:'하늘에서 보면 글씨가 삐뚤까.',
-  openCrate:'냄비에 국자까지? 낚싯대도 있네.',
-  closedCrate:'손톱만 아프네. 뭘로 비틀어야 하나.',
-  axeIdea:'이 덩굴, 뭘 묶기엔 딱이겠다.',
-  gateOpen:'쿵 소리 아직도 귀에 남아.',
-  gateBottle:'이 나무가 저렇게 밀렸어?',
-  gateBranches:'가지에 또 옷 걸렸어.',
-  gateRocks:'신발에 돌 들어갔어.',
-  gateSeen:'쓰러진 쪽은 나무 속이 하얗네.',
-  betterAxe:'나무보다 내 팔이 먼저 나가겠다.',
-  bottleFound:name=>`…이거 ${name} 이름이잖아.`,
-  bottleTrail:'얼마나 무서웠을까.',
-  campAtNight:'불 보니까 눈이 자꾸 감겨.',
-  campUntilNight:'모래가 아직 따뜻해.',
+  wake:(name,who)=>['…여기 어디야? 나, 살아 있는 거지?','맞다, 동물들 싣고 가던 배… 파도가 덮쳐서 바다에 빠졌어.',
+    '선원 아저씨들은? 우리에 있던 동물들은 괜찮을까.',
+    `${name}도 같이 타고 있었는데… 어디 간 거야?`,`${who}! ${who}! 내 목소리 들려?`],
+  fireIdea:'옷이 아직 축축해. 밤이 되면 더 추울 텐데… 불이 있어야겠어.',
+  dryIdea:'열매만으론 금방 배고파. 몇 알은 잎에 펴서 말려 둘까.',
+  vineIdea:'바위에 감긴 덩굴… 이 뾰족한 돌이면 끊어질까?',
+  searchB:name=>name+'! 여기 있어? 대답 좀 해 봐.',
+  wreck:'오래된 배다. 우리 배는 아니네… 안에 뭐가 남아 있을까?',
+  east:'모래밭이 동쪽으로 계속 이어지네. 저쪽에 누가 있을지도 몰라.',
+  fruitFishIdea:'구운 생선만 먹으니까 비려. 코코넛이랑 같이 끓여 볼까?',
+  emptyBottle:'빈 병이네. 민물을 찾으면 담아 둬야지.',
+  hutComfort:'잎으로 엮은 움막인데… 바람이 덜 들어와서 좋다.',
+  hutFamily:name=>`엄마 아빠는 보호 구역에서 기다리고 계실 텐데. ${name}도 어디선가 이 밤을 버티고 있겠지.`,
+  hutHope:'누가 꼭 찾으러 올 거야. 오늘은 좀 쉬자.',
+  hutStorm:'바람 소리가 무서워… 오늘은 밖에 나가지 말자.',
+  hutSleep:'눈 좀 붙여야겠다.',
+  fiberIdea:'코코넛 껍질의 마른 털… 불쏘시개로 쓸 수 있겠다.',
+  fireLit:'불 붙었다… 손이 좀 녹네.',
+  afterSunset:'해가 졌어.',
+  beforeSunset:'곧 해가 지겠어.',
+  sunsetFire:' 불 피울 준비를 해야 해.',
+  dawnWithLeaves:'잎을 덮었는데도 새벽엔 덜덜 떨렸어.',
+  dawnCold:'새벽에 너무 추워서 계속 깼어.',
+  dawnShelter:'바람을 막아 줄 데가 있어야겠어.',
+  prepareBeacon:'엄마 아빠가 지금쯤 우리를 찾고 있을 거야. 연기를 올리면 보일지도 몰라.',
+  beaconLit:'연기가 올라간다. 모래에도 크게 표시해 두자.',
+  sos:'하늘에서 이거 보이겠지? …이제 추위 피할 곳부터.',
+  openCrate:'냄비랑 국자, 낚싯대까지 멀쩡해. 나머진 다 깨졌네.',
+  closedCrate:'뚜껑이 꽉 끼었어. 손으로는 안 되겠다.',
+  axeIdea:'덩굴이 생각보다 질기네. 돌을 막대에 묶으면 도끼가 되겠다.',
+  gateOpen:'겨우 지나갈 틈이 생겼다.',
+  gateBottle:'태풍에 나무가 쓰러졌네… 해변에 뭐가 떠밀려 왔는지부터 볼까.',
+  gateBranches:'걸린 가지만 쳐내면 지나갈 수 있겠어.',
+  gateRocks:'발밑에 돌이 잔뜩이야. 이것부터 치워야겠다.',
+  gateSeen:'쓰러진 나무 속이 아직 하얘. 그 폭풍 치던 밤에 넘어갔나 봐.',
+  betterAxe:'돌도끼로는 한참 걸리네. 팔 빠지겠다.',
+  bottleFound:name=>`이 이름표… ${name} 거야. ${name}도 이 섬에 있어.`,
+  bottleTrail:'여기까지 왔다가 숲 쪽으로 간 걸까?',
+  campAtNight:'불 옆에 앉자. 오늘은 여기서 버텨야 해.',
+  campUntilNight:'해 질 때까지 잠깐 쉬자.',
 };
 const BEACH_NO_ACTION=new Set(['grass','rock_big','rock_pile','log']);
 function validateBeachData(){
@@ -1111,54 +1111,58 @@ function validateBeachData(){
 validateBeachData();
 // ===== 정글 표 (GPT, v52) =====
 const JUNGLE_DIALOGUE = {
-  enterJungle:'엄마 아빠가 기다릴 텐데.',
+  enterJungle:'숲 냄새가 확 나. 엄마 아빠가 기다릴 텐데… 친구부터 찾자.',
   footprintSeen:{
-    boy:'발자국인가… 모서리가 다 뭉개졌어.',
-    girl:'발끝이 물 쪽이네. 여기, 발가락 자국.',
+    boy:'이거 발자국 맞지? 흐릿해서 잘 모르겠다.',
+    girl:'발자국이야. 딱 우리 또래 크기… 발끝이 여울 쪽을 향해 있어.',
   },
   footprintAgain:{
-    boy:'이것도 같은 자국인가.',
-    girl:'이것도 발끝이 여울을 향해 있어.',
+    boy:'또 있다. 물가 쪽으로 이어지는 것 같은데.',
+    girl:'계속 여울 쪽이야. 물 마시러 간 거야.',
   },
-  fordBefore:'생각보다 물소리가 크네.',
-  fordCross:'으, 발목까지 차가워.',
-  fordAfter:'걸을 때마다 신발이 찍찍거려.',
-  enterJungleB:'내 발소리 아닌 줄 알았어.',
-  springFound:'이 소리… 파도랑 다르다.',
+  fordBefore:'물이 얕은 데가 있네. 돌이 보여.',
+  fordCross:'으, 차가워. 미끄러지지 말자.',
+  fordAfter:'신발이 다 젖었네. 그래도 건넜다.',
+  enterJungleB:'숲이 점점 깊어져… 내 목소리 들릴까?',
+  springFound:'물소리다. 샘인가 봐.',
   reunion:{
     boy:(name,called)=>[
-      ['me',`…${called}?`],
-      ['friend','나야. 물 뜨던 중이었어.'],
-      ['me','무릎은 왜 그래?'],
-      ['friend','긁혔어. 사육사인 우리 엄마가 보면 난리 날걸.'],
-      ['me','수의사인 우리 아빠는 붕대부터 감을걸.'],
-      ['friend','…너 지금 표정이 딱 너희 아빠야.'],
-      ['friend','그렇게 아픈 건 아니야.'],
-      ['me',`${name}, 손 좀 잡아도 돼?`],
-      ['friend','응. 내 손 젖었는데.'],
+      ['me',`${called}!`],
+      ['friend','…진짜 너야? 꿈 아니지?'],
+      ['me','살아 있었구나. 다친 데는 없어?'],
+      ['friend','무릎만 좀 까졌어. 넌?'],
+      ['me','난 괜찮아. 해변에서 네 물병 주웠어.'],
+      ['friend','그거 찾았어? …혼자인 줄 알았어.'],
+      ['friend','엄마가 그랬어. 사육사는 겁먹은 동물 앞에서 먼저 울면 안 된대.'],
+      ['me','우리 아빠도 수의사라 똑같은 말 할걸. …근데 울어도 돼.'],
+      ['friend','안 울어. …조금만.'],
+      ['me',`${name}, 같이 돌아가자. 엄마 아빠한테.`],
+      ['friend','응. 같이.'],
     ],
     girl:(name,called)=>[
-      ['me',`…${called}?`],
-      ['friend','나야. 물 뜨던 중이었어.'],
-      ['me','무릎은 왜 그래?'],
-      ['friend','긁혔어. 수의사인 우리 아빠가 보면 약부터 찾을걸.'],
-      ['me','사육사인 우리 엄마는 일단 꼭 안아 줄걸.'],
-      ['friend','…너 지금 표정이 딱 너희 엄마야.'],
-      ['friend','그렇게 아픈 건 아니야.'],
-      ['me',`${name}, 손 좀 잡아도 돼?`],
-      ['friend','응. 내 손 젖었는데.'],
+      ['me',`${called}!`],
+      ['friend','…진짜 너야? 꿈 아니지?'],
+      ['me','살아 있었구나. 다친 데는 없어?'],
+      ['friend','무릎만 좀 까졌어. 넌?'],
+      ['me','난 괜찮아. 해변에서 네 물병 주웠어.'],
+      ['friend','그거 찾았어? …혼자인 줄 알았어.'],
+      ['friend','아빠가 그랬어. 수의사는 다친 동물 앞에서 먼저 겁먹으면 안 된대.'],
+      ['me','우리 엄마도 사육사라 똑같은 말 할걸. …근데 무서워해도 돼.'],
+      ['friend','안 무서워. …조금만.'],
+      ['me',`${name}, 같이 돌아가자. 엄마 아빠한테.`],
+      ['friend','응. 같이.'],
     ],
   },
   knifeGift:{
-    boy:[['friend','잠깐. 주머니에 뭐가 있어.'],['friend','엄마가 먹이 손질할 때 쓰는 칼이야.'],['me','이걸 아직 갖고 있었네.']],
-    girl:[['friend','잠깐. 주머니에 뭐가 있어.'],['friend','아빠 접이식 칼이야.'],['me','와, 진짜 작다.']],
+    boy:[['friend','잠깐, 주머니에 이게 있었어.'],['friend','엄마가 먹이 손질할 때 쓰던 칼이야. 네가 써.'],['me','고마워. 이거면 덩굴도 잘리겠다.']],
+    girl:[['friend','잠깐, 주머니에 이게 있었어.'],['friend','아빠 접이식 칼이야. 네가 써.'],['me','고마워. 조심해서 쓸게.']],
   },
-  stoneRetired:'이 돌칼도 꽤 오래 버텼네.',
-  bottleFilled:'병이 차가워졌어.',
-  toughVineTry:'돌로는 꿈쩍도 안 해.',
-  toughVineCut:'끊어질 때 손이 찌릿했어.',
-  caveLocked:'안이 하나도 안 보여. 여긴 못 들어가.',
-  meadowLocked:'초원 쪽 길도 아직 못 지나가.',
+  stoneRetired:'돌칼은 가방에 넣어 두자. 그동안 고마웠어.',
+  bottleFilled:'물병 가득 찼다. 차갑다.',
+  toughVineTry:'돌로는 안 잘려… 너무 질겨.',
+  toughVineCut:'잘렸다. 이 덩굴이면 뭐든 단단히 묶겠어.',
+  caveLocked:'동굴 안이 너무 깜깜해. 지금은 못 들어가.',
+  meadowLocked:'저쪽은 초원으로 가는 길 같은데… 아직은 정글이 먼저야.',
 };
 
 const JUNGLE_QUESTS = [
@@ -1354,7 +1358,8 @@ function updateMate(dt){
     if(mate.timer<=0){
       if(mate.mode==='idle'&&Math.random()<.35){mate.mode='look';mate.timer=1.6;return;}
       mate.pts??=JSPOT.wander.filter(([x,y])=>mateCanStand(x,y));   // 정글 B에서 처음 한 번 걸러 둠
-      const pool=mate.pts.filter(([x,y])=>Math.hypot(x-mate.x,y-mate.y)>60);
+      const far=Math.random()<.25,pool=mate.pts.filter(([x,y])=>{const d=Math.hypot(x-mate.x,y-mate.y);return d>60&&(far||d<240);});
+      if(!pool.length){mate.timer=1;return;}
       mate.target=pool[Math.floor(Math.random()*pool.length)];mate.mode='walk';mate.stuck=0;
     }
     return;
@@ -1363,12 +1368,18 @@ function updateMate(dt){
     if(mate.mode==='home'&&!isNight()&&Math.hypot(mate.target[0]-mate.x,mate.target[1]-mate.y)<10){mate.mode='idle';mate.timer=2;return;}
     const [tx,ty]=mate.target,dx=tx-mate.x,dy=ty-mate.y,d=Math.hypot(dx,dy);
     if(d<6){ if(mate.mode==='walk'){mate.mode='idle';mate.timer=2+Math.random()*3;} else mate.dir='down'; return; }
-    const sp=(mate.mode==='come'?78:46)*dt,vx=dx/d,vy=dy/d;
+    // v57: 걷기 장면은 걸은 거리로 바뀌므로(옆 24px·앞뒤 15px) 너무 느리면 발이 느리게 움직여 '떠다니는' 느낌 → 주인공(150)에 가까운 빠르기로
+    const sp=(mate.mode==='come'?120:92)*dt,vx=dx/d,vy=dy/d;
     let moved=false;
+    mate.dirT=(mate.dirT||0)+dt;
     for(const a of [0,.5,-.5,1,-1,1.5,-1.5]){
       const c=Math.cos(a),s=Math.sin(a),mx=(vx*c-vy*s)*sp,my=(vx*s+vy*c)*sp;
       if(mateCanStand(mate.x+mx,mate.y+my)){mate.x+=mx;mate.y+=my;mate.dist+=sp;moved=true;
-        mate.dir=Math.abs(mx)>Math.abs(my)?(mx>0?'right':'left'):(my>0?'down':'up');break;}
+        // 방향은 확실히 바뀔 때만 (대각선에서 옆·앞 모습이 번갈아 깜빡이지 않게), 바꾼 뒤 0.35초는 유지
+        const side=Math.abs(mx)>Math.abs(my), nd=side?(mx>0?'right':'left'):(my>0?'down':'up');
+        const clear=side?Math.abs(mx)>Math.abs(my)*1.35:Math.abs(my)>Math.abs(mx)*1.35;
+        if(nd!==mate.dir&&(clear||mate.dirT>.8)&&mate.dirT>.35){mate.dir=nd;mate.dirT=0;}
+        break;}
     }
     if(!moved&&++mate.stuck>20&&mate.mode!=='come'){mate.mode='idle';mate.timer=1;}
   }
