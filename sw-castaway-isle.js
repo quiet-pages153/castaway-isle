@@ -1,6 +1,6 @@
 // 표류섬 서비스워커 — 이 앱 주소(/castaway-isle/) 것만 다룸
 const APP = 'castaway-isle';
-const VERSION = '51';
+const VERSION = '53';
 const CACHE = APP + '-' + VERSION;
 const FILES = [
   "./manifest.webmanifest", "./icon-192.png", "./icon-192.png?v=5", "./icon-512.png?v=5",
@@ -9,7 +9,7 @@ const FILES = [
   "./felled_tree.webp", "./thin_tree.webp", "./beach_story_items.webp", "./beach_cooking.webp",
   "./beach_soups.webp", "./castaway_carry.webp", "./hut_views.webp", "./paper_beach_map.webp",
   "./floor_beachA.webp", "./title_ship.webp", "./floor_beachB.webp",
-  "./floor_jungleA.webp", "./floor_jungleB.webp", "./beach-audio.js", "./beacon_lit.webp",
+  "./floor_jungleA.webp", "./floor_jungleB.webp", "./jungle_foot.webp", "./tough_vine.webp", "./tough_vine_cut.webp", "./beach-audio.js", "./beacon_lit.webp",
   "./catch_icons.webp", "./coconut-chips.webp", "./beacon_ash.webp", "./cliff_mask.png",
   "./shore_items.webp", "./carried_ember.webp"
 ];

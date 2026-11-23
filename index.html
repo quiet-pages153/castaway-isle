@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="51">
+<meta name="app-version" content="53">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -444,7 +444,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='51', NOTE="정글: 지도 위 빈 땅 없앰, 장식 바나나는 열매 없는 나무로, 덜 걸리게, 큰 나무 아래 반딧불이";
+const APP='castaway-isle', APP_V='53', NOTE="정글 이야기: 발자국·여울·샘에서 친구를 다시 만나요. 작은 칼, 질긴 덩굴. 친구는 정글 B를 돌아다녀요";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -541,6 +541,9 @@ IMG.story=new Image(); IMG.story.src='beach_story_items.webp';
 IMG.thin=new Image(); IMG.thin.src='thin_tree.webp';
 IMG.hutView=new Image();IMG.hutView.src='hut_views.webp';
 IMG.cooking=new Image(); IMG.cooking.src='beach_cooking.webp';
+IMG.foot=new Image(); IMG.foot.src='jungle_foot.webp';
+IMG.vine=new Image(); IMG.vine.src='tough_vine.webp';
+IMG.vineCut=new Image(); IMG.vineCut.src='tough_vine_cut.webp';
 document.getElementById('verText').textContent=document.getElementById('verText2').textContent='v'+APP_V;
 
 // ---------- 캐릭터 그리기: (x,y)는 발바닥 가운데, h는 화면 키 ----------
@@ -744,6 +747,8 @@ const ITEM_DB = {
   grilledScallop:{icon:'grilledScallop', name:'가리비 구이', kind:'food', bagOrder:7, eat:{food:20}, usable:true},
   berryJuice:{icon:'berryJuice', name:'열매 주스', kind:'food', bagOrder:10, eat:{food:15,water:30}, usable:true},
   sharp:{icon:'sharp', name:'돌칼', kind:'tool', bagOrder:0, usable:true},
+  smallKnife:{icon:'sharp', name:'작은 칼', kind:'tool', bagOrder:0, usable:true},   // 그림은 임시(돌칼). 정글 재회 때 받음
+  toughVine:{icon:'vineBundle', name:'질긴 덩굴', kind:'mat', bagOrder:3},   // 그림은 임시(덩굴)
   mapPiece:{icon:'mapPiece', name:'찢어진 지도 조각', kind:'mat', bagOrder:9},
   axe:{icon:'axe', name:'돌도끼', kind:'tool', bagOrder:1, usable:true},
   branch:{icon:'branch', name:'나뭇가지', kind:'mat', bagOrder:1},
@@ -806,6 +811,7 @@ let equipped=null, placement=null;
 const story={};
 const seenHints=new Set();
 function resetStory(){
+  Object.assign(story,{jungleEntered:false,footprintSeen:false,fordCrossed:false,jungleBEntered:false,springFound:false,reunited:false,knifeGot:false,bottleFilled:false,toughVineCut:false});   // 정글 이야기 (v52~)
   Object.assign(story,{stormOver:false,stormNight:false,gateOpen:false,stoneFound:false,gateSeen:false,
     fireIdea:false,fireLit:false,dryIdea:false,axeIdea:false,fruitFishIdea:false,fruitClamIdea:false,
     signalPrepared:false,ember:false,beaconLit:false,beaconLitDay:0,sosDrawn:false,hutReady:false,crateOpened:false,bottleFound:false});
@@ -1091,9 +1097,232 @@ function validateBeachData(){
   }
 }
 validateBeachData();
+// ===== 정글 표 (GPT, v52) =====
+const JUNGLE_DIALOGUE = {
+  enterJungle:'엄마 아빠가 기다릴 텐데. 친구부터 찾아야겠다.',
+  footprintSeen:{
+    boy:'발자국인가? 흐릿하지만 누가 지나간 것 같아.',
+    girl:'발자국이 또렷해. 발끝이 여울 쪽을 향해 있어.',
+  },
+  footprintAgain:{
+    boy:'여기에도 자국이 있네. 저 물가까지 이어진 걸까?',
+    girl:'발끝이 계속 물가를 향해 있어. 여울로 간 게 맞아.',
+  },
+  fordBefore:'물이 얕은 곳이 보여. 저기로 건너가 보자.',
+  fordCross:'돌이 미끄러워. 한 발씩 천천히.',
+  fordAfter:'건넜다! 길이 숲 안쪽으로 이어지네.',
+  enterJungleB:'숲이 더 깊어졌어. 내 목소리가 들릴까?',
+  springFound:'물소리가 나. 저기 샘이 있어!',
+  reunion:{
+    boy:(name,called)=>[
+      ['me',`${called}! 거기 있었구나!`],
+      ['friend','너였구나! 샘 옆에서 네가 오길 기다렸어.'],
+      ['me','방학에 같이 탄 동물 운송선이 폭풍에 부서졌잖아.'],
+      ['friend','응. 이 섬에 와서 만난 건 너뿐이야.'],
+      ['me','엄마 아빠가 동물 보호 구역에서 기다릴 텐데.'],
+      ['friend','우리 엄마 아빠도 거기 계셔. 동물을 돌보는 사육사야.'],
+      ['me','우리 부모님은 아픈 동물을 치료하는 수의사야.'],
+      ['me',`${name}, 우리 같이 돌아갈 길을 찾아보자.`],
+      ['friend','응. 이제 같이 가자.'],
+    ],
+    girl:(name,called)=>[
+      ['me',`${called}! 거기 있었구나!`],
+      ['friend','너였구나! 샘 옆에서 네가 오길 기다렸어.'],
+      ['me','방학에 같이 탄 동물 운송선이 폭풍에 부서졌잖아.'],
+      ['friend','응. 이 섬에 와서 만난 건 너뿐이야.'],
+      ['me','엄마 아빠가 동물 보호 구역에서 기다릴 텐데.'],
+      ['friend','우리 부모님도 거기 계셔. 아픈 동물을 치료하는 수의사야.'],
+      ['me','우리 엄마 아빠는 동물을 돌보는 사육사야.'],
+      ['me',`${name}, 우리 같이 돌아갈 길을 찾아보자.`],
+      ['friend','응. 이제 같이 가자.'],
+    ],
+  },
+  knifeGift:{
+    boy:[['friend','여기, 먹이 손질 칼이야. 네가 써.'],['me','고마워. 칼이 필요했어.']],
+    girl:[['friend','여기, 접이식 칼이야. 네가 써.'],['me','고마워. 쓰고 나면 접어 둘게.']],
+  },
+  stoneRetired:'돌칼은 가방에 넣어 두고 이 작은 칼을 쓰자.',
+  bottleFilled:'빈 물병에 샘물을 채웠어. 가는 길에 마시자.',
+  toughVineTry:'돌로는 안 잘려… 더 날카로운 게 있으면 좋을 텐데.',
+  toughVineCut:'잘렸다! 이 질긴 덩굴로 오두막을 묶을 밧줄을 만들자.',
+  caveLocked:'동굴 안이 너무 어두워. 지금은 들어가기 어렵겠어.',
+  meadowLocked:'초원으로 이어지는 길 같아. 지금은 정글을 더 살펴보자.',
+};
+
+const JUNGLE_QUESTS = [
+  {id:'findTracks',when:()=>story.jungleEntered&&!story.footprintSeen,
+    title:()=>'발자국 찾기',
+    detail:()=>chosen==='girl'?'여울 쪽으로 향한 발자국을 찾아요.':'길가에 흐릿한 발자국이 있는지 살펴봐요.'},
+  {id:'crossFord',when:()=>story.footprintSeen&&!story.fordCrossed,
+    title:()=>'여울 건너기',detail:()=>'물이 얕고 돌이 보이는 곳으로 건너가요.'},
+  {id:'goDeeper',when:()=>story.fordCrossed&&!story.jungleBEntered,
+    title:()=>'정글 안쪽으로 가기',detail:()=>'여울 너머 길을 따라 숲 안쪽으로 가요.'},
+  {id:'findFriend',when:()=>story.jungleBEntered&&!story.reunited,
+    title:()=>'친구 찾기',detail:()=>'물소리를 따라 샘 옆에서 친구를 찾아요.'},
+  {id:'fillBottle',when:()=>story.reunited&&!story.bottleFilled,
+    title:()=>'물병에 샘물 담기',detail:()=>'빈 물병에 샘물을 채워요.',items:['emptyBottle']},
+  {id:'cutVine',when:()=>story.knifeGot&&!story.toughVineCut,
+    title:()=>'질긴 덩굴 자르기',detail:()=>'작은 칼로 질긴 덩굴을 잘라 밧줄 재료를 얻어요.',items:['smallKnife']},
+];
+// ===== 정글 표 끝 =====
+
+// ===== 정글 이야기 연결 (Claude, v53) =====
+// 자리(바닥 그림 기준 px): 발자국 = 정글 A 아래 길→여울, 샘 = 정글 B 왼쪽 아래 웅덩이, 동료 자리 = 샘 왼쪽 위
+const JSPOT={foot:[[874,940],[900,884],[880,828],[818,772],[730,716],[704,660]],pond:[285,748],mateHome:[226,640],vine:[770,420],
+  wander:[[406,697],[213,528],[366,510],[160,671],[368,847],[105,590],[453,505],[435,622],[263,624],[293,543],[504,714],[290,853],[494,801],[525,522]]};
+const JSTORY_TYPES=new Set(['footprint','spring','toughVine','mate']);
+Object.assign(SOLID,{spring:[150,90],mate:[13,6],toughVine:[44,14]});
+const MATE_LINES=['샘물이 정말 맑아. 마셔 봤어?','밤이 되면 이 숲에 반딧불이가 엄청 많아.','여기 빈터에 오두막을 지으면 좋겠다.','혼자일 땐 무서웠는데, 이제 괜찮아.','할 일 생기면 말해. 나도 도울게.'];
+let mate=null, reunionOn=false, talkAnchor=null;
+const mateCh=()=>chosen==='boy'?'girl':'boy';
+function addJungleStory(){
+  const A=world.jungleA.objs,B=world.jungleB.objs;
+  JSPOT.foot.forEach(([x,y],i)=>{
+    const [nx,ny]=JSPOT.foot[Math.min(i+1,JSPOT.foot.length-1)],[px,py]=JSPOT.foot[Math.max(i-1,0)];
+    const a=Math.atan2(ny-py,nx-px)+Math.PI/2;
+    A.push({type:'footprint',i,x,y,a,shake:0,fall:0});
+  });
+  B.push({type:'spring',x:JSPOT.pond[0],y:JSPOT.pond[1],shake:0,fall:0});
+  B.push({type:'toughVine',x:JSPOT.vine[0],y:JSPOT.vine[1],cut:false,solid:[44,14],shake:0,fall:0});
+  mate={type:'mate',x:JSPOT.mateHome[0],y:JSPOT.mateHome[1],dir:'down',mode:'wait',timer:0,dist:0,target:null,look:0,line:0,shake:0,fall:0};
+  B.push(mate);
+}
+// 대사 고르기: {boy,girl} → 주인공 쪽, 함수 → 이름 넣기, 결과는 [[말하는 사람, 글], …]
+function jLines(key){
+  let v=JUNGLE_DIALOGUE[key]; if(v&&typeof v==='object'&&!Array.isArray(v))v=v[chosen];
+  if(typeof v==='function')v=v(partner(),callName(partner()));
+  return (Array.isArray(v)?v:[v]).map(x=>Array.isArray(x)?x:['me',x]);
+}
+function playLines(lines,done,i=0){
+  if(i>=lines.length){talkAnchor=null;done?.();return;}
+  const [who,text]=lines[i];
+  say(text,who==='me'&&lines.length===1,true,()=>playLines(lines,done,i+1),who==='friend'?mate:null);
+}
+function sayJ(key){
+  const L=jLines(key);
+  if(L.length===1&&L[0][0]==='me')say(L[0][1],true);
+  else playLines(L);
+}
+function jungleStory(){
+  if(!MAP.jungle||dialoguePinned||st.act||reunionOn)return;
+  if(cur==='jungleA'){
+    if(!story.footprintSeen){
+      const f=objs.find(o=>o.type==='footprint'&&Math.hypot(o.x-st.x,o.y-st.y)<70);
+      if(f){story.footprintSeen=true;goal();sayJ('footprintSeen');return;}
+    }else if(!seenHints.has('footAgain')&&objs.some(o=>o.type==='footprint'&&o.i>=3&&Math.hypot(o.x-st.x,o.y-st.y)<60)){
+      seenHints.add('footAgain');sayJ('footprintAgain');return;
+    }
+    if(!story.fordCrossed){
+      if(st.y<440){story.fordCrossed=story.footprintSeen=true;goal();sayJ('fordAfter');}
+      else if(st.depth>12&&!seenHints.has('fordCross')){seenHints.add('fordCross');sayJ('fordCross');}
+      else if(st.y<650&&st.y>560&&!seenHints.has('fordBefore')){seenHints.add('fordBefore');sayJ('fordBefore');}
+    }
+  }else if(cur==='jungleB'){
+    if(!story.springFound&&Math.hypot(st.x-JSPOT.pond[0],st.y-JSPOT.pond[1])<260){story.springFound=true;sayJ('springFound');return;}
+    if(!story.reunited&&Math.hypot(st.x-mate.x,st.y-mate.y)<130)startReunion();
+  }
+}
+function startReunion(){
+  if(reunionOn||story.reunited)return;
+  reunionOn=true;st.moving=false;jv=[0,0];
+  mate.mode='talk';mate.dir=Math.abs(st.x-mate.x)>Math.abs(st.y-mate.y)?(st.x>mate.x?'right':'left'):(st.y>mate.y?'down':'up');
+  faceTo(mate);
+  playLines(jLines('reunion'),()=>playLines(jLines('knifeGift'),()=>{
+    reunionOn=false;story.reunited=true;story.knifeGot=true;
+    if(!inv.smallKnife)give('smallKnife',1,st.x,st.y-120);
+    if(!inv.emptyBottle)story.bottleFilled=true;   // 물병을 아직 안 마셨으면 채울 필요 없음
+    mate.mode='idle';mate.timer=2;goal();
+    if(inv.sharp)say(jLines('stoneRetired')[0][1],true);
+  }));
+}
+function jungleHit(t){
+  if(t.type==='spring'){
+    if(inv.emptyBottle){inv.emptyBottle=0;inv.waterBottle=(inv.waterBottle||0)+1;renderInv('waterBottle');
+      if(story.reunited&&!story.bottleFilled){story.bottleFilled=true;goal();}
+      say(jLines('bottleFilled')[0][1],true);}
+    else{const w=Math.min(30,100-st.water);st.water+=w;renderGauges();pops.push({text:'목마름 +'+Math.round(w),x:st.x,y:st.y-130,t:0});}
+    return;
+  }
+  if(t.type==='toughVine'&&!t.cut&&inv.smallKnife){
+    t.cut=true;t.solid=[18,8];beachAudio.effect('vine');give('toughVine',2,t.x,t.y-60);
+    story.toughVineCut=true;goal();sayJ('toughVineCut');
+  }
+}
+OBJECT_ACTIONS.spring=()=>({label:inv.emptyBottle?'샘물 담기':'샘물 마시기',icon:inv.emptyBottle?'emptyBottle':'waterBottle',anim:'pick'});
+OBJECT_ACTIONS.toughVine=o=>o.cut?null:inv.smallKnife?{label:'덩굴 자르기',icon:'sharp',anim:'pick'}:
+  {label:'덩굴 자르기',icon:'sharp',talk:()=>sayJ('toughVineTry')};
+OBJECT_ACTIONS.mate=o=>story.reunited?{label:'이야기하기',icon:'dialogueIcon',talk:talkMate}:{label:'부르기',icon:'dialogueIcon',talk:startReunion};
+function talkMate(){
+  mate.mode='talk';mate.timer=4;mate.dir=Math.abs(st.x-mate.x)>Math.abs(st.y-mate.y)?(st.x>mate.x?'right':'left'):(st.y>mate.y?'down':'up');
+  const text=MATE_LINES[mate.line++%MATE_LINES.length];
+  playLines([['friend',text]],()=>{mate.mode='idle';mate.timer=1.5;});
+}
+// 동료: 쉬기 → 걷기 → (가끔 쪼그려 살피기) → 쉬기. 밤에는 자기 자리로. 정글 B에 있을 때만 움직임
+function mateCanStand(x,y){
+  if(!MAP.jungle)return false;
+  const z=zoneAt(x,y);if(BLOCK(z)||z===3||BLOCK(zoneAt(x-8,y))||BLOCK(zoneAt(x+8,y)))return false;
+  for(const o of objs){if(o===mate)continue;const s=o.solid||SOLID[o.type];if(!s)continue;const dx=(x-o.x)/s[0],dy=(y-o.y)/s[1];if(dx*dx+dy*dy<1)return false;}
+  return true;
+}
+function updateMate(dt){
+  if(!mate||cur!=='jungleB'||mate.mode==='wait'||mate.mode==='talk'&&reunionOn)return;
+  if(mate.mode==='talk'){mate.timer-=dt;if(mate.timer<=0&&!dialoguePinned)mate.mode='idle';return;}
+  if(isNight()&&mate.mode!=='home'){mate.mode='home';mate.target=JSPOT.mateHome;}
+  if(mate.mode==='idle'||mate.mode==='look'){
+    mate.timer-=dt;
+    if(mate.timer<=0){
+      if(mate.mode==='idle'&&Math.random()<.35){mate.mode='look';mate.timer=1.6;return;}
+      mate.pts??=JSPOT.wander.filter(([x,y])=>mateCanStand(x,y));   // 정글 B에서 처음 한 번 걸러 둠
+      const pool=mate.pts.filter(([x,y])=>Math.hypot(x-mate.x,y-mate.y)>60);
+      mate.target=pool[Math.floor(Math.random()*pool.length)];mate.mode='walk';mate.stuck=0;
+    }
+    return;
+  }
+  if(mate.mode==='walk'||mate.mode==='home'){
+    if(mate.mode==='home'&&!isNight()&&Math.hypot(mate.target[0]-mate.x,mate.target[1]-mate.y)<10){mate.mode='idle';mate.timer=2;return;}
+    const [tx,ty]=mate.target,dx=tx-mate.x,dy=ty-mate.y,d=Math.hypot(dx,dy);
+    if(d<6){ if(mate.mode==='walk'){mate.mode='idle';mate.timer=2+Math.random()*3;} else mate.dir='down'; return; }
+    const sp=46*dt,vx=dx/d,vy=dy/d;
+    let moved=false;
+    for(const a of [0,.5,-.5,1,-1,1.5,-1.5]){
+      const c=Math.cos(a),s=Math.sin(a),mx=(vx*c-vy*s)*sp,my=(vx*s+vy*c)*sp;
+      if(mateCanStand(mate.x+mx,mate.y+my)){mate.x+=mx;mate.y+=my;mate.dist+=sp;moved=true;
+        mate.dir=Math.abs(mx)>Math.abs(my)?(mx>0?'right':'left'):(my>0?'down':'up');break;}
+    }
+    if(!moved&&++mate.stuck>20){mate.mode='idle';mate.timer=1;}
+  }
+}
+function drawJungleStoryObj(o){
+  if(o.type==='footprint'){
+    if(!IMG.foot.complete||!IMG.foot.naturalWidth)return;
+    const clear=chosen==='girl', cell=0;   // 소녀(사육사 집)는 또렷하게, 소년은 흐릿하게
+    // 젖은 흙에 찍힌 자국처럼 바닥을 진하게 (곱하기). 소녀는 또렷, 소년은 흐릿
+    ctx.save();ctx.translate(o.x,o.y);ctx.rotate(o.a);ctx.globalCompositeOperation='multiply';
+    for(let k=0;k<(clear?2:1);k++){ctx.globalAlpha=clear?1:.75;
+      ctx.drawImage(IMG.foot,cell*32,0,32,32,-19,-12,18,18);ctx.drawImage(IMG.foot,(cell+1)*32,0,32,32,1,2,18,18);}
+    ctx.restore();return;
+  }
+  if(o.type==='toughVine'){
+    const im=o.cut?IMG.vineCut:IMG.vine;if(!im.complete||!im.naturalWidth)return;
+    const w=o.cut?46:130,h=w*im.naturalHeight/im.naturalWidth;ctx.drawImage(im,o.x-w/2,o.y-h+6,w,h);return;
+  }
+  if(o.type==='mate'){
+    const ch=mateCh(),walking=o.mode==='walk'||o.mode==='home'&&Math.hypot(o.target[0]-o.x,o.target[1]-o.y)>=6;
+    const [anim,flip]=sprite(o.dir,walking?'walk':o.mode==='look'?'pick':'stand');
+    const side=o.dir==='left'||o.dir==='right';
+    drawFrame(ctx,ch,anim,walking?Math.floor(o.dist/(side?24:15)):o.mode==='look'?1:0,o.x,o.y,playerHeight,flip);
+  }
+}
+// ===== 정글 이야기 연결 끝 =====
 // ===== 해변 전용 끝 =====
 
 function goal(){
+  if(story.jungleEntered&&typeof JUNGLE_QUESTS!=='undefined'){
+    const q=JUNGLE_QUESTS.find(q=>q.when());
+    if(q)renderQuests(q.title(),q.detail());
+    else renderQuests('정글 이야기는 여기까지','다음 이야기를 준비하고 있어요');
+    return;
+  }
   const quest=BEACH_QUESTS.find(q=>q.when());
   renderQuests(quest.title(),quest.detail(),quest.recipe);
 }
@@ -1144,13 +1373,14 @@ function survivalIdeas(){
   if(story.fireLit&&!inv.mapPiece&&!story.visitedB&&cur==='beachA'&&st.t>85)
     noticeOnce('east',BEACH_DIALOGUE.east);
 }
-function say(message,thought=false,pinned=false,next=null){
+function say(message,thought=false,pinned=false,next=null,anchor=null){
+  talkAnchor=anchor;   // 말하는 사람(동료) 위에 말풍선. 없으면 주인공
   const limit=VW<360?36:45;
   if(pinned&&message.length>limit){
     const split=message.lastIndexOf(' ',limit);
     const at=split>limit/2?split:limit;
     const rest=message.slice(at).trim(), after=next;
-    next=()=>say(rest,thought,true,after);
+    next=()=>say(rest,thought,true,after,anchor);
     message=message.slice(0,at).trim();
   }
   dialogueNext=next;talkTap.hidden=!pinned;
@@ -1180,7 +1410,7 @@ function positionDialogue(){
     dialogue.style.top=Math.max(top,Math.round(VH*.18))+'px';
     return;
   }
-  const x=st.x-cam.x,y=st.y-cam.y;
+  const x=(talkAnchor?talkAnchor.x:st.x)-cam.x,y=(talkAnchor?talkAnchor.y:st.y)-cam.y;
   const fitX=n=>Math.max(8,Math.min(VW-w-8,n));
   const quest=objective.getBoundingClientRect();
   const questBox={left:quest.left-root.left,right:quest.right-root.left,top:quest.top-root.top,bottom:quest.bottom-root.top};
@@ -1235,6 +1465,7 @@ function resetWorld(){
     const so=JUNGLE.solid[spr];
     return {type:'jd',spr,x,y,s:sc,flip,tier,solid:so?[so[0]*sc,so[1]*sc]:null,bushy:JUNGLE_BUSHY.has(spr),shake:0,fall:0};
   });
+  addJungleStory();
   world.beachB.objs.push(...tideDigSites.map(site=>({...site,type:'sandHole',shake:0,fall:0})));
   for(const [x,y] of [[751,153],[801,159]])world.beachB.objs.push({type:'looseRocks',x,y,gateRock:true,shake:0,fall:0});
   tideHeld=false;
@@ -1259,6 +1490,8 @@ function enterMap(k,x,y,first){
   leaveHut();cancelPlacement(); closeCampOptions(); cancelQuick(); clearDialogue();
   document.getElementById('craftCard').hidden=true; cardRec=null;
   if(!first){ fadeT=FADE; hint(MAP.name,1.4); }
+  if(k==='jungleA'&&!story.jungleEntered){story.jungleEntered=true;goal();sayJ('enterJungle');}
+  if(k==='jungleB'&&!story.jungleBEntered){story.jungleBEntered=true;story.jungleEntered=story.fordCrossed=story.footprintSeen=true;goal();sayJ('enterJungleB');}
 }
 const FADE=.35; let fadeT=0;
 // 가장자리 출구: 걸어서 화면 끝에 닿으면 이어진 지도로
@@ -1985,7 +2218,7 @@ function drawShadow(cx,cy,w,box){
 const sprOf=o=>o.type==='palm'&&o.spr?o.spr:o.type==='looseRocks'?'rock_pile':o.type==='smallRocks'?'stone':o.type==='vineCut'?'rock_pile':o.type;
 const storyArt={palmLeaf:[0,52],waterBottle:[3,37]};
 const customArt={sharp:[0,67,47],vineRock:[1,128,128],vineBundle:[2,83,61]};
-function shadowWidth(o){ if(o.type==='gate'||o.type==='felled')return 102; if(o.type==='beacon')return story.beaconLit?130:66; if(dryingFood[o.type])return 37; if(['sosSpot','palmLeaf','waterBottle','sandHole'].includes(o.type))return 13; if(o.type==='tree')return 46; if(customArt[o.type])return o.type==='vineRock'?58:25; if(o.type==='fire'||o.type==='hut') return SOLID[o.type][0]*2; const m=OB[sprOf(o)]; if(o.type==='tree') return m[2]/K*0.5; if(o.type==='palm') return m[2]/K*0.42; if(o.type==='crate') return m[2]/K*1.02; return m?m[6]/K*1.05:30; }   // 상자: 몸 너비 전체
+function shadowWidth(o){ if(o.type==='mate')return 34; if(o.type==='toughVine')return o.cut?40:100; if(o.type==='gate'||o.type==='felled')return 102; if(o.type==='beacon')return story.beaconLit?130:66; if(dryingFood[o.type])return 37; if(['sosSpot','palmLeaf','waterBottle','sandHole'].includes(o.type))return 13; if(o.type==='tree')return 46; if(customArt[o.type])return o.type==='vineRock'?58:25; if(o.type==='fire'||o.type==='hut') return SOLID[o.type][0]*2; const m=OB[sprOf(o)]; if(o.type==='tree') return m[2]/K*0.5; if(o.type==='palm') return m[2]/K*0.42; if(o.type==='crate') return m[2]/K*1.02; return m?m[6]/K*1.05:30; }   // 상자: 몸 너비 전체
 function drawSos(x,y){
   ctx.save();ctx.translate(x,y-5);ctx.scale(1,.57);
   ctx.lineJoin='round';ctx.lineCap='round';
@@ -2054,6 +2287,7 @@ function drawJungleFlies(cx,cy){
 }
 function drawObj(o){
   if(o.type==='jd'){drawJungleObj(o);return;}
+  if(JSTORY_TYPES.has(o.type)){drawJungleStoryObj(o);return;}
   if(o.type==='sandHole'){
     if(!exposedTide())return;
     ctx.fillStyle=o.dugDay===camp.day?'#a87448':'#6a482e';
@@ -2300,6 +2534,7 @@ function doAction(target=st.target){
   const action=objs.includes(t) && interactionReach(t)<1 ? actionOf(t) : null;
   if(!action) return;
   if(action.camp){ useCamp(t); return; }
+  if(action.talk){ faceTo(t); action.talk(t); return; }
   st.running=false;faceTo(t); st.act=action.anim; st.actT=0; st.hit=false; st.actObj=t; st.appT=0;
   if(st.act==='pick' && PICK[t.type]){         // 손이 물건에 닿는 자리로 한두 걸음 다가감 (옆: 손이 발보다 20px 앞)
     const dx={left:-1,right:1}[st.dir]||0;
@@ -2451,6 +2686,7 @@ function hitNow(t){
     t.dugDay=camp.day;give(t.item,1,t.x,t.y-26);return;
   }
   if(st.act==='chop'&&equipped==='axe'&&actionOf(t)?.anim==='chop'){beachAudio.effect('chop');pulse(32);}
+  if(t.type==='spring'||t.type==='toughVine'){actHeld=false;jungleHit(t);return;}
   if(dryingFood[t.type]){
     const drying=dryingFood[t.type];
     actHeld=false;
@@ -2809,7 +3045,7 @@ function drawPlayer(){
   });
   if(d>KNEE*0.6)drawRipples(st.x,st.y-d);
 }
-function inView(o){ if(o.type==='jd'){const d=JUNGLE.sprites[o.spr],h=d[4]*o.s,w=h*d[2]/d[3];return o.x+w/2>cam.x&&o.x-w/2<cam.x+VW&&o.y>cam.y-20&&o.y-h<cam.y+VH;} const m=OB[sprOf(o)]; const w=m?m[2]/K:192, h=m?m[3]/K:130; return o.x+w>cam.x && o.x-w<cam.x+VW && o.y>cam.y-20 && o.y-h-160<cam.y+VH; }
+function inView(o){ if(JSTORY_TYPES.has(o.type))return o.x>cam.x-160&&o.x<cam.x+VW+160&&o.y>cam.y-20&&o.y-200<cam.y+VH; if(o.type==='jd'){const d=JUNGLE.sprites[o.spr],h=d[4]*o.s,w=h*d[2]/d[3];return o.x+w/2>cam.x&&o.x-w/2<cam.x+VW&&o.y>cam.y-20&&o.y-h<cam.y+VH;} const m=OB[sprOf(o)]; const w=m?m[2]/K:192, h=m?m[3]/K:130; return o.x+w>cam.x && o.x-w<cam.x+VW && o.y>cam.y-20 && o.y-h-160<cam.y+VH; }
 const nightLayer=document.createElement('canvas'), shade=nightLayer.getContext('2d');
 function drawCampLight(cx,cy){
   const dusk=Math.max(0,1-Math.abs(camp.time-dayLength())/35);
@@ -2914,8 +3150,8 @@ function drawWorld(){
   drawTidalShore();
   ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
   const vis=objs.filter(inView);
-  vis.forEach(o=>{if(o.type==='sosSpot')drawObj(o);});
-  vis.forEach(o=>{ if(o.type!=='sosSpot'&&o.type!=='sandHole'&&o.type!=='jd'&&zoneAt(o.x,o.y)<3 && !(o.fall>.15)) drawShadow(o.x,o.y,shadowWidth(o),o.type==='crate'); });
+  vis.forEach(o=>{if(o.type==='sosSpot'||o.type==='footprint')drawObj(o);});
+  vis.forEach(o=>{ if(o.type!=='sosSpot'&&o.type!=='sandHole'&&o.type!=='jd'&&o.type!=='footprint'&&o.type!=='spring'&&zoneAt(o.x,o.y)<3 && !(o.fall>.15)) drawShadow(o.x,o.y,shadowWidth(o),o.type==='crate'); });
   crabs.forEach(c=>drawShadow(c.x,c.y,22));   // 떨어지는 코코넛은 땅에 닿을 때쯤 그림자
   if(st.depth<5) drawShadow(st.x,st.y,36);
   if(st.target && !['fishWater','sosSpot'].includes(st.target.type) && !st.act){
@@ -2923,7 +3159,7 @@ function drawWorld(){
     ctx.save(); ctx.globalAlpha=.55+p*.4; ctx.strokeStyle='#F2C14E'; ctx.lineWidth=2.5;
     ctx.beginPath(); ctx.ellipse(st.target.x,st.target.y,s[0]+10+p*3,s[1]+6+p*2,0,0,Math.PI*2); ctx.stroke(); ctx.restore();
   }
-  const items=vis.filter(o=>o.type!=='sosSpot').map(o=>({y:o.y,draw:()=>drawObj(o)}));
+  const items=vis.filter(o=>o.type!=='sosSpot'&&o.type!=='footprint').map(o=>({y:o.y,draw:()=>drawObj(o)}));
   items.push({y:st.y,draw:drawPlayerWithCliff});
   crabs.forEach(c=>{ if(c.x>cam.x-40&&c.x<cam.x+VW+40&&c.y>cam.y-20&&c.y<cam.y+VH+40) items.push({y:c.y,draw:()=>drawCrab(c)}); });
   playerUnderTree=false;
@@ -3204,7 +3440,7 @@ function loop(now){
       if(insideHut){st.t+=dt;renderHutChoices();hutMonologue();}
       else if(buildMotion)tickBuild(dt);
       else if(!ignition)update(dt);
-      survive(dt);if(!insideHut&&!buildMotion)survivalIdeas();renderGauges();
+      survive(dt);if(!insideHut&&!buildMotion){survivalIdeas();jungleStory();}updateMate(dt);renderGauges();
     }
   }
   if(insideHut)drawHutView();else drawWorld();
