@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="58">
+<meta name="app-version" content="59">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -125,6 +125,7 @@
   .ic.yellowBerry{background:url(icon_berry_yellow.webp) center/contain no-repeat}
   .ic.purpleBerry{background:url(icon_berry_purple.webp) center/contain no-repeat}
   .ic.chestIcon{background:url(jungle_chest.webp) center/contain no-repeat}
+  .ic.spear{background:url(icon_spear.webp) center/contain no-repeat}.ic.hen{background:url(icon_hen.webp) center/contain no-repeat}.ic.roastChicken{background:url(icon_roast_chicken.webp) center/contain no-repeat}
   .mapPieces{display:grid;gap:6px;width:100%;max-height:min(52vh,400px)}
   .mapPieces img{width:100%;max-height:calc(min(52vh,400px)/2 - 4px);object-fit:contain;display:block}
   .joy .rim{fill:#3b2922;fill-opacity:.87;stroke:#9e7051;stroke-width:2}
@@ -453,7 +454,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='58', NOTE="위로 걸을 때 앞이 더 잘 보여요";
+const APP='castaway-isle', APP_V='59', NOTE="정글: 나무 창을 만들어 닭을 잡을 수 있어요";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -772,6 +773,9 @@ const ITEM_DB = {
   shell:{icon:'conchIcon', name:'빈 소라 껍데기', kind:'mat', bagOrder:6},
   stone:{icon:'stone', name:'돌', kind:'mat', bagOrder:2},
   vine:{icon:'vineBundle', name:'덩굴', kind:'mat', bagOrder:3},
+  spear:{icon:'spear', name:'나무 창', kind:'tool', bagOrder:2, usable:true},          // v59 정글 (그림 임시)
+  hen:{icon:'hen', name:'잡은 닭', kind:'mat', bagOrder:14},                            // v59 (그림 임시)
+  roastChicken:{icon:'roastChicken', name:'닭고기 구이', kind:'food', bagOrder:11, eat:{food:32}, usable:true},   // v59 숫자는 폰에서 확인 (그림 임시)
 };
 const ITEMS=Object.fromEntries(Object.entries(ITEM_DB).map(([key,{icon,name}])=>[key,[icon,name]]));
 const itemsByKind=kind=>Object.keys(ITEM_DB)
@@ -819,13 +823,14 @@ const RECIPES = [
   {id:'fire', name:'모닥불', icon:'branch', structure:true, need:{stone:2, branch:1}, msg:'점화에 마른 섬유 1개와 나뭇가지 1개'},
   {id:'hut', name:'움막', icon:'wood', structure:true, need:{wood:3,vine:1,leaf:5}, msg:'가까이에서 뼈대부터 세워요'},
   {id:'drycoconut',name:'코코넛 칩 만들기',icon:'coconutChips',structure:true,need:{coconut:3},msg:'다음 날 아침에 코코넛 칩을 수거해요'},
+  {id:'spear',name:'나무 창',icon:'spear',need:{branch:1,stone:1,toughVine:1},msg:'빠른 칸에서 들고 닭에게 던져요'},   // v59
 ];
 let objs=[], inv={}, crabs=[], leaves=[], told={}, world={};
 let equipped=null, placement=null;
 const story={};
 const seenHints=new Set();
 function resetStory(){
-  Object.assign(story,{mapPiece2:false,jungleEntered:false,footprintSeen:false,fordCrossed:false,jungleBEntered:false,springFound:false,reunited:false,knifeGot:false,bottleFilled:false,toughVineCut:false});   // 정글 이야기 (v52~)
+  Object.assign(story,{mapPiece2:false,jungleEntered:false,footprintSeen:false,fordCrossed:false,jungleBEntered:false,springFound:false,reunited:false,knifeGot:false,bottleFilled:false,toughVineCut:false,spearMade:false,huntHesitated:false,henCaught:false,spearMissed:false});   // 정글 이야기 (v52~, 사냥 v59)
   Object.assign(story,{stormOver:false,stormNight:false,gateOpen:false,stoneFound:false,gateSeen:false,
     fireIdea:false,fireLit:false,dryIdea:false,axeIdea:false,fruitFishIdea:false,fruitClamIdea:false,
     signalPrepared:false,ember:false,beaconLit:false,beaconLitDay:0,sosDrawn:false,hutReady:false,crateOpened:false,bottleFound:false});
@@ -1165,6 +1170,11 @@ const JUNGLE_DIALOGUE = {
   toughVineCut:'잘렸다. 이 덩굴이면 뭐든 단단히 묶겠어.',
   caveLocked:'동굴 안이 너무 깜깜해. 지금은 못 들어가.',
   meadowLocked:'저쪽은 초원으로 가는 길 같은데… 아직은 정글이 먼저야.',
+  // v59 사냥 (Claude)
+  huntHesitate:{boy:'막상 던지려니 손이 떨려. …그래도 먹어야 버텨.',girl:'고개를 갸웃거리네… 미안. 우리도 먹어야 해.'},
+  spearMiss:'빗나갔다. 멈칫하고 서 있을 때 던져야겠어.',
+  firstHunt:{boy:'…고마워. 하나도 안 남기고 먹을게.',girl:'…고마워. 아껴서 먹을게.'},
+  mateHens:'빈터 옆에 닭이 몇 마리 있더라. 놀라면 푸드덕 날아가.',
 };
 
 const JUNGLE_QUESTS = [
@@ -1181,6 +1191,10 @@ const JUNGLE_QUESTS = [
     title:()=>'물병에 샘물 담기',detail:()=>'빈 물병에 샘물을 채워요.',items:['emptyBottle']},
   {id:'cutVine',when:()=>story.reunited&&!story.toughVineCut,
     title:()=>'질긴 덩굴 자르기',detail:()=>story.knifeGot?'작은 칼로 질긴 덩굴을 잘라요.':'빈터 위쪽 질긴 덩굴을 살펴봐요.',items:['smallKnife']},
+  {id:'makeSpear',when:()=>story.toughVineCut&&!story.spearMade,   // v59
+    title:()=>'나무 창 만들기',detail:()=>'나뭇가지·돌·질긴 덩굴로 만들어요.',items:['branch','stone','toughVine']},
+  {id:'huntHen',when:()=>story.spearMade&&!story.henCaught,
+    title:()=>'닭 잡기',detail:()=>chosen==='girl'?'천천히 걸어가면 덜 놀라요. 멈칫할 때 창을 던져요.':'멈칫할 때 창을 던져요. 뛰어가면 멀리서 놀라요.',items:['spear']},
 ];
 // ===== 정글 표 끝 =====
 
@@ -1188,7 +1202,7 @@ const JUNGLE_QUESTS = [
 // 자리(바닥 그림 기준 px): 발자국 = 정글 A 아래 길→여울, 샘 = 정글 B 왼쪽 아래 웅덩이, 동료 자리 = 샘 왼쪽 위
 const JSPOT={foot:[[874,940],[900,884],[880,828],[818,772],[730,716],[704,660]],pond:[285,748],mateHome:[226,640],vine:[770,420],
   wander:[[406,697],[213,528],[366,510],[160,671],[368,847],[105,590],[453,505],[435,622],[263,624],[293,543],[504,714],[290,853],[494,801],[525,522]]};
-const JSTORY_TYPES=new Set(['footprint','spring','toughVine','mate','banana','chest']);
+const JSTORY_TYPES=new Set(['footprint','spring','toughVine','mate','banana','chest','henDown','spearDrop']);
 // 채집거리 (v54): 열매 덤불·바나나·나뭇가지·돌·덩굴 바위. 자리는 걷는 곳·길 밖·나무와 떨어진 곳으로 골라 둠
 const JRES={"jungleA":[["bush",1315,838],["bush",1014,858],["bush",1189,426],["bush",697,803],["bush",404,429],["banana",133,296],["banana",760,219],["banana",439,216],["branch",1349,337],["branch",1088,375],["branch",207,909],["branch",740,374],["branch",1099,736],["branch",593,207],["stone",1191,700],["stone",889,322],["stone",662,609],["stone",974,634],["vineRock",466,755],["vineRock",1200,187]],"jungleB":[["bush",1015,275],["bush",272,522],["bush",655,871],["bush",509,867],["bush",1219,877],["banana",162,366],["banana",1146,520],["banana",1275,672],["branch",370,530],["branch",293,926],["branch",472,720],["branch",1053,529],["branch",559,245],["branch",407,211],["stone",1313,811],["stone",911,376],["stone",1314,912],["stone",164,590],["vineRock",964,862],["vineRock",792,693]]};
 Object.assign(SOLID,{spring:[150,90],mate:[13,6],toughVine:[44,14]});
@@ -1303,6 +1317,7 @@ function jungleHit(t){
     inv.mapPiece=(inv.mapPiece||0)+1;renderInv('mapPiece');paperMapBtn.hidden=false;goal();
     showMapPiece2();return;
   }
+  if(t.type==='henDown'||t.type==='spearDrop'){huntPick(t);return;}
   if(t.type==='toughVine'&&!t.cut&&inv.smallKnife){
     t.cut=true;t.solid=[40,12];beachAudio.effect('vine');give('toughVine',2,t.x,t.y-60);
     story.toughVineCut=true;goal();sayJ('toughVineCut');
@@ -1331,7 +1346,7 @@ function giveKnife(){
 OBJECT_ACTIONS.mate=o=>story.reunited?{label:'이야기하기',icon:'dialogueIcon',talk:talkMate}:{label:'부르기',icon:'dialogueIcon',talk:startReunion};
 function talkMate(){
   mate.mode='talk';mate.timer=4;mate.dir=Math.abs(st.x-mate.x)>Math.abs(st.y-mate.y)?(st.x>mate.x?'right':'left'):(st.y>mate.y?'down':'up');
-  const text=MATE_LINES[mate.line++%MATE_LINES.length];
+  const text=story.spearMade&&!story.henCaught&&!seenHints.has('mateHens')?(seenHints.add('mateHens'),jLines('mateHens')[0][1]):MATE_LINES[mate.line++%MATE_LINES.length];
   playLines([['friend',text]],()=>{mate.mode='idle';mate.timer=1.5;});
 }
 // 동료: 쉬기 → 걷기 → (가끔 쪼그려 살피기) → 쉬기. 밤에는 자기 자리로. 정글 B에 있을 때만 움직임
@@ -1386,6 +1401,166 @@ function updateMate(dt){
     if(!moved&&++mate.stuck>20&&mate.mode!=='come'){mate.mode='idle';mate.timer=1;}
   }
 }
+// ===== 정글 사냥 (Claude, v59): 나무 창 던지기 + 닭 무리 =====
+// 닭: 쪼기(가만히) ↔ 걷기. 사람이 다가오면 멈칫(alert) → 더 다가오면 도망(flee). 뛰면 멀리서, 걸으면 가까이서 놀람. 소녀는 더 가까이 갈 수 있음.
+// 창: 닭이 던질 거리 안에 있으면 '던지기'. 놓는 순간 닭 자리로 날아감 → 날아가는 동안 닭 몸에 닿으면 잡힘. 빗나가면 땅에 떨어지고, 주워야 다시 던짐.
+const HEN_HOME={jungleA:{home:[330,770],n:4,r:150},jungleB:{home:[930,660],n:4,r:150}};   // 정글 A 왼쪽 아래 열매 빈터 아래 풀밭, 정글 B 빈터 오른쪽 아래
+const HEN_CELL=[116,104], HEN_DRAW=.42;            // jungle_hens.webp 칸 크기, 그릴 배율 (닭 키 ≈ 40px, 사람 112px)
+const HEN_FRAME={down:0,side:4,up:8,flap:12,fall:13,dead:14};
+const HUNT={boy:{range:200,hitR:24,alert:1,flee:1},girl:{range:165,hitR:17,alert:.7,flee:.65}};
+let hens=[], flyingSpear=null, spearOut=false, henSeed=20261123;
+const henRand=()=>{henSeed^=henSeed<<13;henSeed^=henSeed>>>17;henSeed^=henSeed<<5;return (henSeed>>>0)/4294967296;};   // 닭 전용 난수 (다른 물체의 난수 순서를 흔들지 않게)
+Object.assign(NAME,{henTarget:'닭',henDown:'잡은 닭',spearDrop:'떨어진 창'});
+IMG.hens=new Image(); IMG.hens.src='jungle_hens.webp';
+function henCanStand(x,y,home){
+  if(!MAP.jungle||home&&Math.hypot(x-home[0],(y-home[1])*1.3)>HEN_HOME[cur].r+60)return false;
+  const z=zoneAt(x,y);if(BLOCK(z)||z===3||BLOCK(zoneAt(x-8,y))||BLOCK(zoneAt(x+8,y)))return false;
+  for(const o of objs){if(o===mate)continue;const s=o.solid||SOLID[o.type];if(!s)continue;const dx=(x-o.x)/s[0],dy=(y-o.y)/s[1];if(dx*dx+dy*dy<1)return false;}
+  return true;
+}
+function newHen(k,i){
+  const H=HEN_HOME[k],a=i*2.4+henRand(),r=30+henRand()*70;
+  return {x:H.home[0]+Math.cos(a)*r,y:H.home[1]+Math.sin(a)*r*.6,kind:i%2,dir:henRand()<.5?'left':'right',mode:'peck',timer:henRand()*2,dist:0,t:henRand()*5};
+}
+function enterHens(k){
+  flyingSpear=null;
+  if(spearOut){spearOut=false;for(const w of Object.values(world))w.objs=w.objs.filter(o=>o.type!=='spearDrop');objs=world[k].objs;}   // 맵을 떠나면 떨어진 창은 다시 손에
+  if(!HEN_HOME[k]){hens=[];return;}
+  refillHens(k);
+  for(const h of hens)if(!henCanStand(h.x,h.y)){h.x=HEN_HOME[k].home[0];h.y=HEN_HOME[k].home[1];}
+}
+function refillHens(k){   // 아침마다 무리를 다시 채움
+  const H=HEN_HOME[k],w=world[k];
+  if(!w.hens||w.hensDay!==camp.day){
+    w.hens=(w.hens||[]).filter(h=>h.mode!=='fall');
+    for(let i=w.hens.length;i<H.n;i++)w.hens.push(newHen(k,i));
+    w.hensDay=camp.day;
+  }
+  hens=w.hens;
+}
+function henDir(h,vx,vy){h.dir=Math.abs(vx)>Math.abs(vy)*1.2?(vx>0?'right':'left'):(vy>0?'down':'up');}
+function startle(x,y,r){for(const h of hens)if(h.mode!=='fall'&&Math.hypot(h.x-x,h.y-y)<r){h.mode='flee';h.timer=1.1+henRand()*.4;h.flap=.35;}}
+function updateHens(dt){
+  if(!MAP.jungle||!hens.length&&!flyingSpear)return;
+  if(HEN_HOME[cur]&&world[cur].hensDay!==camp.day&&!hens.some(h=>h.mode==='fall'))refillHens(cur);
+  const H=HEN_HOME[cur],P=HUNT[chosen]||HUNT.boy;
+  const run=st.running,walk=st.moving&&!run;
+  const alertR=(run?230:walk?150:105)*P.alert, fleeR=(run?170:walk?85:58)*P.flee;
+  for(const h of hens){
+    h.t+=dt;h.flap=Math.max(0,(h.flap||0)-dt);
+    if(h.mode==='fall'){h.timer-=dt;if(h.timer<=0)henDown(h);continue;}
+    const d=Math.hypot(st.x-h.x,(st.y-h.y)*1.3);
+    if(h.mode!=='flee'&&d<fleeR&&!reunionOn){h.mode='flee';h.timer=1.2+henRand()*.4;h.flap=.35;startle(h.x,h.y,110);}
+    else if((h.mode==='peck'||h.mode==='walk')&&d<alertR){h.mode='alert';h.timer=.7+henRand()*.5;henDir(h,st.x-h.x,st.y-h.y);}
+    h.timer-=dt;
+    let vx=0,vy=0,sp=0;
+    if(h.mode==='flee'){
+      sp=175;const ax=h.x-st.x,ay=h.y-st.y,l=Math.hypot(ax,ay)||1;vx=ax/l;vy=ay/l;
+      if(h.timer<=0){h.mode='alert';h.timer=1.2;}
+    }else if(h.mode==='alert'){
+      if(h.timer<=0){if(d<alertR)h.timer=.6;else{h.mode='peck';h.timer=1+henRand()*2;}}
+    }else if(h.mode==='walk'){
+      sp=38;const [tx,ty]=h.to,dx=tx-h.x,dy=ty-h.y,l=Math.hypot(dx,dy);
+      if(l<4||h.timer<=0){h.mode='peck';h.timer=1+henRand()*2.5;sp=0;}else{vx=dx/l;vy=dy/l;}
+    }else{   // peck
+      if(h.timer<=0&&!isNight()){
+        const back=Math.hypot(h.x-H.home[0],h.y-H.home[1])>H.r*.8;
+        const a=back?Math.atan2(H.home[1]-h.y,H.home[0]-h.x)+(henRand()-.5):henRand()*Math.PI*2,r=30+henRand()*60;
+        h.to=[h.x+Math.cos(a)*r,h.y+Math.sin(a)*r*.7];h.mode='walk';h.timer=3;
+      }
+    }
+    if(sp){
+      let moved=false;
+      for(const a of [0,.6,-.6,1.2,-1.2,1.8,-1.8]){
+        const c=Math.cos(a),s=Math.sin(a),mx=(vx*c-vy*s)*sp*dt,my=(vx*s+vy*c)*sp*dt;
+        if(henCanStand(h.x+mx,h.y+my,H.home)){h.x+=mx;h.y+=my;h.dist+=Math.hypot(mx,my);henDir(h,mx,my);moved=true;break;}
+      }
+      if(!moved&&h.mode==='walk'){h.mode='peck';h.timer=1;}
+    }
+  }
+  if(flyingSpear)tickSpear(dt);
+}
+function findHenTarget(){
+  if(equipped!=='spear'||!inv.spear||spearOut||flyingSpear||!MAP.jungle||placement)return null;
+  const P=HUNT[chosen]||HUNT.boy;let best=null,bd=Infinity;
+  for(const h of hens){
+    if(h.mode==='fall')continue;
+    const d=Math.hypot(h.x-st.x,h.y-st.y);
+    if(d<P.range&&d>24&&d<bd){bd=d;best=h;}
+  }
+  return best?{type:'henTarget',hen:best,x:best.x,y:best.y}:null;
+}
+OBJECT_ACTIONS.henTarget=()=>({label:'던지기',icon:'spear'});
+OBJECT_ACTIONS.henDown=()=>({label:'줍기',icon:'hen',anim:'pick'});
+OBJECT_ACTIONS.spearDrop=()=>({label:'창 줍기',icon:'spear',anim:'pick'});
+function throwSpear(t){
+  if(!story.huntHesitated){story.huntHesitated=true;faceTo(t.hen);sayJ('huntHesitate');return;}   // 첫 사냥: 한 번 망설임
+  faceTo(t.hen);st.throwA=Math.atan2(t.hen.y-14-(st.y-62),t.hen.x-st.x);st.running=false;st.act='throw';st.actT=0;st.hit=false;st.actObj=t;st.appT=0;actHeld=false;
+}
+function releaseSpear(t){
+  const h=t.hen,[hx,hy]=dirVector[st.dir]||[0,1];
+  const sx=st.x+hx*14,sy=st.y-62,tx=h.x,ty=h.y-14,l=Math.hypot(tx-sx,ty-sy)||1;
+  flyingSpear={x:sx,y:sy,vx:(tx-sx)/l,vy:(ty-sy)/l,left:l+18,a:Math.atan2(ty-sy,tx-sx)};
+  spearOut=true;beachAudio.effect('chop');
+}
+function tickSpear(dt){
+  const f=flyingSpear,P=HUNT[chosen]||HUNT.boy,step=460*dt;
+  f.x+=f.vx*step;f.y+=f.vy*step;f.left-=step;
+  for(const h of hens){
+    if(h.mode==='fall')continue;
+    if(Math.hypot(f.x-h.x,f.y-(h.y-14))<P.hitR){   // 맞음: 날갯짓 → 넘어짐 → 쓰러짐
+      h.mode='fall';h.timer=.55;h.fallDir=f.vx>=0?'right':'left';flyingSpear=null;pulse(20);
+      startle(h.x,h.y,170);return;
+    }
+  }
+  if(f.left<=0){   // 빗나감: 땅에 꽂힘
+    flyingSpear=null;
+    let x=f.x,y=f.y+26;if(!walkable(x,y)){x=st.x+(f.vx*40);y=st.y+(f.vy*30)+6;}
+    if(!walkable(x,y)){spearOut=false;hint('창을 다시 집었어요',1.4);return;}
+    objs.push({type:'spearDrop',x,y,a:f.a,shake:0,fall:0});startle(f.x,f.y+14,100);   // 옆에 꽂히면 무리가 놀람
+    if(!story.spearMissed){story.spearMissed=true;sayJ('spearMiss');}
+  }
+}
+function henDown(h){
+  hens.splice(hens.indexOf(h),1);
+  objs.push({type:'henDown',x:h.x,y:h.y,kind:h.kind,flip:h.fallDir==='left',shake:0,fall:0});
+}
+function huntPick(t){   // jungleHit 에서 부름
+  objs.splice(objs.indexOf(t),1);spearOut=false;
+  if(t.type==='spearDrop'){pops.push({text:'창을 주웠어요',x:t.x,y:t.y-40,t:0});return;}
+  give('hen',1,t.x,t.y-40);
+  if(!story.henCaught){story.henCaught=true;goal();sayJ('firstHunt');}
+}
+function drawHen(h){
+  if(!IMG.hens.complete||!IMG.hens.naturalWidth)return;
+  let f,flip=h.dir==='left';
+  if(h.mode==='fall'){f=h.timer>.38?HEN_FRAME.flap:h.timer>.18?HEN_FRAME.fall:HEN_FRAME.dead;flip=h.fallDir==='left';}
+  else if(h.flap>0)f=HEN_FRAME.flap;
+  else{
+    const side=h.dir==='left'||h.dir==='right',base=side?HEN_FRAME.side:h.dir==='up'?HEN_FRAME.up:HEN_FRAME.down;
+    const moving=h.mode==='walk'||h.mode==='flee';
+    f=base+(moving?Math.floor(h.dist/(h.mode==='flee'?9:6))%4:h.mode==='peck'&&Math.sin(h.t*3+h.kind)>.6?1:0);
+  }
+  const [cw,ch]=HEN_CELL,s=HEN_DRAW,bob=h.mode==='peck'&&Math.sin(h.t*7)>.85?1:0;
+  ctx.save();ctx.translate(h.x,h.y+bob);if(flip)ctx.scale(-1,1);
+  ctx.drawImage(IMG.hens,f*cw,h.kind*ch,cw,ch,-cw*s/2,-(ch-4)*s,cw*s,ch*s);
+  ctx.restore();
+}
+function drawSpearShape(len){   // 임시 창 그림 (그림 받기 전): 자루 + 덩굴 감은 자리 + 돌 촉. 원점 = 촉 끝, 자루는 왼쪽으로
+  ctx.lineCap='round';
+  ctx.strokeStyle='#2a180e';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-len,0);ctx.lineTo(-9,0);ctx.stroke();
+  ctx.strokeStyle='#a0683a';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-len+1,0);ctx.lineTo(-10,0);ctx.stroke();
+  ctx.fillStyle='#5f7834';ctx.fillRect(-15,-2.5,6,5);
+  ctx.fillStyle='#2a180e';ctx.beginPath();ctx.moveTo(1,0);ctx.lineTo(-10,-4.5);ctx.lineTo(-10,4.5);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#c9c9bf';ctx.beginPath();ctx.moveTo(-1,0);ctx.lineTo(-9,-3);ctx.lineTo(-9,3);ctx.closePath();ctx.fill();
+}
+function drawHeldSpear(){   // 던지는 동작(임시): 어깨 높이에서 뒤로 당겼다가 놓음
+  const T=TIMES.throw;if(st.actT>=T[1])return;
+  const k=Math.min(1,st.actT/T[0]),a=st.throwA||0,c=Math.cos(a),s=Math.sin(a),pull=6+k*16;
+  ctx.save();ctx.translate(st.x+c*(44-pull*.6),st.y-64+s*(44-pull*.6)*.5);ctx.rotate(a-.12*k*Math.sign(c||1));drawSpearShape(58);ctx.restore();
+}
+function drawFlyingSpear(){const f=flyingSpear;ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.a);drawSpearShape(58);ctx.restore();}
+// ===== 정글 사냥 끝 =====
 function drawJungleStoryObj(o){
   if(o.type==='footprint'){
     if(!IMG.foot.complete||!IMG.foot.naturalWidth)return;
@@ -1412,6 +1587,12 @@ function drawJungleStoryObj(o){
     const w=o.cut?112:130,h=w*im.naturalHeight/im.naturalWidth;   // 덩굴을 걷어내도 바위 크기는 그대로
     ctx.drawImage(im,o.x-w/2,o.y-h+6,w,h);return;
   }
+  if(o.type==='henDown'){
+    if(!IMG.hens.complete||!IMG.hens.naturalWidth)return;const [cw,ch]=HEN_CELL,s=HEN_DRAW;
+    ctx.save();ctx.translate(o.x,o.y);if(o.flip)ctx.scale(-1,1);ctx.drawImage(IMG.hens,HEN_FRAME.dead*cw,o.kind*ch,cw,ch,-cw*s/2,-(ch-4)*s,cw*s,ch*s);
+    ctx.translate(2,-12);ctx.rotate(1.98);drawSpearShape(46);ctx.restore();return;   // 창이 꽂힌 채로 (자루가 위로)
+  }
+  if(o.type==='spearDrop'){ctx.save();ctx.translate(o.x,o.y-4);ctx.rotate(Math.abs(Math.cos(o.a))>.4?(Math.cos(o.a)>0?.18:Math.PI-.18):(Math.sin(o.a)>0?1.2:-1.9));drawSpearShape(58);ctx.restore();return;}
   if(o.type==='mate'){
     const ch=mateCh(),walking=o.mode==='walk'||o.mode==='come'||o.mode==='home'&&Math.hypot(o.target[0]-o.x,o.target[1]-o.y)>=6;
     const scoop=o.mode==='wait';   // 재회 전: 샘가에 쪼그려 앉아 손으로 물을 뜨는 중
@@ -1589,7 +1770,7 @@ function resetWorld(){
 function enterMap(k,x,y,first){
   st.stepDistance=0;
   if(k==='beachB')story.visitedB=true;
-  cur=k; Z=ZONES[k].Z; ZG=ZONES[k].g; MAP=MAPS[k]; objs=world[k].objs; crabs=world[k].crabs; leaves=[];
+  cur=k; Z=ZONES[k].Z; ZG=ZONES[k].g; MAP=MAPS[k]; objs=world[k].objs; crabs=world[k].crabs; leaves=[]; enterHens(k);
   for(let d=0; d<400 && !walkable(x,y); d+=4){ if(walkable(x,y-d)){ y-=d; break; } if(walkable(x,y+d)){ y+=d; break; } }   // 넘어간 자리가 물·물건이면 가까운 땅으로
   fishing=null;tideHeld=false;st.running=false;
   st.x=x; st.y=y;renderExitCue(); st.depth=waterDepth(x,y); st.act=null; st.target=null; camInit=true; lastAct=null;
@@ -1640,7 +1821,7 @@ function give(item,n,x,y){
 const foodSlotsUsed=(extra={})=>FOODS.reduce((s,k)=>s+Math.ceil((inv[k]+(extra[k]||0))/STACK),0);
 function roomFor(item,n){ return !FOODS.includes(item) || foodSlotsUsed({[item]:n})<=FOOD_SLOTS; }
 const hasRecipe=r=>r.structure?(!dryingFood[r.id]&&!!built(r.id)):inv[r.id]>0;
-const recipeOpen=r=>r.id==='fire'?story.fireIdea:dryingFood[r.id]?story.dryIdea:r.id==='axe'?story.axeIdea:story.sosDrawn;
+const recipeOpen=r=>r.id==='spear'?story.toughVineCut:r.id==='fire'?story.fireIdea:dryingFood[r.id]?story.dryIdea:r.id==='axe'?story.axeIdea:story.sosDrawn;
 const canCraft=r=>recipeOpen(r)&&!hasRecipe(r) && Object.entries(r.need).every(([k,n])=>inv[k]>=n);
 const visibleRecipes=()=>RECIPES.filter(recipeOpen).sort((a,b)=>Number(canCraft(b))-Number(canCraft(a)));
 let cardRec=null;
@@ -1671,6 +1852,7 @@ function completeCraft(r){
   if(r.id!=='hut') pops.push({text:r.name+' 완성!',x:st.x,y:st.y-130,t:0});
   hint(r.msg,2.8); lastAct=null;
   if(r.id==='axe')showTool('axe');
+  if(r.id==='spear'){story.spearMade=true;goal();showTool('spear');}
   if(dryingFood[r.id])seenHints.add(r.id==='dryberries'?'quest:driedBerry':'quest:coconutChips');   // v46: 한 번 널어 두면 퀘스트 끝
 }
 // ---------- 가방 판: 가방 / 만들기 ----------
@@ -2123,7 +2305,8 @@ const COOKING=[   // v48: 섬에서 할 법한 요리로 다시 짬 (구이·수
   ...['rawFish','stripedFish','blueFish'].map(fish=>({result:'coconutSoup',need:{[fish]:1,coconut:1},idea:'fruitFishIdea'})),
   {result:'clamSoup',need:{clam:2}},
   {result:'grilledScallop',need:{scallop:1}},
-  {result:'berryJuice',need:{berries:3,coconut:1}}
+  {result:'berryJuice',need:{berries:3,coconut:1}},
+  {result:'roastChicken',need:{hen:1}}   // v59
 ];
 for(const key of [...Object.values(PICK).map(([item])=>item),...RECIPES.flatMap(({id,structure,need})=>[...Object.keys(need),...(structure?[]:[id])]),...COOKING.flatMap(({result,need})=>[result,...Object.keys(need)])]) if(!Object.hasOwn(ITEM_DB,key)) console.error('ITEM_DB에 없는 아이템:',key);
 const cookingOpen=r=>!r.idea||story[r.idea];
@@ -2637,6 +2820,7 @@ function findTarget(){
     const gate=objs.find(o=>o.type==='gate');
     if(gate&&interactionReach(gate)<1)return gate;
   }
+  if(equipped==='spear'&&best?.type!=='henDown'&&best?.type!=='spearDrop'){const hen=findHenTarget();if(hen)return hen;}   // v59: 창을 들면 닭이 먼저
   return best||findFishingWater();
 }
 function faceTo(o){ const vx=o.x-st.x, vy=(o.y-st.y)*1.6; st.dir=Math.abs(vx)>Math.abs(vy)?(vx>0?'right':'left'):(vy>0?'down':'up'); }
@@ -2649,6 +2833,7 @@ function doAction(target=st.target){
   const t=target;
   if(!t){ hint('가까이 가면 버튼이 켜져요',1.4); return; }
   if(t.type==='fishWater'){startFishing();return;}
+  if(t.type==='henTarget'){throwSpear(t);return;}
   const action=objs.includes(t) && interactionReach(t)<1 ? actionOf(t) : null;
   if(!action) return;
   if(action.camp){ useCamp(t); return; }
@@ -2794,8 +2979,9 @@ function fishingRodTip(ch,x,y,flip,pose=1){
   const scale=playerHeight/SRC_H*(FRAMES[ch]._fix?.fish_side||1);
   return [x+(tipX-ax)*scale*(flip?-1:1),y+(tipY-ay)*scale];
 }
-const TIMES={chop:[.14,.24,.46], pick:[.16,.30,.48], shake:[.16,.55,.95]};   // [장면 바뀜, 효과, 끝]
+const TIMES={chop:[.14,.24,.46], pick:[.16,.30,.48], shake:[.16,.55,.95], throw:[.2,.26,.5]};   // [장면 바뀜, 효과, 끝]
 function hitNow(t){
+  if(t?.type==='henTarget'){releaseSpear(t);return;}   // v59 창 던지기
   if(!t||!objs.includes(t)||interactionReach(t)>=1.15)return;
   if(t.type==='sandHole'){
     if(!exposedTide()||t.dugDay===camp.day)return;
@@ -2804,7 +2990,7 @@ function hitNow(t){
     t.dugDay=camp.day;give(t.item,1,t.x,t.y-26);return;
   }
   if(st.act==='chop'&&equipped==='axe'&&actionOf(t)?.anim==='chop'){beachAudio.effect('chop');pulse(32);}
-  if(t.type==='spring'||t.type==='toughVine'||t.type==='jd'||t.type==='banana'||t.type==='chest'){actHeld=false;jungleHit(t);return;}
+  if(t.type==='spring'||t.type==='toughVine'||t.type==='jd'||t.type==='banana'||t.type==='chest'||t.type==='henDown'||t.type==='spearDrop'){actHeld=false;jungleHit(t);return;}
   if(dryingFood[t.type]){
     const drying=dryingFood[t.type];
     actHeld=false;
@@ -3004,6 +3190,7 @@ function update(dt){
     o.inside=inside; }
   leaves.forEach(l=>{ l.t+=dt; l.x+=l.vx*dt; l.y+=l.vy*dt; l.vy+=170*dt; }); leaves=leaves.filter(l=>l.t<.7);
   updateCrabs(dt);
+  updateHens(dt);
   const wantDepth=waterDepth(st.x,st.y); st.depth+=(wantDepth-st.depth)*Math.min(1,dt*12);
   updatePlacement();
   const t=placement?null:findTarget(); st.target=t;
@@ -3157,6 +3344,7 @@ function drawPlayer(){
   if(st.act==='chop'){ anim='chop'; i=st.actT<T[0]?0:st.actT<T[1]?1:2; }
   else if(st.act==='pick'){ const lt=st.actT-(st.appT||0); if(lt<0){ anim='walk'; i=Math.floor(st.t*10); } else { anim='pick'; i=lt<T[0]?0:1; } }
   else if(st.act==='shake'){ if(st.actT<T[0]){ anim='walk'; i=Math.floor(st.t*8); } else { anim='shake'; const SEQ=[0,1,2,1,2,3]; i=SEQ[Math.min(5,Math.floor((st.actT-T[0])/(T[2]-T[0])*6))]; } }   // 섬→당기기→밀기→당기기→밀기→섬
+  else if(st.act==='throw'){ anim='stand'; i=0; }
   else if(st.moving){ anim='walk'; const side=st.dir==='left'||st.dir==='right'; i=Math.floor(st.walkDist/(side?24:15)); }   // 걸은 거리로 장면을 바꿈 → 발이 미끄러지지 않음 (옆모습은 보폭이 커서 24px마다)
   else { anim='stand'; i=0; }
   const [name,flip]=sprite(st.dir,anim);
@@ -3166,6 +3354,7 @@ function drawPlayer(){
     if(carry)drawActionSprite(IMG.carry,carryPose());
     else if(st.running)drawRun();
     else drawFrame(ctx,chosen,name,i,st.x+ox,st.y,112,flip);
+    if(st.act==='throw')drawHeldSpear();
     if(!st.act&&story.ember)drawCarriedEmber();
   });
   if(d>KNEE*0.6)drawRipples(st.x,st.y-d);
@@ -3277,7 +3466,8 @@ function drawWorld(){
   const vis=objs.filter(inView);
   vis.forEach(o=>{if(o.type==='sosSpot'||o.type==='footprint')drawObj(o);});
   vis.forEach(o=>{ if(o.type!=='sosSpot'&&o.type!=='sandHole'&&o.type!=='jd'&&o.type!=='footprint'&&o.type!=='spring'&&zoneAt(o.x,o.y)<3 && !(o.fall>.15)) drawShadow(o.x,o.y,shadowWidth(o),o.type==='crate'); });
-  crabs.forEach(c=>drawShadow(c.x,c.y,22));   // 떨어지는 코코넛은 땅에 닿을 때쯤 그림자
+  crabs.forEach(c=>drawShadow(c.x,c.y,22));
+  hens.forEach(h=>{if(h.mode!=='fall')drawShadow(h.x,h.y,24);});   // 떨어지는 코코넛은 땅에 닿을 때쯤 그림자
   if(st.depth<5) drawShadow(st.x,st.y,36);
   if(st.target && !['fishWater','sosSpot'].includes(st.target.type) && !st.act){
     const s=SOLID[st.target.type]||[12,6], p=(Math.sin(st.t*6)+1)/2;
@@ -3287,6 +3477,8 @@ function drawWorld(){
   const items=vis.filter(o=>o.type!=='sosSpot'&&o.type!=='footprint').map(o=>({y:o.y,draw:()=>drawObj(o)}));
   items.push({y:st.y,draw:drawPlayerWithCliff});
   crabs.forEach(c=>{ if(c.x>cam.x-40&&c.x<cam.x+VW+40&&c.y>cam.y-20&&c.y<cam.y+VH+40) items.push({y:c.y,draw:()=>drawCrab(c)}); });
+  hens.forEach(h=>{ if(h.x>cam.x-60&&h.x<cam.x+VW+60&&h.y>cam.y-20&&h.y<cam.y+VH+60) items.push({y:h.y,draw:()=>drawHen(h)}); });
+  if(flyingSpear)items.push({y:flyingSpear.y+63,draw:drawFlyingSpear});   // 창 높이(손 높이 62)만큼 아래가 땅
   playerUnderTree=false;
   items.sort((a,b)=>a.y-b.y).forEach(it=>it.draw());
   if(playerUnderTree){ ctx.save(); ctx.globalAlpha=.38; drawPlayerWithCliff(); ctx.restore(); }   // 숲에 가려도 내 캐릭터는 흐리게 보이게
@@ -3400,7 +3592,8 @@ paperMapBtn.addEventListener('click',()=>{
 const toolUse={
   sharp:'날이 제법 날카롭네. 돌칼을 들고 풀밭 쪽 바위에 감긴 덩굴을 잘라보자.',
   axe:'돌도끼를 들면 단단한 상자를 부수고 나무도 벨 수 있어.',
-  rod:'낚싯대를 들고 물가로 가면 낚시할 자리가 보여.'
+  rod:'낚싯대를 들고 물가로 가면 낚시할 자리가 보여.',
+  spear:'창을 들고 닭에게 다가가면 던질 수 있어. 멈춰 있을 때가 좋아.'
 };
 function equipNewTool(item,index){
   const prior=quick.indexOf(item);
