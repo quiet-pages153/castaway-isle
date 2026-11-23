@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="57">
+<meta name="app-version" content="58">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -312,6 +312,8 @@
     border:1px solid #b98b55;border-radius:5px;background:#30251ceb;box-shadow:inset 0 0 0 2px #1c1813b8,0 2px 4px #170e0844}
   .questScroll{max-height:min(24dvh,160px);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:5px 7px}
   .questBox.is-expanded .questScroll{max-height:min(40dvh,280px)}
+  .objective{transition:opacity .35s}
+  #gameScreen.walking .objective{opacity:.3}
   .questFooter{display:flex;justify-content:space-between;align-items:center;gap:3px;padding:1px 5px;border-top:1px solid #a47c4b5e}
   .questFooter button{min-height:27px;padding:1px 3px;background:none;border:0;color:#f4d49b;font:inherit;font-size:11px;cursor:pointer}
   .questFooter button:focus-visible{outline:2px solid #ffda91}
@@ -451,7 +453,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='57', NOTE="대사를 다시 썼어요";
+const APP='castaway-isle', APP_V='58', NOTE="위로 걸을 때 앞이 더 잘 보여요";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -2958,6 +2960,8 @@ function update(dt){
     if(m>.2&&fishing.phase!=='reel')fishing=null;
     else {tickFishing(dt);if(fishing)return;}
   }
+  if(!(m>0.2)||st.act){st.walkT=0;st.walkingUI=false;}
+  gameScreen.classList.toggle('walking',!!st.walkingUI);
   const zone=zoneAt(st.x,st.y);
   if(st.act){
     const T=TIMES[st.act]; st.actT+=dt;
@@ -2984,6 +2988,7 @@ function update(dt){
     const moved=Math.hypot(st.x-ox0,st.y-oy0);
     st.walkDist+=moved;
     st.moving=moved>0;st.running=run&&st.moving;
+    st.walkT=st.moving?(st.walkT||0)+dt:0;st.walkingUI=st.walkT>.25;
     if(st.running)st.runDist=(wasRunning?st.runDist:0)+moved;
     st.stepDistance+=moved;
     if(st.stepDistance>=39){
@@ -3026,9 +3031,13 @@ function update(dt){
   objs.forEach(o=>{ o.shake=Math.max(0,o.shake-dt); if(o.fall>0) o.fall=Math.max(0,o.fall-dt); });
   pops.forEach(p=>p.t+=dt); while(pops.length&&pops[0].t>1) pops.shift();
   // 카메라: 캐릭터를 가운데보다 조금 위에 (아래 조작을 피함)
-  const tx=st.x-VW/2, ty=st.y-60-VH/2+VH*0.06;
+  // v58: 가는 쪽을 미리 보여 줌 (위쪽은 상단 바·퀘스트 카드가 가려서 더 많이). 멈추면 천천히 원래 자리로
+  if(st.moving&&!st.act){const [mx,my]=movementInput(),mm=Math.hypot(mx,my)||1;cam.leadTX=mx/mm*VW*.10;cam.leadTY=my<0?my/mm*VH*.17:my/mm*VH*.06;}
+  else{cam.leadTX=0;cam.leadTY=0;}
+  const lk=Math.min(1,dt*(st.moving?2.2:1.2));cam.lx=(cam.lx||0)+((cam.leadTX||0)-(cam.lx||0))*lk;cam.ly=(cam.ly||0)+((cam.leadTY||0)-(cam.ly||0))*lk;
+  const tx=st.x-VW/2+cam.lx, ty=st.y-60-VH/2+VH*0.06+cam.ly;
   renderExitCue();
-  if(camInit){ cam.x=tx; cam.y=ty; camInit=false; } else { const k=Math.min(1,dt*7); cam.x+=(tx-cam.x)*k; cam.y+=(ty-cam.y)*k; }
+  if(camInit){ cam.lx=cam.ly=0; cam.x=tx-0; cam.y=ty; camInit=false; } else { const k=Math.min(1,dt*7); cam.x+=(tx-cam.x)*k; cam.y+=(ty-cam.y)*k; }
   clampCam();
 }
 
