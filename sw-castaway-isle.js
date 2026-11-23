@@ -1,6 +1,6 @@
 // 표류섬 서비스워커 — 이 앱 주소(/castaway-isle/) 것만 다룸
 const APP = 'castaway-isle';
-const VERSION = '54';
+const VERSION = '55';
 const CACHE = APP + '-' + VERSION;
 const FILES = [
   "./manifest.webmanifest", "./icon-192.png", "./icon-192.png?v=5", "./icon-512.png?v=5",
@@ -9,7 +9,7 @@ const FILES = [
   "./felled_tree.webp", "./thin_tree.webp", "./beach_story_items.webp", "./beach_cooking.webp",
   "./beach_soups.webp", "./castaway_carry.webp", "./hut_views.webp", "./paper_beach_map.webp",
   "./floor_beachA.webp", "./title_ship.webp", "./floor_beachB.webp",
-  "./floor_jungleA.webp", "./floor_jungleB.webp", "./jungle_foot.webp", "./tough_vine.webp", "./tough_vine_cut.webp", "./jungle_berry.webp", "./jungle_berry_empty.webp", "./jungle_banana.webp", "./jungle_banana_empty.webp", "./jungle_icon_banana.webp", "./beach-audio.js", "./beacon_lit.webp",
+  "./floor_jungleA.webp", "./floor_jungleB.webp", "./jungle_foot.webp", "./tough_vine.webp", "./tough_vine_cut.webp", "./jungle_berry_red.webp", "./jungle_berry_red_empty.webp", "./jungle_berry_yellow.webp", "./jungle_berry_yellow_empty.webp", "./jungle_berry_purple.webp", "./jungle_berry_purple_empty.webp", "./icon_berry_red.webp", "./icon_berry_yellow.webp", "./icon_berry_purple.webp", "./jungle_chest.webp", "./jungle_chest_open.webp", "./map_piece2.webp", "./jungle_banana.webp", "./jungle_banana_empty.webp", "./jungle_icon_banana.webp", "./beach-audio.js", "./beacon_lit.webp",
   "./catch_icons.webp", "./coconut-chips.webp", "./beacon_ash.webp", "./cliff_mask.png",
   "./shore_items.webp", "./carried_ember.webp"
 ];
