@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="63">
+<meta name="app-version" content="64">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -459,7 +459,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='63', NOTE="닭이 덜 뭉치고 느려졌어요. 창은 언제든 찌를 수 있어요";
+const APP='castaway-isle', APP_V='64', NOTE="빈터에 오두막을 지을 수 있어요";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -562,6 +562,7 @@ IMG.cooking=new Image(); IMG.cooking.src='beach_cooking.webp';
 IMG.foot=new Image(); IMG.foot.src='jungle_foot.webp';
 IMG.vine=new Image(); IMG.vine.src='tough_vine.webp';
 IMG.vineCut=new Image(); IMG.vineCut.src='tough_vine_cut.webp';
+IMG.jhut=new Image(); IMG.jhut.src='jungle_hut.webp';   // v64 오두막 3단계(기둥·반쯤·완성), 칸 230×228
 for(const [k,f] of [['jBerry_red','jungle_berry_red.webp'],['jBerryEmpty_red','jungle_berry_red_empty.webp'],['jBerry_yellow','jungle_berry_yellow.webp'],['jBerryEmpty_yellow','jungle_berry_yellow_empty.webp'],['jBerry_purple','jungle_berry_purple.webp'],['jBerryEmpty_purple','jungle_berry_purple_empty.webp'],['chest','jungle_chest.webp'],['chestOpen','jungle_chest_open.webp'],['mapPiece2','map_piece2.webp'],['jBanana','jungle_banana.webp'],['jBananaEmpty','jungle_banana_empty.webp']]){IMG[k]=new Image();IMG[k].src=f;}
 document.getElementById('verText').textContent=document.getElementById('verText2').textContent='v'+APP_V;
 
@@ -838,7 +839,7 @@ let equipped=null, placement=null;
 const story={};
 const seenHints=new Set();
 function resetStory(){
-  Object.assign(story,{mapPiece2:false,jungleEntered:false,footprintSeen:false,fordCrossed:false,jungleBEntered:false,springFound:false,reunited:false,knifeGot:false,bottleFilled:false,toughVineCut:false,spearMade:false,huntHesitated:false,henCaught:false,spearMissed:false});   // 정글 이야기 (v52~, 사냥 v59)
+  Object.assign(story,{mapPiece2:false,jungleEntered:false,footprintSeen:false,fordCrossed:false,jungleBEntered:false,springFound:false,reunited:false,knifeGot:false,bottleFilled:false,toughVineCut:false,spearMade:false,huntHesitated:false,henCaught:false,spearMissed:false,hutSite:false,hutDone:false,hutEnd:false,hutStock:null,hutDropTold:false,hutByMate:false});   // 정글 이야기 (v52~, 사냥 v59)
   Object.assign(story,{mateJob:null,mateWork:0,mateHeld:{},mateFruitN:0,mateFishDay:0,mateDryDay:0,mateDryTold:false,mateFullTold:false});   // v60 동료 일 맡기기
   Object.assign(story,{stormOver:false,stormNight:false,gateOpen:false,stoneFound:false,gateSeen:false,
     fireIdea:false,fireLit:false,dryIdea:false,axeIdea:false,fruitFishIdea:false,fruitClamIdea:false,
@@ -1184,6 +1185,15 @@ const JUNGLE_DIALOGUE = {
   spearMiss:'놓쳤다. 멈칫하고 서 있을 때 한 걸음 더 붙어서 찔러야겠어.',
   firstHunt:{boy:'…고마워. 하나도 안 남기고 먹을게.',girl:'…고마워. 아껴서 먹을게.'},
   mateHens:'빈터 옆에 닭이 몇 마리 있더라. 놀라면 푸드덕 날아가.',
+  // v64 오두막 (Claude)
+  hutIdea:[['friend','먹을 건 생겼으니까, 이제 비 피할 데가 있으면 좋겠다.'],['me','빈터에 오두막을 짓자. 목재로 기둥을 세우고 질긴 덩굴로 묶으면 버틸 거야.']],
+  hutIdeaSolo:'먹을 건 생겼다. 이제 비 피할 데가 필요해… 샘 옆 빈터에 오두막을 지어 볼까.',
+  hutStep1:'기둥은 섰다. 덩굴로 꽉 묶어 두니까 흔들리지 않아.',
+  hutStep2:'벽이 한쪽 올라갔어. 지붕만 덮으면 돼.',
+  hutDrop:'재료는 여기 모아 두자. 부탁하면 이어서 지어 줄 거야.',
+  hutMateStep:[['friend','놓아둔 재료로 조금 더 지어 놨어.']],
+  hutDone:[['me','다 지었다. 이제 비가 와도 괜찮겠어.'],['friend','오늘은 여기서 좀 쉬자. 다리가 후들거려.'],['me','그래. 내일 일은 내일 생각하자.']],
+  hutDoneMate:[['friend','네가 둔 재료로 지붕까지 덮었어. 와서 봐.'],['me','진짜 다 지었네. 이제 비가 와도 괜찮겠어.'],['friend','오늘은 여기서 좀 쉬자.']],
 };
 
 const JUNGLE_QUESTS = [
@@ -1204,17 +1214,22 @@ const JUNGLE_QUESTS = [
     title:()=>'나무 창 만들기',detail:()=>'나뭇가지·돌·질긴 덩굴로 만들어요.',items:['branch','stone','toughVine']},
   {id:'huntHen',when:()=>story.spearMade&&!story.henCaught,
     title:()=>'닭 잡기',detail:()=>chosen==='girl'?'천천히 걸어가면 덜 놀라요. 가까이 붙어서 창으로 찔러요.':'멈칫할 때 다가가 창으로 찔러요. 뛰어가면 멀리서 놀라요.',items:['spear']},
+  {id:'buildJHut',when:()=>story.henCaught&&!story.hutDone,   // v64
+    title:()=>`빈터에 오두막 짓기 ${(jhutObj()?.stage||0)+1}/3`,detail:()=>jhutNeedText(),items:['wood','branch','toughVine']},
 ];
 // ===== 정글 표 끝 =====
 
 // ===== 정글 이야기 연결 (Claude, v53) =====
 // 자리(바닥 그림 기준 px): 발자국 = 정글 A 아래 길→여울, 샘 = 정글 B 왼쪽 아래 웅덩이, 동료 자리 = 샘 왼쪽 위
-const JSPOT={foot:[[874,940],[900,884],[880,828],[818,772],[730,716],[704,660]],pond:[285,748],mateHome:[226,640],vine:[770,420],
+const JSPOT={foot:[[874,940],[900,884],[880,828],[818,772],[730,716],[704,660]],pond:[285,748],mateHome:[226,640],vine:[770,420],hut:[600,520],hutWork:[[520,590],[690,585],[470,520],[600,610]],
   wander:[[406,697],[213,528],[366,510],[160,671],[368,847],[105,590],[453,505],[435,622],[263,624],[293,543],[504,714],[290,853],[494,801],[525,522]]};
-const JSTORY_TYPES=new Set(['footprint','spring','toughVine','mate','banana','chest','henDown']);
+const JSTORY_TYPES=new Set(['footprint','spring','toughVine','mate','banana','chest','henDown','jhut']);
+// v64 오두막 (정글 B 빈터 흙바닥 가운데, 닭 무리 930,660과 약 380px 떨어짐). 숫자는 여기 한곳
+const JHUT={steps:[{name:'기둥 세우기',need:{wood:6,toughVine:3}},{name:'벽 엮기',need:{wood:6,branch:6,toughVine:2}},{name:'지붕 덮기',need:{branch:6,toughVine:3}}],
+  regrow:150,chopHits:3,mateEvery:150,w:230,h:228};
 // 채집거리 (v54): 열매 덤불·바나나·나뭇가지·돌·덩굴 바위. 자리는 걷는 곳·길 밖·나무와 떨어진 곳으로 골라 둠
 const JRES={"jungleA":[["bush",1315,838],["bush",1014,858],["bush",1189,426],["bush",697,803],["bush",404,429],["banana",133,296],["banana",760,219],["banana",439,216],["branch",1349,337],["branch",1088,375],["branch",207,909],["branch",740,374],["branch",1099,736],["branch",593,207],["stone",1191,700],["stone",889,322],["stone",662,609],["stone",974,634],["vineRock",466,755],["vineRock",1200,187]],"jungleB":[["bush",1015,275],["bush",272,522],["bush",655,871],["bush",509,867],["bush",1219,877],["banana",162,366],["banana",1146,520],["banana",1275,672],["branch",370,530],["branch",293,926],["branch",472,720],["branch",1053,529],["branch",559,245],["branch",407,211],["stone",1313,811],["stone",911,376],["stone",1314,912],["stone",164,590],["vineRock",964,862],["vineRock",792,693]]};
-Object.assign(SOLID,{spring:[150,90],mate:[13,6],toughVine:[44,14]});
+Object.assign(SOLID,{spring:[150,90],mate:[13,6],toughVine:[44,14],jhut:[78,24]});
 // v55 열매 덤불: 정글 = 빨강·노랑, 초원 = 노랑·보라 (w = 게임에서 그리는 폭)
 const BERRY_KIND={red:{item:'redBerry',w:84},yellow:{item:'yellowBerry',w:70},purple:{item:'purpleBerry',w:84}};
 // v55 정글 A 빈터: 오른쪽 위 = 옛 상자(지도 조각 2), 왼쪽 아래 = 열매 빈터
@@ -1284,6 +1299,7 @@ function jungleStory(){
   }else if(cur==='jungleB'){
     if(!story.springFound&&Math.hypot(st.x-JSPOT.pond[0],st.y-JSPOT.pond[1])<260){story.springFound=true;sayJ('springFound');return;}
     if(!story.reunited&&Math.hypot(st.x-mate.x,st.y-mate.y)<130)startReunion();
+    if(story.hutDone&&!story.hutEnd)hutEnding();
   }
 }
 function startReunion(){
@@ -1297,7 +1313,98 @@ function startReunion(){
     mate.mode='idle';mate.timer=2;goal();
   });
 }
+// ===== v64 오두막 =====
+const jhutObj=()=>world.jungleB?.objs.find(o=>o.type==='jhut');
+const jhutHave=k=>(story.hutStock?.[k]||0)+(inv[k]||0);
+function jhutNeedText(){
+  const o=jhutObj(),S=JHUT.steps[o?o.stage:0];if(!S)return '';
+  const short={wood:'목재',branch:'가지',toughVine:'덩굴'};   // 퀘스트 설명 34자 안
+  const parts=Object.entries(S.need).map(([k,n])=>`${short[k]} ${Math.min(jhutHave(k),n)}/${n}`);
+  return `${S.name} · ${parts.join(' · ')}`;
+}
+function openHutSite(){
+  if(story.hutSite)return;
+  story.hutSite=true;story.hutStock={};   // 처음엔 null (빈 {}는 시험 기록에서 '참'으로 세어져 진행 기록이 다 달라짐)
+  world.jungleB.objs.push({type:'jhut',x:JSPOT.hut[0],y:JSPOT.hut[1],stage:0,shake:0,fall:0});
+  if(mate)mate.pts=null;
+}
+// 오두막 자리에서 할 일: 다 지음 = 쉬어 가기, 가방에 쓸 재료가 있으면 재료 두기, 놓아둔 재료가 한 단계만큼이면 짓기, 아니면 살펴보기
+OBJECT_ACTIONS.jhut=o=>{
+  if(o.stage>=3)return {label:'쉬어 가기',icon:'dialogueIcon',talk:()=>showRestEnd()};
+  const S=JHUT.steps[o.stage];
+  if(['wood','branch','toughVine'].some(k=>inv[k]>0&&jhutLeft(k)>0))return {label:'재료 두기',icon:'branch',talk:()=>jhutDrop(o)};   // 먼저 놓아두고
+  if(Object.entries(S.need).every(([k,n])=>(story.hutStock?.[k]||0)>=n))return {label:S.name,icon:'wood',camp:true};   // 놓아둔 재료로 짓기 (동료도 이것으로 이어 지음)
+  return {label:'살펴보기',icon:'wood',talk:()=>hint(jhutNeedText()+(S.need.wood&&jhutHave('wood')<S.need.wood?' · 목재는 돌도끼로 나무를 베어요':''),3.2)};
+};
+// 남은 단계 전부에 아직 필요한 수 (넣어 둔 것 빼고)
+function jhutLeft(k){const o=jhutObj();let n=0;for(let i=o?o.stage:0;i<3;i++)n+=JHUT.steps[i].need[k]||0;return n-(story.hutStock?.[k]||0);}
+function jhutDrop(o){
+  let row=0;
+  for(const k of ['wood','branch','toughVine']){
+    const m=Math.min(inv[k]||0,Math.max(0,jhutLeft(k)));if(!m)continue;
+    inv[k]-=m;story.hutStock[k]=(story.hutStock?.[k]||0)+m;renderInv(k);
+    pops.push({text:`${ITEMS[k][1]} ${m} 놓아둠`,x:o.x,y:o.y-150-row*22,t:0});row++;
+  }
+  st.wood=inv.wood;beachAudio.effect('pickup');goal();
+  if(story.mateJob!=='hut'&&!story.hutDropTold){story.hutDropTold=true;say(JUNGLE_DIALOGUE.hutDrop,true);}
+  else hint(story.mateJob==='hut'?'놓아둔 재료로 동료가 이어 지어요':Object.entries(JHUT.steps[o.stage].need).every(([k,n])=>(story.hutStock?.[k]||0)>=n)?'재료가 다 모였어요 · 한 번 더 눌러 '+JHUT.steps[o.stage].name:'놓아둔 재료 · '+jhutNeedText(),2.4);
+}
+// 한 단계 재료 쓰기: 놓아둔 것부터, 모자라면 가방에서 (동료는 놓아둔 것만)
+function jhutUse(o,fromBag){
+  const S=JHUT.steps[o.stage];
+  if(!Object.entries(S.need).every(([k,n])=>(story.hutStock?.[k]||0)+(fromBag?inv[k]||0:0)>=n))return false;
+  for(const [k,n] of Object.entries(S.need)){
+    const a=Math.min(story.hutStock[k]||0,n);story.hutStock[k]=(story.hutStock?.[k]||0)-a;
+    if(n>a){inv[k]-=n-a;renderInv(k);}
+  }
+  st.wood=inv.wood;return true;
+}
+function jhutBuild(o){
+  if(o.stage>=3||buildMotion||!jhutUse(o,true))return;
+  buildMotion={object:o,stage:o.stage,anim:Math.min(1,o.stage),t:0,flip:st.x>o.x};
+  actHeld=false;st.moving=false;lastAct=null;
+}
+function jhutStepDone(o,byMate){
+  o.stage++;o.shake=.3;goal();
+  if(o.stage>=3){
+    story.hutDone=true;story.hutByMate=!!byMate;if(story.mateJob==='hut')story.mateJob=null;
+    renderMateJob();goal();
+    if(!byMate||cur==='jungleB')hutEnding();
+    return;
+  }
+  if(!byMate)say(JUNGLE_DIALOGUE[o.stage===1?'hutStep1':'hutStep2'],true);
+}
+// 다 지으면: 둘이 오두막 앞에 서서 몇 마디 → '쉬어 가는 끝' 화면
+function hutEnding(){
+  if(story.hutEnd||dialoguePinned||cur!=='jungleB')return;
+  story.hutEnd=true;
+  const o=jhutObj();
+  if(mate){mate.x=o.x+70;mate.y=o.y+62;mate.mode='talk';mate.timer=99;mate.dir='left';}
+  st.moving=false;jv=[0,0];
+  if(Math.hypot(st.x-o.x,st.y-o.y)<260){st.x=o.x-62;st.y=o.y+64;st.dir='right';}
+  playLines(jLines(story.hutByMate?'hutDoneMate':'hutDone'),()=>{showRestEnd();if(mate){mate.mode='idle';mate.timer=4;}});
+}
+// 쉬어 가는 끝: 지금 화면에서 오두막 둘레를 잘라 보여 줌
+function showRestEnd(){
+  const o=jhutObj();let img=null;
+  try{
+    const sx=(o.x-cam.x-170)*dpr,sy=(o.y-cam.y-250)*dpr,sw=340*dpr,sh=330*dpr,c=document.createElement('canvas');
+    c.width=Math.round(sw);c.height=Math.round(sh);c.getContext('2d').drawImage(cv,sx,sy,sw,sh,0,0,sw,sh);
+    img=document.createElement('img');img.className='findArt';img.src=c.toDataURL();img.alt='빈터에 다 지은 오두막과 두 아이';
+  }catch(e){img=null;}
+  reveal('정글 이야기는 여기까지','둘이 함께 지은 오두막에서 한숨 돌려요. 다음 이야기는 준비하고 있어요. 그동안 섬을 마음껏 둘러봐도 돼요.');
+  discovery='rest';findArt.className='';
+  if(img)findArt.appendChild(img);
+  findButton('계속 둘러보기',closeDiscovery);
+}
+const vineBack=o=>{if(o.cut&&story.hutSite&&camp.elapsed-(o.cutAt||0)>=JHUT.regrow){o.cut=false;o.solid=[44,14];}};   // v64 질긴 덩굴이 다시 자람
+// ===== v64 오두막 끝 =====
 function jungleHit(t){
+  if(t.type==='jd'&&st.act==='chop'){   // v64 돌도끼로 정글 나무 베기: 세 번 치면 목재 1, 한 나무 하루 한 번
+    t.shake=.3;t.chopHit=(t.chopDay===camp.day?t.chopHit||0:0)+1;t.chopDay=camp.day;
+    if(t.chopHit>=JHUT.chopHits){t.chopDone=camp.day;give('wood',1,t.x+(t.ox||0),t.y-60);hint('이 나무는 내일 또 벨 수 있어요',1.8);}
+    return;
+  }
   if(t.type==='jd'){   // 흔들면 나뭇가지가 위에서 떨어짐 (해변 나무와 같은 방식, 하루 한 번)
     if(t.shookDay===camp.day)return;
     t.shookDay=camp.day;t.shake=.45;
@@ -1328,17 +1435,19 @@ function jungleHit(t){
   }
   if(t.type==='henDown'){huntPick(t);return;}
   if(t.type==='toughVine'&&!t.cut&&inv.smallKnife){
-    t.cut=true;t.solid=[40,12];beachAudio.effect('vine');give('toughVine',2,t.x,t.y-60);
-    story.toughVineCut=true;goal();sayJ('toughVineCut');
+    t.cut=true;t.cutAt=camp.elapsed;t.solid=[40,12];beachAudio.effect('vine');give('toughVine',2,t.x,t.y-60);
+    if(!story.toughVineCut){story.toughVineCut=true;goal();sayJ('toughVineCut');}
+    else hint('덩굴은 조금 지나면 다시 자라요',1.8);
   }
 }
 OBJECT_ACTIONS.chest=o=>o.open?null:{label:'상자 열기',icon:'chestIcon',anim:'pick'};
 OBJECT_ACTIONS.bush_berry=o=>o.berry?{label:'따기',icon:BERRY_KIND[o.berry].item,anim:'pick'}:undefined;
-OBJECT_ACTIONS.jd=o=>o.reach&&o.shookDay!==camp.day?{label:'흔들기',icon:'branch',anim:'shake'}:null;
+OBJECT_ACTIONS.jd=o=>o.reach&&story.hutSite&&equipped==='axe'&&inv.axe&&o.chopDone!==camp.day?{label:'베기',icon:'axe',anim:'chop'}:   // v64 목재
+  o.reach&&o.shookDay!==camp.day?{label:'흔들기',icon:'branch',anim:'shake'}:null;
 ACTIONS.banana={label:'따기',icon:'banana',anim:'pick',when:o=>o.ripe};
-Object.assign(SOLID,{banana:[10,5]});Object.assign(NAME,{banana:'바나나 나무',jd:'나무',chest:'낡은 나무 상자'});
+Object.assign(SOLID,{banana:[10,5]});Object.assign(NAME,{banana:'바나나 나무',jd:'나무',chest:'낡은 나무 상자',jhut:'오두막'});
 OBJECT_ACTIONS.spring=()=>({label:inv.emptyBottle?'샘물 담기':'샘물 마시기',icon:inv.emptyBottle?'emptyBottle':'waterBottle',anim:'pick'});
-OBJECT_ACTIONS.toughVine=o=>o.cut?null:inv.smallKnife?{label:'덩굴 자르기',icon:'sharp',anim:'pick'}:
+OBJECT_ACTIONS.toughVine=o=>(vineBack(o),o.cut)?null:inv.smallKnife?{label:'덩굴 자르기',icon:'sharp',anim:'pick'}:
   {label:'덩굴 자르기',icon:'sharp',talk:()=>{
     if(!story.reunited||mate.mode==='come'){sayJ('toughVineTry');return;}
     playLines(jLines('toughVineTry'),()=>{mate.mode='come';mate.stuck=0;mate.comeT=0;});
@@ -1367,12 +1476,14 @@ const MATE_JOB={
   fruit:{ask:'열매 따 와 줘',icon:'redBerry',every:240,n:3,cap:6,items:['redBerry','yellowBerry']},
   branch:{ask:'나뭇가지 모아 줘',icon:'branch',every:180,n:2,cap:4,items:['branch']},
   fish:{ask:'물고기 잡아 와 줘',icon:'rawFish',every:240,n:1,cap:1,items:['rawFish'],girlOnly:true},   // 하루 1마리
+  hut:{ask:'오두막 이어 지어 줘',icon:'wood',every:150,n:0,cap:0,items:[],hutOnly:true},   // v64 놓아둔 재료만큼 한 단계씩
 };
 const MATE_DRY={days:2,n:2,cap:4};   // 소년 동료: 이틀마다 말린 열매 2개
 const MATE_SAY={
   fruit:'좋아. 덤불 돌면서 따 놓을게.',
   branch:'알았어. 마른 걸로 골라 둘게.',
   fish:'여울에서 해 볼게. 하루 한 마리는 잡을 수 있을 거야.',
+  hut:'좋아. 놓아둔 재료만큼 이어서 지어 둘게.',
   stop:'그래, 잠깐 쉴게.',
   same:'지금 하고 있어. 모이면 줄게.',
   fishDone:'오늘 건 벌써 잡았어. 내일 또 해 볼게.',
@@ -1386,7 +1497,7 @@ function mateMenu(){
   const add=(text,run)=>{const b=document.createElement('button');b.type='button';b.textContent=text;
     b.addEventListener('click',()=>{closeCampOptions();run();});campChoices.appendChild(b);};
   add('이야기하기',talkMate);
-  for(const [k,J] of Object.entries(MATE_JOB))if(!J.girlOnly||mateCh()==='girl')add((story.mateJob===k?'✓ ':'')+J.ask,()=>setMateJob(k));
+  for(const [k,J] of Object.entries(MATE_JOB))if((!J.girlOnly||mateCh()==='girl')&&(!J.hutOnly||story.hutSite&&!story.hutDone))add((story.mateJob===k?'✓ ':'')+J.ask,()=>setMateJob(k));
   if(story.mateJob)add('그만 쉬어',()=>setMateJob(null));
   add('닫기',()=>{});
   campChoices.hidden=false;
@@ -1415,6 +1526,15 @@ function mateWork(dt,t0,day0){
   if(!work)return;
   const J=MATE_JOB[story.mateJob];
   story.mateWork+=work;
+  if(story.mateJob==='hut'){   // v64: 놓아둔 재료로 한 단계씩 (모자라면 기다림)
+    const o=jhutObj();
+    while(o&&o.stage<3&&story.mateWork>=J.every){
+      if(!jhutUse(o,false)){story.mateWork=J.every;break;}
+      story.mateWork-=J.every;jhutStepDone(o,true);
+      if(o.stage<3&&cur==='jungleB'&&!dialoguePinned)playLines(jLines('hutMateStep'),()=>{});
+    }
+    return;
+  }
   while(story.mateWork>=J.every){
     if(mateHeldN(J.items)+J.n>J.cap){story.mateWork=J.every;break;}   // 손이 꽉 차면 기다림
     if(story.mateJob==='fish'){
@@ -1496,7 +1616,7 @@ function updateMate(dt){
     if(mate.timer<=0){
       if(mate.mode==='idle'&&Math.random()<(story.mateJob?.6:.35)){mate.mode='look';mate.timer=1.6;return;}
       mate.pts??=JSPOT.wander.filter(([x,y])=>mateCanStand(x,y));   // 정글 B에서 처음 한 번 걸러 둠
-      const far=Math.random()<.25,pool=mate.pts.filter(([x,y])=>{const d=Math.hypot(x-mate.x,y-mate.y);return d>60&&(far||d<240);});
+      const far=Math.random()<.25,pts=story.mateJob==='hut'?JSPOT.hutWork.filter(([x,y])=>mateCanStand(x,y)):mate.pts,pool=pts.filter(([x,y])=>{const d=Math.hypot(x-mate.x,y-mate.y);return d>60&&(far||d<240);});
       if(!pool.length){mate.timer=1;return;}
       mate.target=pool[Math.floor(Math.random()*pool.length)];mate.mode='walk';mate.stuck=0;
     }
@@ -1650,7 +1770,7 @@ function henDown(h){
 function huntPick(t){   // jungleHit 에서 부름
   objs.splice(objs.indexOf(t),1);
   give('hen',1,t.x,t.y-40);
-  if(!story.henCaught){story.henCaught=true;goal();sayJ('firstHunt');}
+  if(!story.henCaught){story.henCaught=true;openHutSite();goal();playLines(jLines('firstHunt').concat(jLines(cur==='jungleB'?'hutIdea':'hutIdeaSolo')));}
 }
 function drawHen(h){
   if(!IMG.hens.complete||!IMG.hens.naturalWidth)return;
@@ -1689,8 +1809,16 @@ function drawJungleStoryObj(o){
     ctx.fillStyle='rgba(20,30,10,.28)';ctx.beginPath();ctx.ellipse(o.x,o.y+1,w*.5,6,0,0,Math.PI*2);ctx.fill();
     ctx.drawImage(im,o.x-w/2+sx,o.y-h+5,w,h);return;
   }
+  if(o.type==='jhut'){   // v64: 0 = 자리(통나무 하나), 1 = 기둥, 2 = 벽 반쯤, 3 = 완성
+    const n=buildMotion?.object===o?Math.max(o.stage,1):o.stage;
+    if(n===0){const [sx,sy,sw,sh,fx,fy]=OB.log;ctx.drawImage(IMG.objs,sx,sy,sw,sh,o.x-fx/K,o.y-fy/K,sw/K,sh/K);return;}
+    if(!IMG.jhut.complete||!IMG.jhut.naturalWidth)return;
+    const shx=o.shake>0?Math.round(Math.sin(o.shake*60)*2):0;
+    ctx.fillStyle='rgba(20,30,10,.25)';ctx.beginPath();ctx.ellipse(o.x,o.y+2,92,18,0,0,Math.PI*2);ctx.fill();
+    ctx.drawImage(IMG.jhut,(n-1)*JHUT.w,0,JHUT.w,JHUT.h,o.x-JHUT.w/2+shx,o.y-JHUT.h+14,JHUT.w,JHUT.h);return;
+  }
   if(o.type==='toughVine'){
-    const im=o.cut?IMG.vineCut:IMG.vine;if(!im.complete||!im.naturalWidth)return;
+    vineBack(o);const im=o.cut?IMG.vineCut:IMG.vine;if(!im.complete||!im.naturalWidth)return;
     const w=o.cut?112:130,h=w*im.naturalHeight/im.naturalWidth;   // 덩굴을 걷어내도 바위 크기는 그대로
     ctx.drawImage(im,o.x-w/2,o.y-h+6,w,h);return;
   }
@@ -1714,7 +1842,7 @@ function goal(){
   if(story.jungleEntered&&typeof JUNGLE_QUESTS!=='undefined'){
     const q=JUNGLE_QUESTS.find(q=>q.when());
     if(q)renderQuests(q.title(),q.detail());
-    else renderQuests('정글 이야기는 여기까지','다음 이야기를 준비하고 있어요');
+    else renderQuests('정글 이야기는 여기까지',story.hutDone?'오두막에서 쉬어 가요 · 다음 이야기는 준비 중':'다음 이야기를 준비하고 있어요');
     return;
   }
   const quest=BEACH_QUESTS.find(q=>q.when());
@@ -2381,6 +2509,7 @@ function tickBuild(dt){
   buildMotion.t+=dt;
   if(buildMotion.t<.54)return;
   const {object,stage}=buildMotion;buildMotion=null;
+  if(object.type==='jhut'){lastAct=null;jhutStepDone(object,false);return;}
   object.stage=stage+1;lastAct=null;
   if(object.stage===2){story.hutReady=true;hint('움막이 완성됐어요',2.8);}
   goal();
@@ -2486,6 +2615,7 @@ let ignition=null;
 function useCamp(o){
   actHeld=false;
   if(o.type==='hut'){if((o.stage||0)<2)buildStep(o);else moveThroughHut(o);return;}
+  if(o.type==='jhut'){jhutBuild(o);return;}
   if(o.fuel>0){
     if(story.signalPrepared&&!story.beaconLit&&!story.ember){story.ember=true;goal();hint('불붙인 가지를 들었어요',2);}
     else campOptions(o);
@@ -2545,7 +2675,8 @@ function survive(dt){
   const starving=hunger*(st.running?1.18:1)+Number(st.water<=LOW_WATER)+Number(st.water<=0);
   const cold=isNight()&&!insideHut&&!objs.some(o=>
     (o.type==='fire'&&o.fuel>0&&Math.hypot(o.x-st.x,o.y-st.y)<WARM_RADIUS)||
-    (o.type==='hut'&&o.stage===2&&Math.abs(o.x-st.x)<58&&Math.abs(o.y-st.y)<44));
+    (o.type==='hut'&&o.stage===2&&Math.abs(o.x-st.x)<58&&Math.abs(o.y-st.y)<44)||
+    (o.type==='jhut'&&o.stage===3&&Math.abs(o.x-st.x)<120&&Math.abs(o.y-st.y)<90));
   const chilled=cold && !camp.cold;
   camp.cold=cold;
   if(starving||cold) st.hp=Math.max(0,st.hp-HP_LOSS*(starving+Number(cold))*dt);
@@ -3428,7 +3559,7 @@ function drawPlayer(){
     return;
   }
   if(buildMotion){
-    const b=buildMotion,i=b.stage*2+Number(b.t>=.22);
+    const b=buildMotion,i=(b.anim??b.stage)*2+Number(b.t>=.22);
     ctx.save();ctx.translate(st.x,st.y);if(b.flip)ctx.scale(-1,1);
     drawDense(ctx,'build',i*192,chosen==='boy'?0:150,192,150,-67,-130,192,150);ctx.restore();
     return;
