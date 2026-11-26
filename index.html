@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="64">
+<meta name="app-version" content="65">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -459,7 +459,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='64', NOTE="빈터에 오두막을 지을 수 있어요";
+const APP='castaway-isle', APP_V='65', NOTE="오두막 안에 들어가 쉴 수 있어요";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -558,6 +558,7 @@ IMG.beachMap=new Image(); IMG.beachMap.src='paper_beach_map.webp';
 IMG.story=new Image(); IMG.story.src='beach_story_items.webp';
 IMG.thin=new Image(); IMG.thin.src='thin_tree.webp';
 IMG.hutView=new Image();IMG.hutView.src='hut_views.webp';
+IMG.jhutView=new Image();IMG.jhutView.src='jungle_hut_views.webp';   // v65 오두막 안에서 본 빈터 (위 낮·아래 밤, 512×768씩)
 IMG.cooking=new Image(); IMG.cooking.src='beach_cooking.webp';
 IMG.foot=new Image(); IMG.foot.src='jungle_foot.webp';
 IMG.vine=new Image(); IMG.vine.src='tough_vine.webp';
@@ -844,6 +845,7 @@ function resetStory(){
   Object.assign(story,{stormOver:false,stormNight:false,gateOpen:false,stoneFound:false,gateSeen:false,
     fireIdea:false,fireLit:false,dryIdea:false,axeIdea:false,fruitFishIdea:false,fruitClamIdea:false,
     signalPrepared:false,ember:false,beaconLit:false,beaconLitDay:0,sosDrawn:false,hutReady:false,crateOpened:false,bottleFound:false});
+  delete story.jhutTalk;   // v65 오두막 첫 밤 혼잣말 (기본값 없이 지움: 시험 기록이 그대로 남게)
   closeDiscovery();paperMapBtn.hidden=true;sleepScene=null;
   Object.assign(story,{wreckSeen:false,visitedB:false,duskLine:false,sleptWithLeaves:false});
   seenHints.clear();questsExpanded=false;setQuestFold(false);lastQuestDisplay='';selectedQuest=null;cancelHutTransition();clockTime.hidden=true;clock.setAttribute('aria-expanded','false');introPose=-1;dialogueNext=null;story.hutTalk=false;buildMotion=null;leaveHut();
@@ -1078,6 +1080,9 @@ const BEACH_DIALOGUE={
   hutHope:'누가 꼭 찾으러 올 거야. 오늘은 좀 쉬자.',
   hutStorm:'바람 소리가 무서워… 오늘은 밖에 나가지 말자.',
   hutSleep:'눈 좀 붙여야겠다.',
+  jhutComfort:'가지로 엮은 벽이라 바람이 거의 안 들어온다.',
+  jhutTogether:'둘이 같이 지은 집이라 그런지, 혼자일 때보다 밤이 덜 무섭네.',
+  jhutHope:'내일도 할 일이 많아. 오늘은 푹 자자.',
   fiberIdea:'코코넛 껍질의 마른 털… 불쏘시개로 쓸 수 있겠다.',
   fireLit:'불 붙었다… 손이 좀 녹네.',
   afterSunset:'해가 졌어.',
@@ -1330,7 +1335,7 @@ function openHutSite(){
 }
 // 오두막 자리에서 할 일: 다 지음 = 쉬어 가기, 가방에 쓸 재료가 있으면 재료 두기, 놓아둔 재료가 한 단계만큼이면 짓기, 아니면 살펴보기
 OBJECT_ACTIONS.jhut=o=>{
-  if(o.stage>=3)return {label:'쉬어 가기',icon:'dialogueIcon',talk:()=>showRestEnd()};
+  if(o.stage>=3)return {label:'오두막 들어가기',icon:'wood',camp:true};   // v65 움막처럼 안으로 (끝 화면은 다 지을 때 한 번)
   const S=JHUT.steps[o.stage];
   if(['wood','branch','toughVine'].some(k=>inv[k]>0&&jhutLeft(k)>0))return {label:'재료 두기',icon:'branch',talk:()=>jhutDrop(o)};   // 먼저 놓아두고
   if(Object.entries(S.need).every(([k,n])=>(story.hutStock?.[k]||0)>=n))return {label:S.name,icon:'wood',camp:true};   // 놓아둔 재료로 짓기 (동료도 이것으로 이어 지음)
@@ -2414,15 +2419,20 @@ function renderHutChoices(){
   hutRest.hidden=isNight();
 }
 function hutMonologue(){
-  if(!insideHut||!isNight()||story.hutTalk||dialoguePinned)return;
+  if(!insideHut||!isNight()||dialoguePinned)return;
+  if(insideHut.type==='jhut'){   // v65 정글 오두막: 처음 맞는 밤에 한 번
+    if(story.jhutTalk)return;story.jhutTalk=true;const D=BEACH_DIALOGUE;
+    say(D.jhutComfort,true,true,()=>say(D.jhutTogether,true,true,()=>say(D.jhutHope,true,true)));return;
+  }
+  if(story.hutTalk)return;
   story.hutTalk=true;
   say(BEACH_DIALOGUE.hutComfort,true,true,
     ()=>say(BEACH_DIALOGUE.hutFamily(partner()),true,true,
       ()=>say(BEACH_DIALOGUE.hutHope,true,true)));
 }
 function enterHut(o){
-  if((o.stage||0)!==2)return;
-  insideHut=o;actHeld=false;jv=[0,0];st.moving=false;
+  if(o.type==='jhut'?o.stage!==3:(o.stage||0)!==2)return;
+  insideHut=o;hutCanvas.setAttribute('aria-label',o.type==='jhut'?'오두막 안에서 바라본 빈터':'움막 안에서 바라본 해변');actHeld=false;jv=[0,0];st.moving=false;
   gameScreen.classList.add('indoors');hutView.hidden=false;renderExitCue();
   renderHutChoices();hutMonologue();
 }
@@ -2476,8 +2486,9 @@ function drawHutView(){
   }
   hutCtx.setTransform(dpr,0,0,dpr,0,0);hutCtx.imageSmoothingEnabled=false;
   hutCtx.fillStyle='#172737';hutCtx.fillRect(0,0,VW,VH);
-  const night=isNight(),s=Math.max(VW/518,VH/650),w=518*s,h=650*s;
-  if(IMG.hutView.naturalWidth)hutCtx.drawImage(IMG.hutView,0,night?650:0,518,650,(VW-w)/2,(VH-h)/2,w,h);
+  const J=insideHut?.type==='jhut',V=J?IMG.jhutView:IMG.hutView,cw=J?512:518,ch=J?768:650;   // 정글 오두막은 세로 2:3 (폰에서 양쪽 기둥이 보이게)
+  const night=isNight(),s=Math.max(VW/cw,VH/ch),w=cw*s,h=ch*s;
+  if(V.naturalWidth)hutCtx.drawImage(V,0,night?ch:0,cw,ch,(VW-w)/2,(VH-h)/2,w,h);
   const f=hutFire(insideHut);
   if(f&&IMG.camp.naturalWidth){
     const x=VW/2+Math.max(-VW*.23,Math.min(VW*.23,f.side/135*VW*.23));
@@ -2491,7 +2502,7 @@ function drawHutView(){
     }
     hutCtx.drawImage(IMG.camp,frame*96,0,96,76,x-48*s,y-66*s,96*s,76*s);
   }
-  if(story.stormNight&&night){
+  if(story.stormNight&&night&&insideHut?.type==='hut'){
     hutCtx.save();hutCtx.beginPath();hutCtx.moveTo(VW*.49,VH*.21);
     hutCtx.lineTo(VW*.96,VH*.81);hutCtx.lineTo(VW*.07,VH*.81);hutCtx.closePath();hutCtx.clip();
     drawStormRain(hutCtx,0,0);
@@ -2615,7 +2626,7 @@ let ignition=null;
 function useCamp(o){
   actHeld=false;
   if(o.type==='hut'){if((o.stage||0)<2)buildStep(o);else moveThroughHut(o);return;}
-  if(o.type==='jhut'){jhutBuild(o);return;}
+  if(o.type==='jhut'){if(o.stage>=3)moveThroughHut(o);else jhutBuild(o);return;}
   if(o.fuel>0){
     if(story.signalPrepared&&!story.beaconLit&&!story.ember){story.ember=true;goal();hint('불붙인 가지를 들었어요',2);}
     else campOptions(o);
