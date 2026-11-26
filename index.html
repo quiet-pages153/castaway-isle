@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="62">
+<meta name="app-version" content="63">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -459,7 +459,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='62', NOTE="아이콘 3개(창·잡은 닭·닭고기 구이) 새 그림으로";
+const APP='castaway-isle', APP_V='63', NOTE="닭이 덜 뭉치고 느려졌어요. 창은 언제든 찌를 수 있어요";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
@@ -1526,11 +1526,12 @@ function updateMate(dt){
 // 닭: 쪼기(가만히) ↔ 걷기. 사람이 다가오면 멈칫(alert) → 더 다가오면 도망(flee). 뛰면 멀리서, 걸으면 가까이서 놀람. 소녀는 더 가까이 갈 수 있음.
 // 창(v61): 닭이 찌를 거리(reach) 안에 있으면 '찌르기'. 창 들기 → 닭 쪽으로 한 걸음(lunge) 내디디며 찌름 → 그때 닭이 hit 거리 안이면 잡힘, 아니면 놓치고 무리가 놀라 도망.
 // 찌르는 동안(들기~찌름) 멈칫한 닭은 그대로 서 있음(이미 도망 중인 닭은 계속 도망). 거리는 도망 거리와 같은 잣대(세로 ×1.3).
-const HEN_HOME={jungleA:{home:[330,770],n:4,r:150},jungleB:{home:[930,660],n:4,r:150}};   // 정글 A 왼쪽 아래 열매 빈터 아래 풀밭, 정글 B 빈터 오른쪽 아래
+const HEN_HOME={jungleA:{home:[330,770],n:4,r:230},jungleB:{home:[930,660],n:4,r:230}};   // v63: 150 → 230 (덜 뭉치게)
+const HEN_FLEE_SP=115, HEN_SPACE=70;   // v63: 도망 속도 175 → 115, 닭끼리 떨어지려는 거리   // 정글 A 왼쪽 아래 열매 빈터 아래 풀밭, 정글 B 빈터 오른쪽 아래
 const HEN_CELL=[116,104], HEN_DRAW=.42;            // jungle_hens.webp 칸 크기, 그릴 배율 (닭 키 ≈ 40px, 사람 112px)
 const HEN_FRAME={down:0,side:4,up:8,flap:12,fall:13,dead:14};
 // 소년(사냥 강점): 더 멀리서 찌르고 맞는 범위도 넓음. 소녀: 닭이 덜 놀라 더 가까이 갈 수 있음(alert·flee 배율)
-const HUNT={boy:{reach:105,hit:72,lunge:32,alert:1,flee:1},girl:{reach:85,hit:58,lunge:26,alert:.7,flee:.65}};
+const HUNT={boy:{reach:120,hit:88,lunge:32,alert:1,flee:1},girl:{reach:100,hit:72,lunge:26,alert:.7,flee:.65}};   // v63: reach 105/85 → 120/100, hit 72/58 → 88/72
 let hens=[], henSeed=20261123;
 const henGap=h=>Math.hypot(st.x-h.x,(st.y-h.y)*1.3);
 const henRand=()=>{henSeed^=henSeed<<13;henSeed^=henSeed>>>17;henSeed^=henSeed<<5;return (henSeed>>>0)/4294967296;};   // 닭 전용 난수 (다른 물체의 난수 순서를 흔들지 않게)
@@ -1543,7 +1544,7 @@ function henCanStand(x,y,home){
   return true;
 }
 function newHen(k,i){
-  const H=HEN_HOME[k],a=i*2.4+henRand(),r=30+henRand()*70;
+  const H=HEN_HOME[k],a=i*Math.PI*2/H.n+henRand()*.6,r=80+henRand()*80;   // v63: 고르게 둘러 퍼져 태어남
   return {x:H.home[0]+Math.cos(a)*r,y:H.home[1]+Math.sin(a)*r*.6,kind:i%2,dir:henRand()<.5?'left':'right',mode:'peck',timer:henRand()*2,dist:0,t:henRand()*5};
 }
 function enterHens(k){
@@ -1572,12 +1573,12 @@ function updateHens(dt){
     h.t+=dt;h.flap=Math.max(0,(h.flap||0)-dt);
     if(h.mode==='fall'){h.timer-=dt;if(h.timer<=0)henDown(h);continue;}
     const d=henGap(h),aiming=st.act==='stab'&&!st.hit;   // 찌르는 중에는 멈칫한 채로 (도망 중인 닭은 계속 도망)
-    if(h.mode!=='flee'&&d<fleeR&&!reunionOn&&!aiming){h.mode='flee';h.timer=1.2+henRand()*.4;h.flap=.35;startle(h.x,h.y,110);}
+    if(h.mode!=='flee'&&d<fleeR&&!reunionOn&&!aiming){h.mode='flee';h.timer=.9+henRand()*.3;h.flap=.35;startle(h.x,h.y,60);}   // v63: 도망 1.2~1.6초 → 0.9~1.2초, 옆 닭 놀람 110 → 60
     else if((h.mode==='peck'||h.mode==='walk')&&d<alertR){h.mode='alert';h.timer=.7+henRand()*.5;henDir(h,st.x-h.x,st.y-h.y);}
     h.timer-=dt;
     let vx=0,vy=0,sp=0;
     if(h.mode==='flee'){
-      sp=175;const ax=h.x-st.x,ay=h.y-st.y,l=Math.hypot(ax,ay)||1;vx=ax/l;vy=ay/l;
+      sp=HEN_FLEE_SP;const ax=h.x-st.x,ay=h.y-st.y,l=Math.hypot(ax,ay)||1;vx=ax/l;vy=ay/l;
       if(h.timer<=0){h.mode='alert';h.timer=1.2;}
     }else if(h.mode==='alert'){
       if(h.timer<=0){if(d<alertR)h.timer=.6;else{h.mode='peck';h.timer=1+henRand()*2;}}
@@ -1587,7 +1588,8 @@ function updateHens(dt){
     }else{   // peck
       if(h.timer<=0&&!isNight()){
         const back=Math.hypot(h.x-H.home[0],h.y-H.home[1])>H.r*.8;
-        const a=back?Math.atan2(H.home[1]-h.y,H.home[0]-h.x)+(henRand()-.5):henRand()*Math.PI*2,r=30+henRand()*60;
+        let near=null,nd=HEN_SPACE;for(const o of hens){if(o===h||o.mode==='fall')continue;const od=Math.hypot(o.x-h.x,o.y-h.y);if(od<nd){nd=od;near=o;}}   // v63: 가까운 닭이 있으면 그 반대쪽으로
+        const a=near?Math.atan2(h.y-near.y,h.x-near.x)+(henRand()-.5)*.8:back?Math.atan2(H.home[1]-h.y,H.home[0]-h.x)+(henRand()-.5):henRand()*Math.PI*2,r=30+henRand()*60;
         h.to=[h.x+Math.cos(a)*r,h.y+Math.sin(a)*r*.7];h.mode='walk';h.timer=3;
       }
     }
@@ -1611,13 +1613,18 @@ function findHenTarget(){
   }
   return best?{type:'henTarget',hen:best,x:best.x,y:best.y}:null;
 }
+function airStab(){   // v63: 닭이 멀어도 창을 들었으면 바라보는 쪽으로 찌를 수 있음
+  if(equipped!=='spear'||!inv.spear||!MAP.jungle||placement)return null;
+  const v={left:[-1,0],right:[1,0],up:[0,-1],down:[0,1]}[st.dir]||[1,0];
+  return {type:'henTarget',hen:null,x:st.x+v[0]*60,y:st.y+v[1]*45};
+}
 OBJECT_ACTIONS.henTarget=()=>({label:'찌르기',icon:'spear'});
 OBJECT_ACTIONS.henDown=()=>({label:'줍기',icon:'hen',anim:'pick'});
 function stabSpear(t){
-  if(!story.huntHesitated){story.huntHesitated=true;faceTo(t.hen);sayJ('huntHesitate');return;}   // 첫 사냥: 한 번 망설임
-  faceTo(t.hen);st.running=false;st.act='stab';st.actT=0;st.hit=false;st.actObj=t;st.appT=0;actHeld=false;
+  if(t.hen&&!story.huntHesitated){story.huntHesitated=true;faceTo(t.hen);sayJ('huntHesitate');return;}   // 첫 사냥: 한 번 망설임
+  faceTo(t.hen||t);st.running=false;st.act='stab';st.actT=0;st.hit=false;st.actObj=t;st.appT=0;actHeld=false;
   // 한 걸음 내디딜 곳: 닭 쪽으로 lunge만큼 (닭 몸에 겹치지 않게 30px 앞까지)
-  const P=HUNT[chosen]||HUNT.boy,h=t.hen,dx=h.x-st.x,dy=h.y-st.y,l=Math.hypot(dx,dy)||1,step=Math.max(0,Math.min(P.lunge,l-30));
+  const P=HUNT[chosen]||HUNT.boy,h=t.hen||t,dx=h.x-st.x,dy=h.y-st.y,l=Math.hypot(dx,dy)||1,step=Math.max(0,Math.min(P.lunge,l-30));
   st.from=[st.x,st.y];st.to=[st.x+dx/l*step,st.y+dy/l*step];
 }
 function stabStep(){   // 들기(T[0]) 뒤 찌를 때(T[1])까지 앞으로 내디딤
@@ -1626,12 +1633,15 @@ function stabStep(){   // 들기(T[0]) 뒤 찌를 때(T[1])까지 앞으로 내�
   if(walkable(nx,ny)){st.x=nx;st.y=ny;}
 }
 function strikeSpear(t){   // hitNow 에서 부름: 찌른 순간 맞았는지
-  const P=HUNT[chosen]||HUNT.boy,h=t.hen;beachAudio.effect('chop');
-  if(h&&hens.includes(h)&&h.mode!=='fall'&&henGap(h)<=P.hit){   // 맞음: 날갯짓 → 넘어짐 → 쓰러짐
+  const P=HUNT[chosen]||HUNT.boy;beachAudio.effect('chop');
+  const ok=x=>x&&hens.includes(x)&&x.mode!=='fall'&&henGap(x)<=P.hit;
+  let h=ok(t.hen)?t.hen:null;
+  if(!h){let bd=Infinity;for(const c of hens){if(!ok(c))continue;const d=henGap(c);if(d<bd){bd=d;h=c;}}}   // v63: 겨눈 닭이 아니어도 맞는 거리 안 닭이면 잡힘
+  if(h){   // 맞음: 날갯짓 → 넘어짐 → 쓰러짐
     h.mode='fall';h.timer=.55;h.fallDir=h.x>=st.x?'right':'left';pulse(20);startle(h.x,h.y,170);return;
   }
-  if(h)startle(h.x,h.y,140);   // 놓침: 무리가 놀라 도망
-  if(!story.spearMissed){story.spearMissed=true;sayJ('spearMiss');}
+  if(t.hen)startle(t.hen.x,t.hen.y,140);else startle(st.x,st.y,130);   // 놓침: 가까운 닭이 놀라 도망
+  if(t.hen&&!story.spearMissed){story.spearMissed=true;sayJ('spearMiss');}
 }
 function henDown(h){
   hens.splice(hens.indexOf(h),1);
@@ -2918,7 +2928,7 @@ function findTarget(){
     if(gate&&interactionReach(gate)<1)return gate;
   }
   if(equipped==='spear'&&best?.type!=='henDown'){const hen=findHenTarget();if(hen)return hen;}   // v59: 창을 들면 닭이 먼저
-  return best||findFishingWater();
+  return best||findFishingWater()||airStab();   // v63: 할 일이 없으면 창 찌르기
 }
 function faceTo(o){ const vx=o.x-st.x, vy=(o.y-st.y)*1.6; st.dir=Math.abs(vx)>Math.abs(vy)?(vx>0?'right':'left'):(vy>0?'down':'up'); }
 function doAction(target=st.target){
