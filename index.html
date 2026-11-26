@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta name="app-id" content="castaway-isle">
-<meta name="app-version" content="61">
+<meta name="app-version" content="62">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>표류섬</title>
@@ -459,7 +459,7 @@
 <script>
 (() => {
 'use strict';
-const APP='castaway-isle', APP_V='61', NOTE="창 사냥이 찌르기로 바뀌었어요";
+const APP='castaway-isle', APP_V='62', NOTE="아이콘 3개(창·잡은 닭·닭고기 구이) 새 그림으로";
 const KEY = n => APP+':'+n;                         // 이 앱의 저장 이름 (다른 앱과 안 겹침)
 const store = {get:k=>{try{return localStorage.getItem(KEY(k));}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(KEY(k),v);}catch(e){}}};
 const vibrationBtn=document.getElementById('vibrationBtn');
